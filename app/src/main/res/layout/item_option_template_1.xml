@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/dp_96"
+    android:background="@drawable/selectable_item_background_light"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/dp_40"
+    android:paddingEnd="@dimen/dp_40">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/primary_text"
+            style="@style/H3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="Primary Text" />
+
+        <LinearLayout
+            android:id="@+id/secondary_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/secondary_text"
+                style="@style/Body16.Grey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Secondary Text" />
+
+            <View
+                android:layout_width="@dimen/dp_1"
+                android:layout_height="@dimen/dp_15"
+                android:layout_marginStart="@dimen/dp_12"
+                android:layout_marginEnd="@dimen/dp_12"
+                android:background="@color/tablet_grey_300" />
+
+            <TextView
+                android:id="@+id/tertiary_text"
+                style="@style/Body16.Grey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="Tertiary Text" />
+        </LinearLayout>
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_1"
+        android:layout_gravity="bottom"
+        android:alpha="0.1"
+        android:background="@android:color/black" />
+</FrameLayout>

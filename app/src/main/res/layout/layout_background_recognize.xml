@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/dp_16"
+    tools:background="@color/tablet_grey_500">
+
+    <TextView
+        android:id="@+id/background_iat"
+        style="@style/Body16"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp_36"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginEnd="@dimen/dp_40"
+        android:background="@drawable/bg_background_iat"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="1"
+        android:paddingStart="@dimen/dp_28"
+        android:paddingEnd="@dimen/dp_16"
+        android:visibility="gone"
+        tools:text="设置上午或者下午的闹钟" />
+
+    <com.cunoraz.gifview.library.GifView
+        android:id="@+id/background_animation"
+        android:layout_width="@dimen/dp_40"
+        android:layout_height="@dimen/dp_40"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/dp_20" />
+
+</FrameLayout>

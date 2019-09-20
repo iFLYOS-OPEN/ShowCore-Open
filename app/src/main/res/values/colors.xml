@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="utf-8"?><!--
+  ~ Copyright (C) 2019 iFLYTEK CO.,LTD.
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~     http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<resources>
+    <color name="campus_blue">#5280ff</color>
+    <color name="semi_black">#262626</color>
+    <color name="grey">#666666</color>
+
+    <color name="windowBackground">#0f1722</color>
+    <color name="setup_primary">#1784e9</color>
+    <color name="setup_primary_disabled">#9f9f9f</color>
+    <color name="setup_primary_pressed">#49B6FF</color>
+    <color name="setup_background">#0f1722</color>
+    <color name="weather_desc_color">#b3ffffff</color>
+    <color name="settings_background">#0f1722</color>
+    <color name="tips_color">#80ffffff</color>
+    <color name="divider">#1affffff</color>
+    <color name="dividerLight">#1a000000</color>
+    <color name="textColorLightPrimary">#0f1722</color>
+    <color name="textColorLightSecondary">#7f8187</color>
+    <color name="textColorDarkPrimary">#ffffff</color>
+    <color name="textColorDarkSecondary">#b3b3b3</color>
+    <color name="textColorDarkTertiary">#7f7f7f</color>
+    <color name="qrCodeBackground">#fff2f5f7</color>
+
+    <color name="tablet_black">#262626</color>
+    <color name="tablet_grey">#666666</color>
+    <color name="tablet_red">#FF7676</color>
+    <color name="tablet_index_bg">#232B32</color>
+    <color name="tablet_grey_500">#9E9FA7</color>
+    <color name="tablet_grey_300">#CED2D6</color>
+    <color name="tablet_grey_100">#EDF0F2</color>
+
+    <color name="grey_500">#9E9FA7</color>
+    <color name="divider_line">#1a000000</color>
+
+    <color name="slide_progress">#1E000000</color>
+    <color name="slide_background">@color/tablet_grey_100</color>
+
+    <color name="panel_background">#FFFFFF</color>
+    <color name="panel_item_background">@color/tablet_grey_100</color>
+    <color name="panel_item_background_pressed">@color/tablet_grey_300</color>
+
+    <color name="lrc_normal_text_color">#9E9E9E</color>
+    <color name="lrc_current_text_color">#FF4081</color>
+    <color name="lrc_timeline_text_color">#F8BBD0</color>
+    <color name="lrc_timeline_color">#809E9E9E</color>
+    <color name="lrc_time_text_color">#809E9E9E</color>
+
+    <color name="settings_item_background">@android:color/white</color>
+    <color name="settings_item_background_pressed">@color/tablet_grey_100</color>
+
+    <color name="message_item_border">@color/tablet_grey_100</color>
+    <color name="message_item_background">@android:color/white</color>
+    <color name="message_item_background_pressed">@color/tablet_grey_500</color>
+
+    <color name="record_border">@color/tablet_grey_100</color>
+    <color name="record_background">@android:color/white</color>
+    <color name="record_background_pressed">@color/tablet_grey_500</color>
+
+    <color name="template_background_layer">#E5FFFFFF</color>
+    <color name="template_body_normal_color">#9E9FA7</color>
+    <color name="template_body_highlight_color">#262626</color>
+    <color name="template_tertiary_text_color">#F09226</color>
+
+    <color name="template_weather_background">#393B48</color>
+
+    <color name="alarm_background">#393B48</color>
+    <color name="alarm_background_layer">#E5393B48</color>
+
+    <color name="border_color">#F2F5F7</color>
+    <color name="default_shadow_color">#88757575</color>
+</resources>

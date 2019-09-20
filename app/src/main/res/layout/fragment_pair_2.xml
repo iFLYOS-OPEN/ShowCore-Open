@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/top_without_back"
+        style="@style/H5"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp_64"
+        android:gravity="center"
+        android:paddingStart="@dimen/dp_40"
+        android:paddingEnd="@dimen/dp_40"
+        android:text="授权绑定" />
+
+    <LinearLayout
+        android:id="@+id/top_with_back"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:background="@android:color/white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <TextView
+            style="@style/H4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="授权绑定" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layoutDirection="rtl"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/dp_40"
+        android:paddingEnd="@dimen/dp_40">
+
+        <FrameLayout
+            android:layout_width="@dimen/dp_160"
+            android:layout_height="@dimen/dp_160"
+            android:layout_marginTop="@dimen/dp_24"
+            android:layout_marginEnd="@dimen/dp_80"
+            android:background="@drawable/bg_qrcode">
+
+            <ImageView
+                android:id="@+id/qrcode"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <ProgressBar
+                android:id="@+id/qrcode_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                tools:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/error_field"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_40"
+                    android:layout_height="@dimen/dp_40"
+                    android:src="@drawable/ic_reload_24dp" />
+
+                <TextView
+                    android:id="@+id/tv_error"
+                    style="@style/Body14.Grey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_12"
+                    android:layout_marginTop="@dimen/dp_12"
+                    android:layout_marginEnd="@dimen/dp_12"
+                    android:gravity="center"
+                    tools:text="获取二维码失败，请重试" />
+
+            </LinearLayout>
+        </FrameLayout>
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="end"
+                android:orientation="vertical"
+                android:paddingTop="@dimen/dp_24"
+                android:paddingBottom="@dimen/dp_24">
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/dp_8"
+                    android:text="1. 安装【小飞在线】" />
+
+                <TextView
+                    style="@style/Body14.Grey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="您可以去应用商店下载【小飞在线】app" />
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_40"
+                    android:layout_marginBottom="@dimen/dp_8"
+                    android:text="2. 激活设备" />
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    style="@style/Body14.Grey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:gravity="start"
+                    android:text="注册并登录【小飞在线】app，在【添加主控设备】中选择【有屏设备】，勾选【设备已显示二维码】并点击下一步，扫描右侧二维码绑定即可。"
+                    android:textAlignment="textStart"
+                    app:lineHeight="@dimen/dp_20" />
+            </LinearLayout>
+        </ScrollView>
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/bottom"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_56"
+        android:background="@android:color/white">
+
+        <TextView
+            android:id="@+id/previous"
+            style="@style/Body14.Grey"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="center_vertical"
+            android:background="?selectableItemBackgroundBorderless"
+            android:gravity="center"
+            android:paddingStart="@dimen/dp_40"
+            android:paddingEnd="@dimen/dp_40"
+            android:text="@string/previous_step" />
+
+    </FrameLayout>
+
+</LinearLayout>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="horizontal">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <TextView
+            style="@style/H4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="start"
+            android:text="欢迎使用" />
+
+        <View
+            android:layout_width="@dimen/dp_200"
+            android:layout_height="0dp" />
+
+        <ImageView
+            android:id="@+id/next"
+            android:layout_width="@dimen/dp_48"
+            android:layout_height="@dimen/dp_48"
+            android:layout_gravity="bottom"
+            android:layout_marginTop="@dimen/dp_80"
+            android:background="@drawable/circle_accent"
+            android:padding="@dimen/dp_8"
+            android:src="@drawable/ic_next_white_24dp" />
+
+    </LinearLayout>
+
+</FrameLayout>

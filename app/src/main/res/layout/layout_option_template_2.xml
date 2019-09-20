@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:theme="@style/AppTheme">
+
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/bg_index1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/template_background_layer"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_64"
+            android:background="#01000000"
+            android:gravity="center_vertical">
+
+
+            <LinearLayout
+                android:id="@+id/back"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_64"
+                android:background="@drawable/bg_back"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_32"
+                android:paddingEnd="@dimen/dp_16">
+
+                <ImageView
+                    android:id="@+id/back_icon"
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_page_back_black_24dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/main_title"
+                    style="@style/H5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    tools:text="主标题" />
+
+                <TextView
+                    android:id="@+id/sub_title"
+                    style="@style/Body14.Grey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    tools:text="次标题" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/skill_icon"
+                android:layout_width="@dimen/dp_32"
+                android:layout_height="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_40"
+                tools:src="@drawable/bg_panel_item" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/dp_12"
+            android:paddingEnd="@dimen/dp_12"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="4"
+            tools:itemCount="20"
+            tools:listitem="@layout/item_option_template_2" />
+    </LinearLayout>
+</FrameLayout>

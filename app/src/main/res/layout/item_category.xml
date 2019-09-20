@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:sl_cornerRadius="@dimen/dp_20"
+    app:sl_dx="0dp"
+    app:sl_dy="@dimen/dp_4"
+    app:sl_shadowColor="#0D000000"
+    app:sl_shadowRadius="@dimen/dp_8">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_16"
+        android:layout_marginTop="@dimen/dp_4"
+        android:layout_marginEnd="@dimen/dp_16"
+        android:layout_marginBottom="@dimen/dp_6"
+        android:background="@drawable/bg_album_shape"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingTop="@dimen/dp_16"
+            android:paddingBottom="@dimen/dp_4">
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/category_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/dp_24"
+                android:gravity="center_vertical"
+                android:textColor="@color/semi_black"
+                android:textSize="@dimen/sp_20"
+                app:lineHeight="@dimen/dp_24"
+                tools:text="热门榜单" />
+
+            <TextView
+                android:id="@+id/category_desc"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginStart="@dimen/dp_8"
+                android:layout_marginEnd="@dimen/dp_8"
+                android:layout_weight="1"
+                android:textColor="@color/grey"
+                android:textSize="@dimen/sp_16"
+                tools:text="“嘿，小飞，最近有什么新歌”" />
+
+            <LinearLayout
+                android:id="@+id/more_content"
+                android:layout_width="wrap_content"
+                android:paddingStart="@dimen/dp_16"
+                android:paddingEnd="@dimen/dp_16"
+                android:layout_height="@dimen/dp_34"
+                android:layout_marginEnd="@dimen/dp_24"
+                android:background="@drawable/item_more_background"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/more"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textColor="@color/semi_black"
+                    android:textSize="@dimen/sp_14"
+                    tools:text="全部华语" />
+
+                <ImageView
+                    android:layout_width="@dimen/dp_10"
+                    android:layout_height="@dimen/dp_10"
+                    android:layout_marginStart="@dimen/dp_5"
+                    android:src="@drawable/ic_angle_right"
+                    android:tint="@color/tablet_grey_500" />
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/album_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingTop="@dimen/dp_10"
+            android:layout_marginBottom="@dimen/dp_24"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/dp_12"
+            android:paddingEnd="@dimen/dp_12"
+            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+            app:spanCount="4" />
+
+    </LinearLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>

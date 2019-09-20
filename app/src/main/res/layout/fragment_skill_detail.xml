@@ -1,0 +1,228 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#E8EBEE"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#01000000">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+        </LinearLayout>
+
+    </FrameLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+                android:id="@+id/icon"
+                android:layout_width="@dimen/dp_90"
+                android:layout_height="@dimen/dp_90"
+                android:layout_marginStart="@dimen/dp_32"
+                app:shadowColor="#0c000000"
+                app:shadowCornerRadius="16dp"
+                app:shadowDx="0dp"
+                app:shadowDy="4dp"
+                app:shadowPaddingBottom="10.5dp"
+                app:shadowPaddingLeft="10.5dp"
+                app:shadowPaddingRight="10.5dp"
+                app:shadowPaddingTop="10.5dp"
+                app:shadowRadius="12dp"
+                app:useShadowColor="true">
+
+                <androidx.cardview.widget.CardView
+                    android:layout_width="@dimen/dp_78"
+                    android:layout_height="@dimen/dp_78"
+                    android:layout_centerInParent="true"
+                    app:cardCornerRadius="16dp"
+                    app:cardElevation="0dp" />
+
+                <ImageView
+                    android:id="@+id/iv_skill_icon"
+                    android:layout_width="@dimen/dp_78"
+                    android:layout_height="@dimen/dp_78"
+                    android:layout_centerInParent="true"
+                    android:scaleType="centerCrop" />
+
+            </com.iflytek.cyber.iot.show.core.widget.ShadowLayout>
+
+            <LinearLayout
+                android:id="@+id/skill_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_toEndOf="@id/icon"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tv_skill_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_32"
+                    android:layout_marginTop="@dimen/dp_4"
+                    android:layout_marginEnd="@dimen/dp_32"
+                    android:textColor="@color/semi_black"
+                    android:textSize="@dimen/sp_24"
+                    tools:text="查天气" />
+
+                <TextView
+                    android:id="@+id/tv_skill_desc"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_32"
+                    android:layout_marginEnd="@dimen/dp_32"
+                    android:textColor="@color/grey"
+                    android:textSize="@dimen/sp_16"
+                    tools:text="查询未来一周的天气，还可以问空气质量、穿衣建议，紫外线强度，洗车建议。" />
+
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/tv_tips"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/skill_content"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_32"
+                android:layout_toEndOf="@id/icon"
+                android:text="你可以说"
+                android:textColor="@color/semi_black"
+                android:textSize="@dimen/sp_18" />
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/example_list"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_tips"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_8"
+                android:layout_toEndOf="@id/icon"
+                android:overScrollMode="never"
+                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+            <View
+                android:id="@+id/divider"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_1"
+                android:layout_below="@+id/example_list"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_24"
+                android:layout_marginEnd="@dimen/dp_32"
+                android:layout_marginBottom="@dimen/dp_24"
+                android:layout_toEndOf="@id/icon"
+                android:alpha="0.1"
+                android:background="@android:color/black" />
+
+            <TextView
+                android:id="@+id/tv_dev_info"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/divider"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_toEndOf="@id/icon"
+                android:text="开发者信息"
+                android:textColor="@color/semi_black"
+                android:textSize="@dimen/sp_18" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_dev_info"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginBottom="@dimen/dp_12"
+                android:layout_toEndOf="@id/icon"
+                android:text="开发者"
+                android:textColor="@color/grey"
+                android:textSize="@dimen/sp_16" />
+
+            <TextView
+                android:id="@+id/tv_dev"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_dev_info"
+                android:layout_marginStart="@dimen/dp_120"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_toEndOf="@id/icon"
+                android:textColor="@color/semi_black"
+                android:textSize="@dimen/sp_16"
+                tools:text="科大讯飞" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_dev"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_8"
+                android:layout_marginBottom="@dimen/dp_12"
+                android:layout_toEndOf="@id/icon"
+                android:text="版本"
+                android:textColor="@color/grey"
+                android:textSize="@dimen/sp_16" />
+
+            <TextView
+                android:id="@+id/tv_version"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_dev"
+                android:layout_marginStart="@dimen/dp_120"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_toEndOf="@id/icon"
+                android:textColor="@color/semi_black"
+                android:textSize="@dimen/sp_16"
+                tools:text="1.0" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_version"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_8"
+                android:layout_marginBottom="@dimen/dp_12"
+                android:layout_toEndOf="@id/icon"
+                android:text="更新日期"
+                android:textColor="@color/grey"
+                android:textSize="@dimen/sp_16" />
+
+            <TextView
+                android:id="@+id/tv_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/tv_version"
+                android:layout_marginStart="@dimen/dp_120"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_toEndOf="@id/icon"
+                android:textColor="@color/semi_black"
+                android:textSize="@dimen/sp_16"
+                tools:text="2018年8月2日" />
+
+        </RelativeLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+</LinearLayout>

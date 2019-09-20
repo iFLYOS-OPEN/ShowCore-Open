@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_settings"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:background="#01000000"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+        </LinearLayout>
+
+        <TextView
+            style="@style/H4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/settings" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingBottom="@dimen/dp_40">
+
+            <LinearLayout
+                android:id="@+id/account"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:background="@drawable/bg_settings_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24">
+
+                <TextView
+                    android:id="@+id/tv_account"
+                    style="@style/H4"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/my_account" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/wifi"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:background="@drawable/bg_settings_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:src="@drawable/ic_wifi_24dp" />
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_16"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:layout_weight="1"
+                    android:text="@string/wlan" />
+
+                <TextView
+                    android:id="@+id/ssid"
+                    style="@style/Body16.Grey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/screen_and_brightness"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:background="@drawable/bg_settings_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:src="@drawable/ic_brightness_level_2_24dp" />
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_16"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:layout_weight="1"
+                    android:text="@string/screen_and_brightness" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/microphone"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:background="@drawable/bg_settings_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:src="@drawable/ic_microphone_24dp" />
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_16"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:layout_weight="1"
+                    android:text="@string/voice_settings" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/volume"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:background="@drawable/bg_settings_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:src="@drawable/ic_volume_level_2_24dp" />
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_16"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:layout_weight="1"
+                    android:text="@string/volume" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/check_update"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:background="@drawable/bg_settings_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:src="@drawable/ic_reload_24dp" />
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_16"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:layout_weight="1"
+                    android:text="@string/check_update" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/about"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:background="@drawable/bg_settings_item"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:src="@drawable/ic_about_iflyos_24dp" />
+
+                <TextView
+                    style="@style/H4"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_16"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:layout_weight="1"
+                    android:text="@string/about" />
+
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

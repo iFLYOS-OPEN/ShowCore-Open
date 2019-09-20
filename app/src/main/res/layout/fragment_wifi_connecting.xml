@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:gravity="bottom"
+    android:orientation="vertical">
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/loading"
+        android:layout_width="@dimen/dp_64"
+        android:layout_height="@dimen/dp_64"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginBottom="@dimen/dp_12"
+        app:lottie_rawRes="@raw/animation_loading_l" />
+
+    <TextView
+        android:id="@+id/connecting"
+        style="@style/H2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginBottom="@dimen/dp_80"
+        android:text="正在连接 Wi-Fi…" />
+
+</LinearLayout>

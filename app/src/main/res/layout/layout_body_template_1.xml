@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:theme="@style/AppTheme">
+
+    <ImageView
+        android:id="@+id/background_image"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/bg_index1" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/template_background_layer"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_64"
+            android:background="#01000000"
+            android:gravity="center_vertical">
+
+            <LinearLayout
+                android:id="@+id/back"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_64"
+                android:background="@drawable/bg_back"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_32"
+                android:paddingEnd="@dimen/dp_16">
+
+                <ImageView
+                    android:id="@+id/back_icon"
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_page_back_black_24dp" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:gravity="center"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/main_title"
+                    style="@style/H5"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    tools:text="主标题" />
+
+                <TextView
+                    android:id="@+id/sub_title"
+                    style="@style/Body14.Grey"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    tools:text="次标题" />
+            </LinearLayout>
+
+            <View
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:layout_weight="1" />
+
+            <ImageView
+                android:id="@+id/skill_icon"
+                android:layout_width="@dimen/dp_32"
+                android:layout_height="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_40"
+                tools:src="@drawable/bg_panel_item" />
+        </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/body_scroll_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:id="@+id/body_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/dp_40"
+                android:paddingTop="@dimen/dp_10"
+                android:paddingEnd="@dimen/dp_40"
+                android:paddingBottom="@dimen/dp_10">
+
+                <androidx.cardview.widget.CardView
+                    android:id="@+id/body_image_container"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/body_template_image_max_height"
+                    android:layout_marginTop="@dimen/dp_14"
+                    android:layout_marginBottom="@dimen/dp_24"
+                    android:visibility="gone"
+                    app:cardElevation="0dp"
+                    app:cardCornerRadius="@dimen/dp_12"
+                    tools:layout_height="@dimen/body_template_image_max_height"
+                    tools:visibility="visible">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent">
+
+                        <ImageView
+                            android:id="@+id/body_background"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:scaleType="centerCrop"
+                            tools:layout_width="match_parent"
+                            tools:src="@drawable/bg_index1" />
+
+                        <View
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="#33FFFFFF" />
+
+                        <ImageView
+                            android:id="@+id/body_image"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_gravity="center"
+                            tools:layout_width="match_parent"
+                            tools:src="@drawable/bg_index1" />
+                    </FrameLayout>
+                </androidx.cardview.widget.CardView>
+
+                <com.iflytek.cyber.iot.show.core.widget.HighlightTextView
+                    android:id="@+id/body_text"
+                    style="@style/TemplateBody"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:gravity="center_vertical"
+                    app:highlightColor="@color/template_body_highlight_color"
+                    app:normalColor="@color/template_body_normal_color"
+                    tools:text="科大讯飞股份有限公司，前身安徽中科大讯飞信息科技有限公司，成立于1999年12月30日，2014年4月18日变更为科大讯飞股份有限公司，专业从事智能语音及语言技术研究、软件及芯片产品开发、语音信息服务及电子政务系统集成。拥有灵犀语音助手，讯飞输入法等优秀产品。科大讯飞信息科技股份有限公司现任董事长兼总裁为刘庆峰先生。科大讯飞信息科技股份有限公司是一家专业从事智能语音" />
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+</FrameLayout>

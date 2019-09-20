@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <ImageView
+        android:layout_width="@dimen/dp_56"
+        android:layout_height="@dimen/dp_56"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginTop="@dimen/dp_80"
+        android:src="@drawable/ic_error" />
+
+    <TextView
+        style="@style/H2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginTop="@dimen/dp_24"
+        android:text="网络连接失败" />
+
+    <TextView
+        style="@style/Body16.Grey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginTop="@dimen/dp_8"
+        android:text="请确认密码后重试" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|bottom"
+        android:padding="@dimen/dp_40">
+
+        <TextView
+            android:id="@+id/cancel"
+            style="@style/Body16"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_48"
+            android:background="@drawable/bg_round_border_accent_48dp"
+            android:gravity="center"
+            android:minWidth="@dimen/dp_110"
+            android:paddingStart="@dimen/dp_24"
+            android:paddingEnd="@dimen/dp_24"
+            android:text="@string/cancel"
+            android:textColor="?colorAccent" />
+
+        <TextView
+            android:id="@+id/retry"
+            style="@style/Body16.White"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_48"
+            android:layout_marginStart="@dimen/dp_16"
+            android:background="@drawable/bg_round_accent_48dp"
+            android:gravity="center"
+            android:minWidth="@dimen/dp_110"
+            android:paddingStart="@dimen/dp_24"
+            android:paddingEnd="@dimen/dp_24"
+            android:text="@string/retry"
+            android:textColor="@android:color/white" />
+    </LinearLayout>
+
+</LinearLayout>

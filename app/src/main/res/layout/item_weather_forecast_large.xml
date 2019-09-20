@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center"
+    android:gravity="center"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/forecast_weekday"
+        style="@style/Body16.White"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="周二" />
+
+    <TextView
+        android:id="@+id/forecast_date"
+        style="@style/Body14.White"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_12"
+        tools:text="22°~27°" />
+
+    <ImageView
+        android:id="@+id/forecast_image"
+        android:layout_width="@dimen/dp_80"
+        android:layout_height="@dimen/dp_80"
+        android:layout_marginTop="@dimen/dp_36"
+        tools:src="@drawable/ic_alarm" />
+
+    <TextView
+        android:id="@+id/forecast_high_temperature"
+        style="@style/Body16.White"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_12"
+        tools:text="27°" />
+
+    <TextView
+        android:id="@+id/forecast_low_temperature"
+        style="@style/Body16.White"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_16"
+        android:alpha="0.7"
+        tools:text="22°" />
+
+</LinearLayout>

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:background="@drawable/top_view_right_drawable">
+
+    <TextView
+        android:id="@+id/tv_duration"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_4"
+        android:layout_marginTop="@dimen/dp_2"
+        android:layout_marginEnd="@dimen/dp_4"
+        android:layout_marginBottom="@dimen/dp_2"
+        android:text="2:00-4:00"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/sp_10" />
+
+</FrameLayout>

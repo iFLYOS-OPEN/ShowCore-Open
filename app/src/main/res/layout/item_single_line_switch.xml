@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/dp_72"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="horizontal">
+
+    <TextView
+        android:id="@+id/title"
+        style="@style/H4"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginEnd="@dimen/dp_100"
+        android:ellipsize="end"
+        android:maxLines="1"
+        tools:text="麦克风" />
+
+    <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
+        android:id="@+id/styled_switch"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|end"
+        android:layout_marginEnd="@dimen/dp_40" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_1"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginEnd="@dimen/dp_40"
+        android:alpha="0.1"
+        android:background="@android:color/black" />
+
+</FrameLayout>

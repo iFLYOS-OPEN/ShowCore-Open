@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/black">
+
+    <TextView
+        android:id="@+id/sleep_time"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:alpha="0.4"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/sp_100"
+        android:textStyle="bold"
+        tools:text="10:45" />
+
+</FrameLayout>

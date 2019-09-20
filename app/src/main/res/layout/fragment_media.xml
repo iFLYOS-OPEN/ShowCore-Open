@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#F2F5F7"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_40"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/dp_72"
+            android:layout_marginEnd="@dimen/dp_60"
+            app:tabGravity="fill"
+            app:tabIndicator="@drawable/indicator_shape"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="@color/semi_black"
+            app:tabTextAppearance="@style/MyTabLayoutTextAppearance"
+            app:tabTextColor="@color/grey" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_64">
+
+        <androidx.viewpager2.widget.ViewPager2
+            android:id="@+id/view_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false" />
+
+        <LinearLayout
+            android:id="@+id/error_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@android:color/white"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/dp_64"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="@dimen/dp_32"
+                android:layout_height="@dimen/dp_32"
+                android:src="@drawable/ic_error" />
+
+            <TextView
+                android:id="@+id/error_text"
+                style="@style/Body14.Grey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_21"
+                tools:text="加载失败，请重试" />
+
+            <TextView
+                android:id="@+id/refresh"
+                style="@style/Widget.AppCompat.Button.Borderless.Colored"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_16"
+                android:text="@string/refresh"
+                android:textSize="@dimen/sp_16" />
+
+        </LinearLayout>
+    </FrameLayout>
+</FrameLayout>

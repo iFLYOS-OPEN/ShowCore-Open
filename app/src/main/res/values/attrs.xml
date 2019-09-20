@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="BoxedHorizontal">
+        <attr name="bh_points" format="integer" />
+        <attr name="bh_max" format="integer" />
+        <attr name="bh_min" format="integer" />
+        <attr name="bh_defaultValue" format="integer" />
+        <attr name="bh_cornerRadius" format="dimension" />
+        <attr name="bh_step" format="integer" />
+
+        <attr name="bh_progressColor" format="color" />
+        <attr name="bh_backgroundColor" format="color" />
+
+        <attr name="bh_clockwise" format="boolean" />
+        <attr name="bh_enabled" format="boolean" />
+        <attr name="bh_touchDisabled" format="boolean" />
+
+    </declare-styleable>
+
+    <declare-styleable name="BoxedVertical">
+        <attr name="bv_points" format="integer" />
+        <attr name="bv_max" format="integer" />
+        <attr name="bv_min" format="integer" />
+        <attr name="bv_defaultValue" format="integer" />
+        <attr name="bv_cornerRadius" format="dimension" />
+        <attr name="bv_step" format="integer" />
+
+        <attr name="bv_progressColor" format="color" />
+        <attr name="bv_backgroundColor" format="color" />
+
+        <attr name="bv_clockwise" format="boolean" />
+        <attr name="bv_enabled" format="boolean" />
+        <attr name="bv_touchDisabled" format="boolean" />
+    </declare-styleable>
+
+    <declare-styleable name="BatteryMeterView">
+        <attr name="charging" format="boolean" />
+        <attr name="warning_level" format="integer" />
+        <attr name="battery_level" format="integer" />
+        <attr name="normal_fill_color" format="color" />
+        <attr name="warning_fill_color" format="color" />
+        <attr name="background_fill_color" format="color" />
+        <attr name="battery_head_color" format="color" />
+        <attr name="charging_color" format="color" />
+        <attr name="text_color" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="BatteryView">
+        <attr name="contentColor" format="color" />
+        <attr name="borderColor" format="color" />
+        <attr name="lowPowerColor" format="color" />
+        <attr name="contentPadding" format="dimension" />
+        <attr name="level" format="integer" />
+        <attr name="isCharging" format="boolean" />
+        <attr name="lowPowerLimit" format="integer" />
+    </declare-styleable>
+
+    <declare-styleable name="LrcView">
+        <attr name="lrcTextSize" format="dimension" />
+        <attr name="lrcNormalTextSize" format="dimension" />
+        <attr name="lrcDividerHeight" format="dimension" />
+        <attr name="lrcNormalTextColor" format="reference|color" />
+        <attr name="lrcCurrentTextColor" format="reference|color" />
+        <attr name="lrcTimelineTextColor" format="reference|color" />
+        <attr name="lrcAnimationDuration" format="integer" />
+        <attr name="lrcLabel" format="string" />
+        <attr name="lrcPadding" format="dimension" />
+        <attr name="lrcTimelineColor" format="reference|color" />
+        <attr name="lrcTimelineHeight" format="dimension" />
+        <attr name="lrcPlayDrawable" format="reference" />
+        <attr name="lrcTimeTextColor" format="reference|color" />
+        <attr name="lrcTimeTextSize" format="dimension" />
+        <attr name="lrcTextGravity">
+            <enum name="left" value="1" />
+            <enum name="center" value="2" />
+            <enum name="right" value="3" />
+        </attr>
+    </declare-styleable>
+    <declare-styleable name="ShadowLayout">
+        <attr name="shadowColor" format="color" />
+        <attr name="shadowRadius" format="dimension" />
+        <attr name="shadowDx" format="dimension" />
+        <attr name="shadowDy" format="dimension" />
+        <attr name="shadowCornerRadius" format="dimension" />
+        <attr name="shadowPaddingLeft" format="dimension" />
+        <attr name="shadowPaddingTop" format="dimension" />
+        <attr name="shadowPaddingRight" format="dimension" />
+        <attr name="shadowPaddingBottom" format="dimension" />
+        <attr name="useShadowColor" format="boolean" />
+        <attr name="shadowShape">
+            <flag name="rectangle" value="0x0001" />
+            <flag name="oval" value="0x0010" />
+        </attr>
+        <attr name="shadowSide">
+            <flag name="all" value="0x1111" />
+            <flag name="left" value="0x0001" />
+            <flag name="top" value="0x0010" />
+            <flag name="right" value="0x0100" />
+            <flag name="bottom" value="0x1000" />
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="HighlightTextView">
+        <attr name="highlightColor" format="color" />
+        <attr name="normalColor" format="color" />
+    </declare-styleable>
+
+    <declare-styleable name="CircleCheckBox">
+        <attr name="isChecked" format="boolean" />
+        <attr name="text" format="string" />
+        <attr name="textSize" format="dimension" />
+        <attr name="textInsetStart" format="dimension" />
+    </declare-styleable>
+
+    <declare-styleable name="ShadowFrameLayout">
+        <attr name="sl_cornerRadius" format="dimension"/>
+        <attr name="sl_shadowRadius" format="dimension"/>
+        <attr name="sl_shadowColor" format="color"/>
+        <attr name="sl_dx" format="dimension"/>
+        <attr name="sl_dy" format="dimension"/>
+    </declare-styleable>
+</resources>

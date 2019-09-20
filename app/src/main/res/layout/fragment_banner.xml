@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/banner_container"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical"
+    android:theme="@style/AppTheme.Dark">
+
+    <FrameLayout
+        android:id="@+id/background_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:foreground="#33262626">
+
+        <ImageView
+            android:id="@+id/background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop" />
+    </FrameLayout>
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/title"
+        style="@style/H1.White"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginEnd="@dimen/dp_40"
+        android:clickable="true"
+        android:ellipsize="end"
+        android:focusable="true"
+        android:gravity="center"
+        android:maxLines="2"
+        android:paddingTop="@dimen/dp_24"
+        android:paddingBottom="@dimen/dp_24"
+        android:textColor="@color/banner_text_color"
+        tools:text="测试测试\n换行换行" />
+
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/summary"
+        style="@style/Body20.White"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginEnd="@dimen/dp_40"
+        android:layout_marginBottom="@dimen/dp_32"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:singleLine="true" />
+
+</FrameLayout>

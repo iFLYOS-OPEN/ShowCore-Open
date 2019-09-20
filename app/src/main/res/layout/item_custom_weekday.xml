@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_week"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_16"
+        android:textColor="@color/semi_black"
+        android:textSize="@dimen/sp_18"
+        tools:text="周一" />
+
+    <com.iflytek.cyber.iot.show.core.widget.CircleCheckBox
+        android:id="@+id/check_box"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end|center_vertical"
+        android:layout_marginEnd="@dimen/dp_16" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_1"
+        android:layout_gravity="bottom"
+        android:layout_marginStart="@dimen/dp_16"
+        android:layout_marginEnd="@dimen/dp_16"
+        android:background="#1A000000" />
+
+</FrameLayout>

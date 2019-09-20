@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#EDF0F2"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white">
+
+        <ImageView
+            android:id="@+id/iv_back"
+            android:layout_width="@dimen/dp_24"
+            android:layout_height="@dimen/dp_24"
+            android:layout_marginStart="@dimen/dp_32"
+            android:layout_marginTop="@dimen/dp_16"
+            android:layout_marginBottom="@dimen/dp_16"
+            android:src="@drawable/ic_page_back_black_24dp"
+            android:tint="@android:color/black" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/dp_64"
+            android:text="@string/alarm_desc"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_16" />
+
+        <Button
+            android:id="@+id/done"
+            android:layout_width="@dimen/dp_70"
+            android:layout_height="@dimen/dp_36"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/dp_40"
+            android:background="@drawable/button_shape"
+            android:text="@string/ok"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_14" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white">
+
+        <EditText
+            android:id="@+id/edit_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_32"
+            android:layout_marginTop="@dimen/dp_16"
+            android:layout_marginEnd="@dimen/dp_32"
+            android:layout_marginBottom="@dimen/dp_32"
+            android:hint="@string/setting_alarm_hint"
+            android:paddingBottom="@dimen/dp_26"
+            android:textColor="@color/semi_black"
+            android:textColorHint="#CCCCCC"
+            android:textSize="@dimen/sp_20" />
+
+    </FrameLayout>
+
+</LinearLayout>

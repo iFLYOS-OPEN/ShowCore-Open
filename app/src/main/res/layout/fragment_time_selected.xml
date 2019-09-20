@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_72"
+            android:layout_gravity="center_vertical"
+            android:text="@string/select_time_title"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_18" />
+
+        <Button
+            android:id="@+id/done"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="@dimen/dp_70"
+            android:layout_height="@dimen/dp_36"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/dp_40"
+            android:text="@string/ok"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_14"
+            app:bl_corners_radius="@dimen/dp_18"
+            app:bl_ripple_color="#1A000000"
+            app:bl_ripple_enable="true"
+            app:bl_unPressed_drawable="@color/setup_primary" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.zyyoona7.wheel.WheelView
+                android:id="@+id/start_hour_wheel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginBottom="@dimen/dp_12"
+                app:wv_curved="false"
+                app:wv_cyclic="true"
+                app:wv_dividerColor="#1A000000"
+                app:wv_dividerType="fill"
+                app:wv_lineSpacing="@dimen/dp_18"
+                app:wv_normalItemTextColor="#9E9FA7"
+                app:wv_selectedItemTextColor="@color/semi_black"
+                app:wv_showDivider="true"
+                app:wv_textBoundaryMargin="@dimen/dp_24"
+                app:wv_textSize="@dimen/sp_20"
+                app:wv_visibleItems="5" />
+
+            <com.zyyoona7.wheel.WheelView
+                android:id="@+id/start_minute_wheel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginBottom="@dimen/dp_12"
+                app:wv_curved="false"
+                app:wv_cyclic="true"
+                app:wv_dividerColor="#1A000000"
+                app:wv_dividerType="fill"
+                app:wv_lineSpacing="@dimen/dp_18"
+                app:wv_normalItemTextColor="#9E9FA7"
+                app:wv_selectedItemTextColor="@color/semi_black"
+                app:wv_showDivider="true"
+                app:wv_textBoundaryMargin="@dimen/dp_24"
+                app:wv_textSize="@dimen/sp_20"
+                app:wv_visibleItems="5" />
+
+        </LinearLayout>
+
+        <TextView
+            android:layout_width="@dimen/dp_100"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="~"
+            android:textColor="#9E9FA7"
+            android:textSize="@dimen/sp_20" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <com.zyyoona7.wheel.WheelView
+                android:id="@+id/en_hour_wheel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginBottom="@dimen/dp_12"
+                app:wv_curved="false"
+                app:wv_cyclic="true"
+                app:wv_dividerColor="#1A000000"
+                app:wv_dividerType="fill"
+                app:wv_lineSpacing="@dimen/dp_18"
+                app:wv_normalItemTextColor="#9E9FA7"
+                app:wv_selectedItemTextColor="@color/semi_black"
+                app:wv_showDivider="true"
+                app:wv_textBoundaryMargin="@dimen/dp_24"
+                app:wv_textSize="@dimen/sp_20"
+                app:wv_visibleItems="5" />
+
+            <com.zyyoona7.wheel.WheelView
+                android:id="@+id/end_minute_wheel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginBottom="@dimen/dp_12"
+                app:wv_curved="false"
+                app:wv_cyclic="true"
+                app:wv_dividerColor="#1A000000"
+                app:wv_dividerType="fill"
+                app:wv_lineSpacing="@dimen/dp_18"
+                app:wv_normalItemTextColor="#9E9FA7"
+                app:wv_selectedItemTextColor="@color/semi_black"
+                app:wv_showDivider="true"
+                app:wv_textBoundaryMargin="@dimen/dp_24"
+                app:wv_textSize="@dimen/sp_20"
+                app:wv_visibleItems="5" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

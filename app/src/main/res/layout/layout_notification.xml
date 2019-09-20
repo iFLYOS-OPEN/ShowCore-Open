@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/AppTheme"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:shadowColor="#19000000"
+    app:shadowDx="0dp"
+    app:shadowDy="@dimen/dp_4"
+    app:shadowRadius="@dimen/dp_8"
+    app:shadowSide="bottom"
+    tools:layout_height="@dimen/dp_76">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:background="@android:color/white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/dp_32"
+        android:paddingEnd="@dimen/dp_32">
+
+        <ImageView
+            android:id="@+id/notification_icon"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_marginEnd="@dimen/dp_12"
+            android:tint="@color/tablet_grey"
+            tools:src="@drawable/ic_voice_zero_black_40dp" />
+
+        <TextView
+            android:id="@+id/notification_message"
+            style="@style/Body16"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:maxLines="2"
+            tools:text="网络连接异常，请在设置-无线网络设置" />
+
+        <Button
+            android:id="@+id/notification_negative_action"
+            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_8"
+            android:layout_marginEnd="@dimen/dp_8"
+            android:paddingStart="@dimen/dp_8"
+            android:paddingEnd="@dimen/dp_8"
+            android:textColor="@color/text_color_accent"
+            android:textSize="@dimen/sp_16"
+            tools:text="稍候再说" />
+
+        <Button
+            android:id="@+id/notification_positive_action"
+            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/dp_8"
+            android:paddingEnd="@dimen/dp_8"
+            android:textColor="@color/text_color_accent"
+            android:textSize="@dimen/sp_16"
+            tools:text="设置网络" />
+
+    </LinearLayout>
+</com.iflytek.cyber.iot.show.core.widget.ShadowLayout>

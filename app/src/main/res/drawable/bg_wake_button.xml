@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_pressed="true">
+        <bitmap android:src="@drawable/assistant_touch_awake_pressed" />
+    </item>
+    <item>
+        <bitmap android:src="@drawable/assistant_touch_awake_default" />
+    </item>
+</selector>

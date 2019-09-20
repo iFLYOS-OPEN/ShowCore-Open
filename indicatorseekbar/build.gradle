@@ -1,0 +1,24 @@
+apply plugin: 'com.android.library'
+
+def VERSION_NAME = "2.1.0"
+
+android {
+    compileSdkVersion 28
+
+    defaultConfig {
+        minSdkVersion 14
+        targetSdkVersion 28
+        versionCode 3
+        versionName VERSION_NAME
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+}
+
+dependencies {
+    compileOnly 'com.android.support:appcompat-v7:28.0.3'
+}

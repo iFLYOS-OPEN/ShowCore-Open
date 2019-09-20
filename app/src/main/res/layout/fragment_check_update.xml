@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:background="@android:color/white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <TextView
+            style="@style/H4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:text="@string/check_update" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:id="@+id/loading_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_100"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/loading"
+                android:layout_width="@dimen/dp_40"
+                android:layout_height="@dimen/dp_40"
+                app:lottie_rawRes="@raw/animation_loading_l" />
+
+            <TextView
+                style="@style/Body16.Grey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="正在检查更新" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/current_version_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_100"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                style="@style/Body16"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="当前系统已是最新版本" />
+
+            <TextView
+                android:id="@+id/current_version"
+                style="@style/Body16"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="1.1.1.1" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/new_version_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingStart="@dimen/dp_40"
+            android:paddingTop="@dimen/sp_16"
+            android:paddingEnd="@dimen/dp_40"
+            android:paddingBottom="@dimen/dp_40"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/new_version_title"
+                style="@style/H4"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="发现新版本 1.1.1.1" />
+
+            <FrameLayout
+                android:id="@+id/progress_container"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingTop="@dimen/dp_24"
+                android:paddingBottom="@dimen/dp_20"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <ProgressBar
+                    android:id="@+id/progress_bar"
+                    style="@style/Widget.AppCompat.ProgressBar.Horizontal"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_4"
+                    android:progressDrawable="@drawable/progress_drawable"
+                    tools:progress="50" />
+
+                <TextView
+                    android:id="@+id/progress_description"
+                    style="@style/Body16"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_12"
+                    android:text="正在下载安装包…" />
+
+                <TextView
+                    android:id="@+id/tv_progress"
+                    style="@style/Body16"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="end"
+                    android:layout_marginTop="@dimen/dp_12"
+                    tools:text="50%" />
+            </FrameLayout>
+
+            <ScrollView
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="@dimen/dp_8"
+                android:layout_marginBottom="@dimen/dp_8"
+                android:layout_weight="1">
+
+                <androidx.appcompat.widget.AppCompatTextView
+                    android:id="@+id/new_version_description"
+                    style="@style/Body16.Grey"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    app:lineHeight="@dimen/dp_26"
+                    tools:text="1.修复若干bug" />
+            </ScrollView>
+
+            <TextView
+                android:id="@+id/update_button"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_48"
+                android:layout_gravity="end"
+                android:layout_marginStart="@dimen/dp_12"
+                android:background="@drawable/bg_round_accent_48dp"
+                android:gravity="center"
+                android:paddingStart="@dimen/dp_24"
+                android:paddingEnd="@dimen/dp_24"
+                android:textColor="@color/text_color_light"
+                android:textSize="@dimen/sp_16"
+                android:theme="@style/AppTheme.Dark"
+                tools:text="立即升级" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/failed_container"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_100"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/failed_message"
+                style="@style/Body16"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/update_failed_common" />
+
+            <TextView
+                android:id="@+id/retry"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_16"
+                android:background="@drawable/bg_round_border_accent_48dp"
+                android:gravity="center"
+                android:paddingStart="@dimen/dp_20"
+                android:paddingEnd="@dimen/dp_20"
+                android:text="@string/retry"
+                android:textColor="@color/text_color_accent"
+                android:textSize="@dimen/sp_14" />
+        </LinearLayout>
+    </FrameLayout>
+</LinearLayout>

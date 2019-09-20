@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:theme="@style/AppTheme.Dark">
+
+    <FrameLayout
+        android:id="@+id/alarm_placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/alarm_background">
+
+        <ImageView
+            android:layout_width="@dimen/dp_80"
+            android:layout_height="@dimen/dp_80"
+            android:layout_gravity="center"
+            android:src="@drawable/ic_alarm" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:background="@color/alarm_background">
+
+        <TextView
+            style="@style/H5.White"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="你可以说：“蓝小飞，关闭闹钟”" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/close_alarm"
+        style="@style/Body16.White"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp_48"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="@dimen/dp_40"
+        android:background="@drawable/bg_primary_button"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:paddingStart="@dimen/dp_32"
+        android:paddingTop="@dimen/dp_12"
+        android:paddingEnd="@dimen/dp_32"
+        android:paddingBottom="@dimen/dp_12"
+        android:text="@string/close_alarm" />
+</FrameLayout>
