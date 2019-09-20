@@ -1,11 +1,6 @@
-### 带屏设备开源项目 ShowCore Open
-==========
-
-## 带屏设备开源项目是什么
+# 带屏设备开源项目 ShowCore Open
 
 本项目是使用 iFLYOS 的 [EVS协议](https://doc.iflyos.cn/device/evs/) 开发的、运行在 Android 平台的通用语音交互 Launcher App。项目的根本目的是为了减少开发者集成到自有硬件中的开发成本，可以快速开发一款使用 iFLYOS 的智能音箱。
-
-==========
 
 ## 运行项目
 
