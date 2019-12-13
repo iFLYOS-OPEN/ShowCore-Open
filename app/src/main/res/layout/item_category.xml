@@ -14,9 +14,8 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/dp_16"
-        android:layout_marginTop="@dimen/dp_4"
         android:layout_marginEnd="@dimen/dp_16"
-        android:layout_marginBottom="@dimen/dp_6"
+        android:layout_marginBottom="@dimen/dp_16"
         android:background="@drawable/bg_album_shape"
         android:orientation="vertical">
 
@@ -24,7 +23,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="horizontal"
-            android:paddingTop="@dimen/dp_16"
+            android:paddingTop="@dimen/dp_12"
             android:paddingBottom="@dimen/dp_4">
 
             <androidx.appcompat.widget.AppCompatTextView
@@ -54,15 +53,15 @@
             <LinearLayout
                 android:id="@+id/more_content"
                 android:layout_width="wrap_content"
-                android:paddingStart="@dimen/dp_16"
-                android:paddingEnd="@dimen/dp_16"
                 android:layout_height="@dimen/dp_34"
                 android:layout_marginEnd="@dimen/dp_24"
                 android:background="@drawable/item_more_background"
                 android:clickable="true"
                 android:focusable="true"
                 android:gravity="center"
-                android:orientation="horizontal">
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_16"
+                android:paddingEnd="@dimen/dp_16">
 
                 <TextView
                     android:id="@+id/more"
@@ -87,10 +86,10 @@
             android:id="@+id/album_list"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingTop="@dimen/dp_10"
-            android:layout_marginBottom="@dimen/dp_24"
+            android:layout_marginBottom="@dimen/dp_20"
             android:clipToPadding="false"
             android:paddingStart="@dimen/dp_12"
+            android:paddingTop="@dimen/dp_12"
             android:paddingEnd="@dimen/dp_12"
             app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             app:spanCount="4" />

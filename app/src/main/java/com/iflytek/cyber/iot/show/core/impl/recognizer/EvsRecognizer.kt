@@ -41,11 +41,15 @@ class EvsRecognizer(context: Context) : Recognizer(), GlobalRecorder.Observer {
             sink?.write(array, offset, length)
     }
 
+    override fun onWakeUp(angle: Int, beam: Int, params: String?) {
+        // ignore
+    }
+
     override fun readBytes(byteArray: ByteArray, length: Int): Int {
         try {
             val data = source?.readByteArray(length.toLong())
             if (data?.isNotEmpty() == true) {
-                for (i in 0 until data.size) {
+                for (i in data.indices) {
                     byteArray[i] = data[i]
                 }
                 return data.size
@@ -66,6 +70,10 @@ class EvsRecognizer(context: Context) : Recognizer(), GlobalRecorder.Observer {
 
     override fun isRecording(): Boolean {
         return isCapturing
+    }
+
+    override fun isSupportBackgroundRecognize(): Boolean {
+        return ConfigUtils.getBoolean(ConfigUtils.KEY_BACKGROUND_RECOGNIZE, false)
     }
 
     override fun onDestroy() {

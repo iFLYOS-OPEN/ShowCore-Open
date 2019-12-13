@@ -32,8 +32,11 @@ import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.evs.sdk.socket.Result
 import com.iflytek.cyber.iot.show.core.*
+import com.iflytek.cyber.iot.show.core.accessibility.TouchAccessibility
 import com.iflytek.cyber.iot.show.core.api.AlarmApi
 import com.iflytek.cyber.iot.show.core.api.BannerApi
+import com.iflytek.cyber.iot.show.core.impl.alarm.EvsAlarm
+import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
 import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager
 import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
 import com.iflytek.cyber.iot.show.core.model.Alert
@@ -41,8 +44,10 @@ import com.iflytek.cyber.iot.show.core.model.Banner
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
 import com.iflytek.cyber.iot.show.core.utils.ConnectivityUtils
+import com.iflytek.cyber.iot.show.core.utils.VoiceButtonUtils
 import com.iflytek.cyber.iot.show.core.widget.BatteryView
 import com.iflytek.cyber.iot.show.core.widget.FadeInPageTransformer
+import com.iflytek.cyber.iot.show.core.widget.InterceptFrameLayout
 import me.yokeyword.fragmentation.ISupportFragment
 import retrofit2.Call
 import retrofit2.Callback
@@ -53,7 +58,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.math.abs
 
 
-class MainFragment2 : BaseFragment() {
+class MainFragment2 : BaseFragment(), PageScrollable {
     companion object {
         private const val ACTION_PREFIX = "com.iflytek.cyber.iot.show.core.action"
         private const val ACTION_REQUEST_BANNERS = "$ACTION_PREFIX.REQUEST_BANNERS"
@@ -88,7 +93,6 @@ class MainFragment2 : BaseFragment() {
     private var viewPager: ViewPager2? = null
     private val bannerList = mutableListOf<Banner>()
     private var ivAlarm: ImageView? = null
-    private var errorBar: View? = null
     private var ivCover: LottieAnimationView? = null
 
     private var clock: TextView? = null
@@ -172,10 +176,16 @@ class MainFragment2 : BaseFragment() {
 
                             override fun onAnimationEnd(animation: Animator?) {
                                 viewPager?.endFakeDrag()
+                                if (viewPager?.tag == animation) {
+                                    viewPager?.tag = null
+                                }
                             }
 
                             override fun onAnimationCancel(animation: Animator?) {
                                 viewPager?.endFakeDrag()
+                                if (viewPager?.tag == animation) {
+                                    viewPager?.tag = null
+                                }
                             }
 
                             override fun onAnimationStart(animation: Animator?) {
@@ -184,6 +194,8 @@ class MainFragment2 : BaseFragment() {
 
                         })
                         animator.start()
+
+                        viewPager?.tag = animator
                     }
 
                     postNextScroll()
@@ -253,14 +265,8 @@ class MainFragment2 : BaseFragment() {
     private val onConfigChangedListener = object : ConfigUtils.OnConfigChangedListener {
         override fun onConfigChanged(key: String, value: Any?) {
             when (key) {
-                ConfigUtils.KEY_MICROPHONE_ENABLED -> {
-                    if (value == false) {
-                        showErrorBar()
-                        view?.findViewById<View>(R.id.microphone)?.visibility = View.GONE
-                    } else {
-                        hideErrorBar()
-                        view?.findViewById<View>(R.id.microphone)?.visibility = View.VISIBLE
-                    }
+                ConfigUtils.KEY_VOICE_WAKEUP_ENABLED -> {
+                    view?.findViewById<View>(R.id.microphone)?.isVisible = value != true
 
                     val intent = Intent(context, EngineService::class.java)
                     intent.action = EngineService.ACTION_SET_WAKE_UP_ENABLED
@@ -310,6 +316,8 @@ class MainFragment2 : BaseFragment() {
         }
     }
     private val evsStatusReceiver = object : SelfBroadcastReceiver(
+        EngineService.ACTION_EVS_CONNECTED,
+        EngineService.ACTION_EVS_DISCONNECTED,
         EngineService.ACTION_SEND_REQUEST_FAILED
     ) {
         override fun onReceiveAction(action: String, intent: Intent) {
@@ -377,6 +385,12 @@ class MainFragment2 : BaseFragment() {
                         }
                     }
                 }
+                EngineService.ACTION_EVS_DISCONNECTED -> {
+                    view?.findViewById<View>(R.id.wifi_error)?.isVisible = true
+                }
+                EngineService.ACTION_EVS_CONNECTED -> {
+                    view?.findViewById<View>(R.id.wifi_error)?.isVisible = false
+                }
             }
         }
     }
@@ -431,54 +445,7 @@ class MainFragment2 : BaseFragment() {
 
         EvsSpeaker.get(context).addOnVolumeChangedListener(onVolumeChangedListener)
 
-        launcher?.getService()?.getAudioPlayer()
-            ?.addListener(object : AudioPlayer.MediaStateChangedListener {
-                override fun onStarted(player: AudioPlayer, type: String, resourceId: String) {
-                }
-
-                override fun onResumed(player: AudioPlayer, type: String, resourceId: String) {
-                    if (type == AudioPlayer.TYPE_PLAYBACK) {
-                        ContentStorage.get().isMusicPlaying = true
-
-                        setupCover()
-                    }
-                }
-
-                override fun onPaused(player: AudioPlayer, type: String, resourceId: String) {
-                    if (type == AudioPlayer.TYPE_PLAYBACK) {
-                        ContentStorage.get().isMusicPlaying = false
-
-                        setupCover()
-
-                        val intent = Intent(context, FloatingService::class.java).apply {
-                            action = FloatingService.ACTION_UPDATE_MUSIC
-                        }
-                        launcher?.startService(intent)
-                    }
-                }
-
-                override fun onStopped(player: AudioPlayer, type: String, resourceId: String) {
-                }
-
-                override fun onCompleted(player: AudioPlayer, type: String, resourceId: String) {
-                }
-
-                override fun onPositionUpdated(
-                    player: AudioPlayer,
-                    type: String,
-                    resourceId: String,
-                    position: Long
-                ) {
-                }
-
-                override fun onError(
-                    player: AudioPlayer,
-                    type: String,
-                    resourceId: String,
-                    errorCode: String
-                ) {
-                }
-            })
+        EvsAlarm.get(context).addOnAlarmUpdatedListener(onAlarmUpdatedListener)
     }
 
     override fun onCreateView(
@@ -494,10 +461,24 @@ class MainFragment2 : BaseFragment() {
 
         viewPager = view.findViewById(R.id.background_pager)
         clock = view.findViewById(R.id.launcher_clock)
-        errorBar = view.findViewById(R.id.error_bar)
         ivCover = view.findViewById(R.id.iv_cover)
-        ivCover?.setOnClickListener {
-            startPlayerInfo()
+        view.findViewById<View>(R.id.cover_container)?.setOnClickListener {
+            val playerInfo = ContentStorage.get().playerInfo
+            if (playerInfo == null) {
+//                launcher?.getService()?.getPlaybackController()
+//                    ?.sendCommand(PlaybackController.Command.Resume)
+                launcher?.getService()?.sendTextIn("我要听歌")
+            } else {
+                startPlayerInfo()
+            }
+        }
+
+        val frameLayout = view.findViewById<InterceptFrameLayout>(R.id.main_content)
+        frameLayout.onInterceptTouchListener = View.OnTouchListener { v, _ ->
+            val context = v.context
+            VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
+//            SleepWorker.get(context).doTouchWork(context)
+            false
         }
 
         val shadowColor = Color.parseColor("#19000000")
@@ -556,10 +537,8 @@ class MainFragment2 : BaseFragment() {
 
         ivAlarm = view.findViewById(R.id.alarm)
         ivAlarm?.setOnClickListener {
-            startForResult(AlarmFragment(), REQUEST_ALARM_CODE)
+            startAlarm()
         }
-
-        ivCover?.isVisible = ContentStorage.get().playerInfo != null
 
         view.findViewById<View>(R.id.found).setOnClickListener {
             val context = it.context
@@ -590,11 +569,6 @@ class MainFragment2 : BaseFragment() {
 
         val timerHandler = TimerHandler(this)
         timerHandler.sendEmptyMessageDelayed(0, 1000)
-
-        val intent = Intent(context, FloatingService::class.java)
-        intent.action = FloatingService.ACTION_SET_CONTROL_PANEL_ENABLED
-        intent.putExtra(FloatingService.EXTRA_ENABLED, true)
-        context?.startService(intent)
 
         getBannersFromPref()
 
@@ -638,11 +612,7 @@ class MainFragment2 : BaseFragment() {
             return
         }
 
-        val playerInfo = ContentStorage.get().playerInfo
-
-        ivCover?.isVisible = playerInfo != null
-
-        if (ContentStorage.get().isMusicPlaying) {
+        if (EvsAudioPlayer.get(context).playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
             ivCover?.playAnimation()
         } else {
             ivCover?.pauseAnimation()
@@ -651,15 +621,20 @@ class MainFragment2 : BaseFragment() {
 
     override fun onSupportVisible() {
         super.onSupportVisible()
-        setupCover()
-        launcher?.getService()?.getAlarm()?.setOnAlarmUpdatedListener(onAlarmUpdatedListener)
 
-        ConfigUtils.getBoolean(ConfigUtils.KEY_MICROPHONE_ENABLED, true).let {
+        val intent = Intent(context, FloatingService::class.java)
+        intent.action = FloatingService.ACTION_SET_CONTROL_PANEL_ENABLED
+        intent.putExtra(FloatingService.EXTRA_ENABLED, true)
+        context?.startService(intent)
+
+        setupCover()
+
+        VoiceButtonUtils.requestRefresh()
+
+        ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true).let {
             if (it) {
-                hideErrorBar()
                 view?.findViewById<View>(R.id.microphone)?.visibility = View.GONE
             } else {
-                showErrorBar()
                 view?.findViewById<View>(R.id.microphone)?.visibility = View.VISIBLE
             }
         }
@@ -678,6 +653,11 @@ class MainFragment2 : BaseFragment() {
                 view?.findViewById<View>(R.id.wifi_error)?.visibility = View.VISIBLE
             }
         })
+
+        viewPager?.post {
+            val current = viewPager?.currentItem ?: 0
+            viewPager?.currentItem = current
+        }
 
         if (needRequestNewBanners) {
             val intent = Intent(ACTION_REQUEST_BANNERS)
@@ -701,6 +681,25 @@ class MainFragment2 : BaseFragment() {
                     System.currentTimeMillis() + REQUEST_SCROLL_DELAY, pendingIntent
                 )
         }
+
+        TouchAccessibility.isMainFragment = true
+    }
+
+    override fun onSupportInvisible() {
+        super.onSupportInvisible()
+
+        if (viewPager?.isFakeDragging == true) {
+            (viewPager?.tag as? Animator)?.cancel()
+
+            viewPager?.endFakeDrag()
+            viewPager?.currentItem = viewPager?.currentItem ?: 0
+        }
+
+        TouchAccessibility.isMainFragment = false
+    }
+
+    fun startAlarm() {
+        startForResult(AlarmFragment(), REQUEST_ALARM_CODE)
     }
 
     override fun onFragmentResult(requestCode: Int, resultCode: Int, data: Bundle) {
@@ -745,6 +744,8 @@ class MainFragment2 : BaseFragment() {
         ConfigUtils.unregisterOnConfigChangedListener(onConfigChangedListener)
 
         EvsSpeaker.get(context).removeOnVolumeChangedListener(onVolumeChangedListener)
+
+        EvsAlarm.get(context).addOnAlarmUpdatedListener(onAlarmUpdatedListener)
     }
 
     override fun onBackPressedSupport(): Boolean {
@@ -765,37 +766,6 @@ class MainFragment2 : BaseFragment() {
 
         post {
             view?.findViewById<View>(R.id.wifi_error)?.visibility = View.VISIBLE
-        }
-    }
-
-    private fun showErrorBar() {
-        errorBar?.let { view ->
-            view.visibility = View.VISIBLE
-            if (isSupportVisible) {
-                view.alpha = 0f
-                view.animate()
-                    .alpha(1f)
-                    .setDuration(500)
-                    .start()
-            } else {
-                view.alpha = 1f
-            }
-        }
-    }
-
-    private fun hideErrorBar() {
-        errorBar?.let { view ->
-            if (isSupportVisible) {
-                view.animate()
-                    .alpha(0f)
-                    .setDuration(350)
-                    .withEndAction {
-                        view.visibility = View.GONE
-                    }
-                    .start()
-            } else {
-                view.visibility = View.GONE
-            }
         }
     }
 
@@ -906,13 +876,15 @@ class MainFragment2 : BaseFragment() {
             ))?.let { intent ->
 
             val status: Int = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            val isCharging: Boolean = status == BatteryManager.BATTERY_STATUS_CHARGING
-                || status == BatteryManager.BATTERY_STATUS_FULL
 
             // How are we charging?
             val chargePlug: Int = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
             val usbCharge: Boolean = chargePlug == BatteryManager.BATTERY_PLUGGED_USB
             val acCharge: Boolean = chargePlug == BatteryManager.BATTERY_PLUGGED_AC
+
+            val isCharging: Boolean =
+                (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL)
+                    && chargePlug == BatteryManager.BATTERY_PLUGGED_USB
 
             val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
             val scale: Int = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
@@ -980,26 +952,48 @@ class MainFragment2 : BaseFragment() {
         clock?.text = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
     }
 
+    override fun scrollToNext(): Boolean {
+        viewPager?.let {
+            if (it.currentItem < (adapter?.itemCount ?: 0) - 1) {
+                it.setCurrentItem(it.currentItem + 1, true)
+            }
+            return true
+        } ?: return false
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        viewPager?.let {
+            if (it.currentItem > 0) {
+                it.setCurrentItem(it.currentItem - 1, true)
+            }
+            return true
+        } ?: return false
+    }
+
     fun startPlayerInfo() {
-        if (getTopFragment() is VideoFragment) {
-            startWithPop(PlayerInfoFragment2())
-        } else {
-            start(PlayerInfoFragment2())
+        val topFragment = getTopFragment()
+        if (topFragment is VideoFragment) {
+            pop()
+            extraTransaction().startDontHideSelf(PlayerInfoFragment2(), ISupportFragment.SINGLETOP)
+        } else if (topFragment !is PlayerInfoFragment2) {
+            extraTransaction().startDontHideSelf(PlayerInfoFragment2(), ISupportFragment.SINGLETOP)
         }
     }
 
     fun startVideoPlayer() {
-        if (getTopFragment() is PlayerInfoFragment2) {
-            ContentStorage.get().playerInfo = null
+        if (ContentStorage.get().playerInfo != null) {
+            ContentStorage.get().savePlayInfo(null)
             ContentStorage.get().isMusicPlaying = false
-            launcher?.getService()?.getAudioPlayer()?.stop(AudioPlayer.TYPE_PLAYBACK)
             val intent = Intent(context, FloatingService::class.java).apply {
                 action = FloatingService.ACTION_UPDATE_MUSIC
             }
-            launcher?.startService(intent)
-            startWithPop(VideoFragment())
+            context?.startService(intent)
+        }
+        if (getTopFragment() is PlayerInfoFragment2) {
+            popTo(PlayerInfoFragment2::class.java, true)
+            start(VideoFragment(), ISupportFragment.SINGLETOP)
         } else {
-            start(VideoFragment())
+            start(VideoFragment(), ISupportFragment.SINGLETOP)
         }
     }
 

@@ -9,7 +9,7 @@ import com.iflytek.cyber.evs.sdk.utils.AppUtil
  * App操作模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/app_action.html#app%E6%93%8D%E4%BD%9C
  */
 abstract class AppAction {
-    val version = "1.0"
+    val version = "1.2"
 
     companion object {
         const val NAME_EXECUTE = "${Constant.NAMESPACE_APP_ACTION}.execute"
@@ -38,10 +38,12 @@ abstract class AppAction {
         const val KEY_END = "end"
         const val KEY_EXTRAS = "extras"
         const val KEY_FAILURE_CODE = "failure_code"
+        const val KEY_SUPPORTED_EXECUTE = "supported_execute"
 
         const val DATA_TYPE_ACTIVITY = "activity"
         const val DATA_TYPE_SERVICE = "service"
         const val DATA_TYPE_BROADCAST = "broadcast"
+        const val DATA_TYPE_EXIT = "exit"
 
         const val FAILURE_LEVEL_ACTION_UNSUPPORTED = 3
         const val FAILURE_LEVEL_APP_NOT_FOUND = 2
@@ -59,6 +61,8 @@ abstract class AppAction {
         codeMap.put(FAILURE_LEVEL_APP_NOT_FOUND, FAILURE_CODE_APP_NOT_FOUND)
         codeMap.put(FAILURE_LEVEL_INTERNAL_ERROR, FAILURE_CODE_INTERNAL_ERROR)
     }
+
+    abstract fun getSupportedExecute(): List<String>
 
     /**
      * 检测设备端对云端actions的支持情况。

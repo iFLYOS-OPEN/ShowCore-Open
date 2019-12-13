@@ -10,19 +10,21 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iflytek.cyber.evs.sdk.agent.Alarm
 import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.adapter.AlarmAdapter
 import com.iflytek.cyber.iot.show.core.api.AlarmApi
+import com.iflytek.cyber.iot.show.core.impl.alarm.EvsAlarm
 import com.iflytek.cyber.iot.show.core.model.Alert
 import com.iflytek.cyber.iot.show.core.model.Message
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class AlarmFragment : BaseFragment() {
+class AlarmFragment : BaseFragment(), PageScrollable {
 
     private lateinit var tvSetAlarmTips: TextView
     private lateinit var tvEmptyTips: TextView
@@ -32,7 +34,17 @@ class AlarmFragment : BaseFragment() {
 
     private var shouldUpdateAlarm = false
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+
+        EvsAlarm.get(context).addOnAlarmUpdatedListener(onAlarmUpdatedListener)
+    }
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return LayoutInflater.from(context).inflate(R.layout.fragment_alarm, container, false)
     }
 
@@ -57,21 +69,29 @@ class AlarmFragment : BaseFragment() {
             start(EditAlarmFragment.instance(it))
         }, { alert, position ->
             AlertDialog.Builder(alarmList.context)
-                    .setMessage("您确定删除闹钟吗？")
-                    .setPositiveButton("确定") { dialog, which ->
-                        deleteAlarm(alert, position)
-                    }
-                    .setNegativeButton("取消", null)
-                    .show()
+                .setMessage("您确定删除闹钟吗？")
+                .setPositiveButton("确定") { dialog, which ->
+                    deleteAlarm(alert, position)
+                }
+                .setNegativeButton("取消", null)
+                .show()
         })
         alarmList.adapter = alarmAdapter
 
         getAlerts()
+
+        setFragmentResult(0, bundleOf(Pair("shouldUpdateAlarm", false)))
     }
 
-    override fun onSupportVisible() {
-        super.onSupportVisible()
-        launcher?.getService()?.getAlarm()?.setOnAlarmUpdatedListener(onAlarmUpdatedListener)
+    override fun onDestroy() {
+        super.onDestroy()
+
+        EvsAlarm.get(context).removeOnAlarmUpdatedListener(onAlarmUpdatedListener)
+    }
+
+    override fun onBackPressedSupport(): Boolean {
+        setFragmentResult(0, bundleOf(Pair("shouldUpdateAlarm", shouldUpdateAlarm)))
+        return super.onBackPressedSupport()
     }
 
     private fun deleteAlarm(alert: Alert, position: Int) {
@@ -97,7 +117,10 @@ class AlarmFragment : BaseFragment() {
                 t.printStackTrace()
             }
 
-            override fun onResponse(call: Call<ArrayList<Alert>>, response: Response<ArrayList<Alert>>) {
+            override fun onResponse(
+                call: Call<ArrayList<Alert>>,
+                response: Response<ArrayList<Alert>>
+            ) {
                 if (response.isSuccessful) {
                     val items = response.body()
                     items?.let {
@@ -117,6 +140,33 @@ class AlarmFragment : BaseFragment() {
                 }
             }
         })
+    }
+
+    override fun scrollToNext(): Boolean {
+        alarmList.let { recyclerView ->
+            val lastItem =
+                (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
+            val itemCount = alarmAdapter.itemCount
+            if (lastItem == itemCount - 1 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, recyclerView.height)
+            }
+        }
+        return true
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        alarmList.let { recyclerView ->
+            val scrollY = recyclerView.computeVerticalScrollOffset()
+            val itemCount = alarmAdapter.itemCount
+            if (scrollY == 0 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, -recyclerView.height)
+            }
+        }
+        return true
     }
 
     private val onAlarmUpdatedListener = object : Alarm.OnAlarmUpdatedListener {

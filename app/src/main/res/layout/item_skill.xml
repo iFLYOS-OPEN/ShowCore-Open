@@ -23,18 +23,20 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/dp_15"
-            android:layout_marginTop="@dimen/dp_18"
+            android:layout_marginTop="@dimen/dp_16"
             android:textColor="#262626"
             android:textSize="@dimen/sp_20"
             tools:text="查天气" />
 
-        <TextView
+        <androidx.appcompat.widget.AppCompatTextView
             android:id="@+id/tv_description"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginStart="@dimen/dp_15"
             android:layout_marginTop="@dimen/dp_6"
-            android:layout_marginBottom="@dimen/dp_18"
+            android:layout_marginBottom="@dimen/dp_16"
+            android:ellipsize="end"
+            android:maxLines="2"
             android:textSize="@dimen/sp_16" />
 
     </LinearLayout>
@@ -43,15 +45,17 @@
         android:id="@+id/iv_skill_icon"
         android:layout_width="@dimen/dp_55"
         android:layout_height="@dimen/dp_55"
-        android:layout_gravity="end|center_vertical"
+        android:layout_gravity="end"
+        android:layout_marginTop="@dimen/dp_16"
         android:layout_marginEnd="@dimen/dp_16"
         android:scaleType="centerCrop" />
 
     <ImageView
-        android:layout_width="@dimen/dp_56"
-        android:layout_height="@dimen/dp_56"
-        android:layout_gravity="end|center_vertical"
+        android:layout_width="@dimen/dp_55"
+        android:layout_height="@dimen/dp_55"
+        android:layout_gravity="end"
+        android:layout_marginTop="@dimen/dp_16"
         android:layout_marginEnd="@dimen/dp_16"
-        android:src="@drawable/ic_border" />
-
+        android:background="@drawable/bg_border_8dp"
+        android:scaleType="centerCrop" />
 </androidx.cardview.widget.CardView>

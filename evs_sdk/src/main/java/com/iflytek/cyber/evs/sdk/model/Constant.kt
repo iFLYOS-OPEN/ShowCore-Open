@@ -23,4 +23,5 @@ internal object Constant {
     const val NAMESPACE_SCREEN = "screen"
     const val NAMESPACE_TEMPLATE = "template"
     const val NAMESPACE_VIDEO_PLAYER = "video_player"
+    const val NAMESPACE_WAKE_WORD = "wakeword"
 }

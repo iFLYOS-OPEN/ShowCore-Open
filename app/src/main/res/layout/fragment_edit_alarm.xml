@@ -5,7 +5,8 @@
     android:id="@+id/drawer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/alarm_background">
+    android:background="@color/alarm_background"
+    android:theme="@style/AppTheme.Dark">
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -13,18 +14,27 @@
 
         <FrameLayout
             android:id="@+id/toolbar"
+            android:background="#01000000"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-            <ImageView
+            <LinearLayout
                 android:id="@+id/iv_back"
-                android:layout_width="@dimen/dp_24"
-                android:layout_height="@dimen/dp_24"
-                android:layout_marginStart="@dimen/dp_32"
-                android:layout_marginTop="@dimen/dp_16"
-                android:layout_marginBottom="@dimen/dp_16"
-                android:src="@drawable/ic_page_back_black_24dp"
-                android:tint="@android:color/white" />
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_64"
+                android:background="?selectableItemBackgroundBorderless"
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_32"
+                android:paddingEnd="@dimen/dp_16">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_page_back_black_24dp"
+                    android:tint="@android:color/white" />
+
+            </LinearLayout>
 
             <TextView
                 android:id="@+id/tv_title"

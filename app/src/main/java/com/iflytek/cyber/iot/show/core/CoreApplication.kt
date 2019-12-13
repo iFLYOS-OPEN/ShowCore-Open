@@ -3,6 +3,11 @@ package com.iflytek.cyber.iot.show.core
 import android.content.Context
 import androidx.multidex.MultiDexApplication
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
+import com.kk.taurus.exoplayer.ExoMediaPlayer
+import com.kk.taurus.ijkplayer.IjkPlayer
+import com.kk.taurus.playerbase.config.PlayerConfig
+import com.kk.taurus.playerbase.config.PlayerLibrary
+import com.kk.taurus.playerbase.entity.DecoderPlan
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -17,6 +22,8 @@ class CoreApplication : MultiDexApplication() {
     private var apis: HashMap<Class<out Any>, Any> = HashMap()
 
     companion object {
+        private const val PLAN_ID_IJK = 1
+        private const val PLAN_ID_EXO = 2
 
         fun from(context: Context): CoreApplication {
             return context.applicationContext as CoreApplication
@@ -49,6 +56,30 @@ class CoreApplication : MultiDexApplication() {
             .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
+
+        PlayerConfig.addDecoderPlan(
+            DecoderPlan(
+                PLAN_ID_IJK,
+                IjkPlayer::class.java.name,
+                "IjkPlayer"
+            )
+        )
+        PlayerConfig.addDecoderPlan(
+            DecoderPlan(
+                PLAN_ID_EXO,
+                ExoMediaPlayer::class.java.name,
+                "ExoMediaPlayer"
+            )
+        )
+        // 这里可以选择视频播放使用的默认解码方案
+        // * EXO 方案更节省算力，低配置机器建议使用
+        // * IJK 方案支持更全的视频编码，中高配机器建议使用
+        PlayerConfig.setDefaultPlanId(PLAN_ID_IJK)
+        PlayerConfig.setUseDefaultNetworkEventProducer(true)
+
+        PlayerLibrary.init(this)
+        IjkPlayer.init(this)
+        ExoMediaPlayer.init(this)
     }
 
     private fun getNetworkInterceptor(): Interceptor {

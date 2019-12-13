@@ -75,10 +75,9 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/dp_1"
             android:layout_gravity="bottom"
-            android:alpha="0.1"
-            android:background="@android:color/black" />
+            android:background="@color/divider_line" />
 
     </FrameLayout>
 
@@ -94,6 +93,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             app:hintEnabled="false"
+            app:passwordToggleDrawable="@drawable/ic_password_toggle"
             app:passwordToggleEnabled="true">
 
             <com.google.android.material.textfield.TextInputEditText
@@ -108,10 +108,9 @@
 
         <View
             android:layout_width="match_parent"
-            android:layout_height="1dp"
+            android:layout_height="@dimen/dp_1"
             android:layout_gravity="bottom"
-            android:alpha="0.1"
-            android:background="@android:color/black" />
+            android:background="@color/divider_line" />
 
     </FrameLayout>
 </LinearLayout>

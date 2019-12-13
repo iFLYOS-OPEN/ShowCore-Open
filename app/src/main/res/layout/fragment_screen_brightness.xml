@@ -41,10 +41,12 @@
     </LinearLayout>
 
     <ScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <LinearLayout
+            android:id="@+id/content_container"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
@@ -97,12 +99,60 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginBottom="@dimen/dp_12"
-                    android:text="@string/auto_lock" />
+                    android:text="@string/power_save_mode" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/one_min_sleep"
+                        android:layout_width="@dimen/dp_0"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/dp_8"
+                        android:layout_weight="1"
+                        android:background="@drawable/sleep_item_selector"
+                        android:gravity="center"
+                        android:paddingStart="@dimen/dp_20"
+                        android:paddingTop="@dimen/dp_16"
+                        android:paddingEnd="@dimen/dp_20"
+                        android:paddingBottom="@dimen/dp_16"
+                        android:text="1分钟"
+                        android:textColor="@color/sleep_item_color_selector"
+                        android:textSize="@dimen/sp_14" />
+
+                    <TextView
+                        android:id="@+id/two_min_sleep"
+                        android:layout_width="@dimen/dp_0"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/dp_8"
+                        android:layout_weight="1"
+                        android:background="@drawable/sleep_item_selector"
+                        android:gravity="center"
+                        android:paddingStart="@dimen/dp_20"
+                        android:paddingTop="@dimen/dp_16"
+                        android:paddingEnd="@dimen/dp_20"
+                        android:paddingBottom="@dimen/dp_16"
+                        android:text="2分钟"
+                        android:textColor="@color/sleep_item_color_selector"
+                        android:textSize="@dimen/sp_14" />
+
+                    <TextView
+                        android:id="@+id/five_min_sleep"
+                        android:layout_width="@dimen/dp_0"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="@dimen/dp_8"
+                        android:layout_weight="1"
+                        android:background="@drawable/sleep_item_selector"
+                        android:gravity="center"
+                        android:paddingStart="@dimen/dp_20"
+                        android:paddingTop="@dimen/dp_16"
+                        android:paddingEnd="@dimen/dp_20"
+                        android:paddingBottom="@dimen/dp_16"
+                        android:text="5分钟"
+                        android:textColor="@color/sleep_item_color_selector"
+                        android:textSize="@dimen/sp_14" />
 
                     <TextView
                         android:id="@+id/ten_min_sleep"
@@ -116,55 +166,7 @@
                         android:paddingTop="@dimen/dp_16"
                         android:paddingEnd="@dimen/dp_20"
                         android:paddingBottom="@dimen/dp_16"
-                        android:text="10分钟后"
-                        android:textColor="@color/sleep_item_color_selector"
-                        android:textSize="@dimen/sp_14" />
-
-                    <TextView
-                        android:id="@+id/twenty_min_sleep"
-                        android:layout_width="@dimen/dp_0"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/dp_8"
-                        android:layout_weight="1"
-                        android:background="@drawable/sleep_item_selector"
-                        android:gravity="center"
-                        android:paddingStart="@dimen/dp_20"
-                        android:paddingTop="@dimen/dp_16"
-                        android:paddingEnd="@dimen/dp_20"
-                        android:paddingBottom="@dimen/dp_16"
-                        android:text="20分钟后"
-                        android:textColor="@color/sleep_item_color_selector"
-                        android:textSize="@dimen/sp_14" />
-
-                    <TextView
-                        android:id="@+id/half_hour_sleep"
-                        android:layout_width="@dimen/dp_0"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/dp_8"
-                        android:layout_weight="1"
-                        android:background="@drawable/sleep_item_selector"
-                        android:gravity="center"
-                        android:paddingStart="@dimen/dp_20"
-                        android:paddingTop="@dimen/dp_16"
-                        android:paddingEnd="@dimen/dp_20"
-                        android:paddingBottom="@dimen/dp_16"
-                        android:text="30分钟后"
-                        android:textColor="@color/sleep_item_color_selector"
-                        android:textSize="@dimen/sp_14" />
-
-                    <TextView
-                        android:id="@+id/hour_sleep"
-                        android:layout_width="@dimen/dp_0"
-                        android:layout_height="wrap_content"
-                        android:layout_marginEnd="@dimen/dp_8"
-                        android:layout_weight="1"
-                        android:background="@drawable/sleep_item_selector"
-                        android:gravity="center"
-                        android:paddingStart="@dimen/dp_20"
-                        android:paddingTop="@dimen/dp_16"
-                        android:paddingEnd="@dimen/dp_20"
-                        android:paddingBottom="@dimen/dp_16"
-                        android:text="1小时后"
+                        android:text="10分钟"
                         android:textColor="@color/sleep_item_color_selector"
                         android:textSize="@dimen/sp_14" />
 
@@ -196,48 +198,6 @@
                     tools:text="若 10分钟后 不通过语音或触控与设备交互，设备自动进入息屏状态" />
 
             </LinearLayout>
-
-            <FrameLayout
-                android:id="@+id/switch_screen_timeout_content"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/dp_48">
-
-                <LinearLayout
-                    android:id="@+id/applicable_time"
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_72"
-                    android:gravity="center_vertical"
-                    android:orientation="horizontal"
-                    android:paddingStart="@dimen/dp_40"
-                    android:paddingEnd="@dimen/dp_40">
-
-                    <TextView
-                        style="@style/H4"
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:text="@string/applicable_time" />
-
-                    <TextView
-                        android:id="@+id/applicable_time_value"
-                        style="@style/Body16.Grey"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="22:00~7:00" />
-
-                </LinearLayout>
-
-                <View
-                    android:layout_width="match_parent"
-                    android:layout_height="@dimen/dp_1"
-                    android:layout_gravity="bottom"
-                    android:layout_marginStart="@dimen/dp_40"
-                    android:layout_marginEnd="@dimen/dp_40"
-                    android:alpha="0.1"
-                    android:background="@android:color/black" />
-
-            </FrameLayout>
 
         </LinearLayout>
     </ScrollView>

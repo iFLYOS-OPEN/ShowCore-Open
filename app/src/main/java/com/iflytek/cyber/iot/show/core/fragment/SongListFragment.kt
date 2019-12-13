@@ -1,9 +1,10 @@
 package com.iflytek.cyber.iot.show.core.fragment
 
+import android.app.Activity
 import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,16 +15,18 @@ import androidx.core.os.bundleOf
 import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
 import androidx.core.view.postDelayed
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
-import com.bumptech.glide.request.RequestOptions
 import com.google.gson.Gson
+import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
+import com.iflytek.cyber.evs.sdk.socket.Result
 import com.iflytek.cyber.iot.show.core.CoreApplication
+import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.FloatingService
 import com.iflytek.cyber.iot.show.core.R
-import com.iflytek.cyber.iot.show.core.adapter.AlbumAdapter
 import com.iflytek.cyber.iot.show.core.adapter.SongListAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
 import com.iflytek.cyber.iot.show.core.model.Error
@@ -32,24 +35,37 @@ import com.iflytek.cyber.iot.show.core.model.SongItem
 import com.iflytek.cyber.iot.show.core.model.SongList
 import com.iflytek.cyber.iot.show.core.utils.RoundedCornersTransformation
 import com.iflytek.cyber.iot.show.core.utils.onLoadMore
-import com.iflytek.cyber.iot.show.core.widget.RatioImageView
 import com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+import com.iflytek.cyber.iot.show.core.widget.StyledQRCodeDialog
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.net.UnknownHostException
+import kotlin.math.max
+import kotlin.math.min
 
-class SongListFragment : BaseFragment() {
+class SongListFragment : BaseFragment(), PageScrollable {
 
     companion object {
 
-        private const val LIMIT = 20
+        const val LIMIT = 20
 
         fun instance(id: String, title: String, typeName: String?): SongListFragment {
             return SongListFragment().apply {
                 arguments = bundleOf(
-                        Pair("id", id),
-                        Pair("title", title),
-                        Pair("name", typeName))
+                    Pair("id", id),
+                    Pair("title", title),
+                    Pair("name", typeName)
+                )
+            }
+        }
+
+        fun instance(songList: SongList, typeName: String?): SongListFragment {
+            return SongListFragment().apply {
+                arguments = bundleOf(
+                    Pair("song_list", songList),
+                    Pair("name", typeName)
+                )
             }
         }
     }
@@ -62,7 +78,9 @@ class SongListFragment : BaseFragment() {
     private lateinit var rectangleContent: ShadowLayout
     private lateinit var rectangleCover: ImageView
 
-    private var songListAdapter: SongListAdapter? = null
+    private var songListAdapter = SongListAdapter {
+        playMusic(it)
+    }
 
     private var page = 1
     private var isLoading = false
@@ -70,7 +88,11 @@ class SongListFragment : BaseFragment() {
     private var audioId: String? = null
     private var name: String? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return LayoutInflater.from(context).inflate(R.layout.fragment_song_list, container, false)
     }
 
@@ -88,37 +110,66 @@ class SongListFragment : BaseFragment() {
         rectangleContent = view.findViewById(R.id.rectangle_content)
         rectangleCover = view.findViewById(R.id.rectangle_cover)
 
-        val id = arguments?.getString("id")
-        val title = arguments?.getString("title")
         name = arguments?.getString("name")
-        tvTitle.text = title
-
-        if (TextUtils.equals(name, "视频")) {
-            squareContent.isVisible = false
-            rectangleContent.isInvisible = true
-        } else {
-            squareContent.isInvisible = true
-            rectangleContent.isVisible = false
-        }
-
-        songList.postDelayed(200) {
-            id?.let { getSongList(id, true) }
-        }
 
         songListAdapter = SongListAdapter {
             playMusic(it)
         }
         songList.adapter = songListAdapter
 
-        songList.onLoadMore {
-            if (!isLoading && hasMoreResult && songListAdapter!!.itemCount >= LIMIT) {
-                page += 1
-                id?.let { getSongList(id, false) }
+        val songListData = arguments?.getParcelable<SongList>("song_list")
+        if (songListData != null) {
+            audioId = songListData.id
+            songList.onLoadMore {
+                if (!isLoading && hasMoreResult && songListAdapter.itemCount >= LIMIT) {
+                    page += 1
+                    songListData.id?.let { id -> getSongList(id, false) }
+                }
+            }
+            setupUI(songListData)
+
+            tvTitle.text = songListData.name
+
+            if (songListAdapter.itemCount > 1 && songListData.items.size == 0) {
+                hasMoreResult = false
+            }
+
+            songListAdapter.items.clear()
+            songListAdapter.items.addAll(songListData.items)
+
+            if (songListAdapter.items.size < LIMIT) {
+                songListAdapter.loadingFinish(true)
+            }
+        } else {
+            val id = arguments?.getString("id")
+            val title = arguments?.getString("title")
+            tvTitle.text = title
+
+            if (TextUtils.equals(name, "视频")) {
+                squareContent.isVisible = false
+                rectangleContent.isInvisible = true
+            } else {
+                squareContent.isInvisible = true
+                rectangleContent.isVisible = false
+            }
+
+            songList.postDelayed(200) {
+                id?.let { getSongList(id, true) }
+            }
+            songList.onLoadMore {
+                if (!isLoading && hasMoreResult && songListAdapter.itemCount >= LIMIT) {
+                    page += 1
+                    id?.let { getSongList(id, false) }
+                }
             }
         }
+
     }
 
     private fun setupUI(songList: SongList) {
+        val context = context ?: return
+        if ((context as? Activity)?.isDestroyed == true)
+            return
         if (TextUtils.equals(name, "视频")) {
             squareContent.isVisible = false
             rectangleContent.isVisible = true
@@ -129,20 +180,21 @@ class SongListFragment : BaseFragment() {
 
         tvSource.text = songList.from
         val transformer = MultiTransformation(
-                CenterCrop(),
-                RoundedCornersTransformation(
-                        ivCover.context.resources.getDimensionPixelSize(R.dimen.dp_6), 0)
+            CenterCrop(),
+            RoundedCornersTransformation(
+                ivCover.context.resources.getDimensionPixelSize(R.dimen.dp_6), 0
+            )
         )
 
-        Glide.with(ivCover)
-                .load(songList.image)
-                .transform(transformer)
-                .into(ivCover)
+        Glide.with(context)
+            .load(songList.image)
+            .transform(transformer)
+            .into(ivCover)
 
-        Glide.with(rectangleCover)
-                .load(songList.image)
-                .transform(transformer)
-                .into(rectangleCover)
+        Glide.with(context)
+            .load(songList.image)
+            .transform(transformer)
+            .into(rectangleCover)
     }
 
     private fun getSongList(id: String, clear: Boolean) {
@@ -163,26 +215,26 @@ class SongListFragment : BaseFragment() {
                             setupUI(it)
                         }
 
-                        if (songListAdapter?.itemCount ?: 0 > 1 && songList.items.size == 0) {
+                        if (songListAdapter.itemCount > 1 && songList.items.size == 0) {
                             hasMoreResult = false
                         }
 
                         if (clear) {
-                            songListAdapter?.items?.clear()
-                            songListAdapter?.items?.addAll(songList.items)
+                            songListAdapter.items.clear()
+                            songListAdapter.items.addAll(songList.items)
                         } else {
                             if (songList.items.size > 0) {
-                                songListAdapter?.items?.addAll(songList.items)
+                                songListAdapter.items.addAll(songList.items)
                             } else {
-                                songListAdapter?.loadingFinish(true)
+                                songListAdapter.loadingFinish(true)
                             }
                         }
 
-                        if (songListAdapter?.items?.size ?: 0 < LIMIT) {
-                            songListAdapter?.loadingFinish(true)
+                        if (songListAdapter.items.size < LIMIT) {
+                            songListAdapter.loadingFinish(true)
                         }
 
-                        songListAdapter?.notifyDataSetChanged()
+                        songListAdapter.notifyDataSetChanged()
                     }
                 }
             }
@@ -197,11 +249,20 @@ class SongListFragment : BaseFragment() {
         getMediaApi()?.playMusic(body)?.enqueue(object : Callback<String> {
             override fun onFailure(call: Call<String>, t: Throwable) {
                 t.printStackTrace()
+
+                if (t is UnknownHostException) {
+                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                    intent.putExtra(
+                        EngineService.EXTRA_RESULT,
+                        Result(Result.CODE_DISCONNECTED, null)
+                    )
+                    context?.sendBroadcast(intent)
+                }
             }
 
             override fun onResponse(call: Call<String>, response: Response<String>) {
                 if (response.isSuccessful) {
-                    songListAdapter?.notifyDataSetChanged()
+                    songListAdapter.notifyDataSetChanged()
                     Toast.makeText(context, "播放${item.name}", Toast.LENGTH_SHORT).show()
                 } else {
                     showError(response.errorBody()?.string())
@@ -213,32 +274,57 @@ class SongListFragment : BaseFragment() {
     private fun showError(errorStr: String?) {
         try {
             val error = Gson().fromJson(errorStr, Error::class.java)
-            val intent = Intent(context, FloatingService::class.java)
-            intent.action = FloatingService.ACTION_SHOW_NOTIFICATION
-            intent.putExtra(FloatingService.EXTRA_MESSAGE, error.message)
-            intent.putExtra(FloatingService.EXTRA_POSITIVE_BUTTON_TEXT, "我知道了")
-            context?.startService(intent)
+            if (error.redirectUrl.isNullOrEmpty()) {
+                val intent = Intent(context, FloatingService::class.java)
+                intent.action = FloatingService.ACTION_SHOW_NOTIFICATION
+                intent.putExtra(FloatingService.EXTRA_MESSAGE, error.message)
+                intent.putExtra(FloatingService.EXTRA_POSITIVE_BUTTON_TEXT, "我知道了")
+                context?.startService(intent)
+            } else {
+                val context = context ?: return
+                val uri = Uri.parse(error.redirectUrl)
+                val codeUrl = uri.buildUpon()
+                    .appendQueryParameter(
+                        "token",
+                        AuthDelegate.getAuthResponseFromPref(context)?.accessToken
+                    )
+                    .build()
+                    .toString()
+                StyledQRCodeDialog.Builder()
+                    .setTitle(error.message)
+                    .setMessage(getString(R.string.scan_qrcode_to_continue))
+                    .setCode(codeUrl)
+                    .setButton(getString(R.string.close), null)
+                    .show(fragmentManager)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
     private fun playAll() {
-        if (audioId == null) {
-            return
-        }
-        val body = MusicBody(audioId!!.toInt(), null, null)
+        val audioId = audioId ?: return
+        val body = MusicBody(audioId.toInt(), null, null)
         getMediaApi()?.playMusic(body)?.enqueue(object : Callback<String> {
             override fun onFailure(call: Call<String>, t: Throwable) {
                 t.printStackTrace()
+
+                if (t is UnknownHostException) {
+                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                    intent.putExtra(
+                        EngineService.EXTRA_RESULT,
+                        Result(Result.CODE_DISCONNECTED, null)
+                    )
+                    context?.sendBroadcast(intent)
+                }
             }
 
             override fun onResponse(call: Call<String>, response: Response<String>) {
                 if (response.isSuccessful) {
-                    songListAdapter?.notifyDataSetChanged()
-                    if ((songListAdapter?.items?.isNullOrEmpty() == false) && songListAdapter?.items?.get(0) != null) {
-                        val item = songListAdapter?.items?.get(0)
-                        Toast.makeText(context, "播放${item?.name}", Toast.LENGTH_SHORT).show()
+                    songListAdapter.notifyDataSetChanged()
+                    if (!songListAdapter.items.isNullOrEmpty()) {
+                        val item = songListAdapter.items[0]
+                        Toast.makeText(context, "播放${item.name}", Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     showError(response.errorBody()?.string())
@@ -249,7 +335,7 @@ class SongListFragment : BaseFragment() {
 
     override fun onSupportVisible() {
         super.onSupportVisible()
-        songListAdapter?.notifyDataSetChanged()
+        songListAdapter.notifyDataSetChanged()
     }
 
     private fun getMediaApi(): MediaApi? {
@@ -258,5 +344,33 @@ class SongListFragment : BaseFragment() {
         } else {
             null
         }
+    }
+
+    override fun scrollToNext(): Boolean {
+        songList.let { recyclerView ->
+            val lastItem =
+                (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
+            val itemCount = songListAdapter.itemCount
+            if (lastItem == itemCount - 1 || itemCount == 0
+            ) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, recyclerView.height)
+            }
+        }
+        return true
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        songList.let { recyclerView ->
+            val scrollY = recyclerView.computeVerticalScrollOffset()
+            val itemCount = songListAdapter.itemCount
+            if (scrollY == 0 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, -recyclerView.height)
+            }
+        }
+        return true
     }
 }

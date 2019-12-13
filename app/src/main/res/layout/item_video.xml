@@ -1,22 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="@dimen/dp_104"
     android:background="?selectableItemBackground"
-    android:orientation="horizontal">
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="horizontal"
+    android:theme="@style/AppTheme">
 
     <ImageView
         android:id="@+id/iv_video_cover"
         android:layout_width="@dimen/dp_120"
         android:layout_height="@dimen/dp_80"
-        android:layout_marginStart="@dimen/dp_12"
+        android:layout_marginStart="@dimen/dp_16"
         android:layout_marginTop="@dimen/dp_12"
         android:layout_marginBottom="@dimen/dp_12" />
-    
+
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:layout_marginStart="@dimen/dp_136">
 
         <TextView
             android:id="@+id/tv_video_desc"
@@ -42,8 +46,13 @@
             android:textColor="@color/semi_black"
             android:textSize="@dimen/sp_18"
             android:visibility="gone"
-            tools:text="第3期 王力宏错失美女学员痛哭"/>
+            tools:text="第3期 王力宏错失美女学员痛哭" />
 
     </FrameLayout>
 
-</LinearLayout>
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_1"
+        android:layout_gravity="bottom"
+        android:background="@color/divider_line" />
+</FrameLayout>

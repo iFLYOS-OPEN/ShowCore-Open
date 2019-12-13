@@ -29,6 +29,7 @@ import java.security.MessageDigest
 import java.security.NoSuchAlgorithmException
 import java.util.*
 import kotlin.collections.HashSet
+import kotlin.math.roundToInt
 
 /**
  * 一个简易的检查更新服务
@@ -37,11 +38,15 @@ class OtaService : Service() {
     companion object {
         const val ACTION_REQUEST_CHECKING = "com.iflytek.cyber.product.ota.action.REQUEST_CHECKING"
         const val ACTION_START_SERVICE = "com.iflytek.cyber.product.ota.action.START_SERVICE"
-        const val ACTION_NEW_UPDATE_DOWNLOADED = "com.iflytek.cyber.product.ota.action.NEW_UPDATE_DOWNLOADED"
+        const val ACTION_NEW_UPDATE_DOWNLOADED =
+            "com.iflytek.cyber.product.ota.action.NEW_UPDATE_DOWNLOADED"
         const val ACTION_NO_UPDATE_FOUND = "com.iflytek.cyber.product.ota.action.NO_UPDATE_FOUND"
-        const val ACTION_CHECK_UPDATE_FAILED = "com.iflytek.cyber.product.ota.action.CHECK_UPDATE_FAILED"
-        const val ACTION_NEW_UPDATE_DOWNLOAD_STARTED = "com.iflytek.cyber.product.ota.action.NEW_UPDATE_DOWNLOAD_STARTED"
-        const val ACTION_CHECK_UPDATE_RESULT = "com.iflytek.cyber.product.ota.action.CHECK_UPDATE_RESULT"
+        const val ACTION_CHECK_UPDATE_FAILED =
+            "com.iflytek.cyber.product.ota.action.CHECK_UPDATE_FAILED"
+        const val ACTION_NEW_UPDATE_DOWNLOAD_STARTED =
+            "com.iflytek.cyber.product.ota.action.NEW_UPDATE_DOWNLOAD_STARTED"
+        const val ACTION_CHECK_UPDATE_RESULT =
+            "com.iflytek.cyber.product.ota.action.CHECK_UPDATE_RESULT"
         const val ACTION_REQUEST_DOWNLOAD = "com.iflytek.cyber.product.ota.action.REQUEST_DOWNLOAD"
         private const val TAG = "OtaService"
         private const val OTA_URL = "https://ota.iflyos.cn"
@@ -112,10 +117,17 @@ class OtaService : Service() {
             val timestamp = System.currentTimeMillis() / 1000
             val nonce = (Math.random() * 10000).toInt().toString()
 
-            val signature = sha1(String.format(Locale.US, "%s:%s:%s:%s:%s",
-                clientId, deviceId, timestamp, nonce, clientSecret))
+            val signature = sha1(
+                String.format(
+                    Locale.US, "%s:%s:%s:%s:%s",
+                    clientId, deviceId, timestamp, nonce, clientSecret
+                )
+            )
 
-            Log.d(TAG, "Using deviceId: $deviceId, clientId: $clientId, clientSecret: $clientSecret, versionId: $versionId")
+            Log.d(
+                TAG,
+                "Using deviceId: $deviceId, clientId: $clientId, clientSecret: $clientSecret, versionId: $versionId"
+            )
             val request = chain.request()
                 .newBuilder()
                 .addHeader("X-Client-ID", clientId.toString())
@@ -176,9 +188,31 @@ class OtaService : Service() {
     }
 
     private fun downloadFile(id: Long, url: String) {
-        downloadingId = id
-
         val filePath = getUrlDownloadedPath(url)
+
+        // 删除旧的固件包
+        run {
+            val directory = File(downloadPath)
+            if (directory.exists()) {
+                if (directory.isDirectory) {
+                    directory.listFiles().map { file ->
+                        if (!file.isDirectory && filePath != file.path) {
+                            val result = file.delete()
+                            Log.v(TAG, "find unnecessary file $file, delete it: $result")
+                        }
+                    }
+                } else {
+                    directory.delete()
+                    val result = directory.mkdirs()
+                    Log.v(TAG, "OTA downloadPath is not directory. Re-creating directory: $result")
+                }
+            } else {
+                val result = directory.mkdirs()
+                Log.v(TAG, "OTA downloadPath is not exists. Creating directory: $result")
+            }
+        }
+
+        downloadingId = id
         val file = File(filePath)
         var ifNeedNewFile: Boolean
         if (file.exists()) {
@@ -212,6 +246,7 @@ class OtaService : Service() {
         }
         if (ifNeedNewFile) {
             file.createNewFile()
+            Log.d(TAG, "Download OTA file task started. url: $url, file: ${file.path}")
             sendBroadcast(Intent(ACTION_NEW_UPDATE_DOWNLOAD_STARTED))
             Thread {
                 var cacheInput: InputStream? = null
@@ -254,7 +289,10 @@ class OtaService : Service() {
 
                             downloadProgressCallbacks.map {
                                 try {
-                                    it.onDownloadProgress(id, (100f * totalRead / contentLength).toInt())
+                                    it.onDownloadProgress(
+                                        id,
+                                        (100f * totalRead / contentLength).roundToInt()
+                                    )
                                 } catch (t: Throwable) {
                                     t.printStackTrace()
                                 }
@@ -313,7 +351,10 @@ class OtaService : Service() {
                 sendBroadcast(Intent(ACTION_CHECK_UPDATE_FAILED))
             }
 
-            override fun onResponse(call: Call<List<PackageEntityNew>>, response: Response<List<PackageEntityNew>>) {
+            override fun onResponse(
+                call: Call<List<PackageEntityNew>>,
+                response: Response<List<PackageEntityNew>>
+            ) {
                 if (response.isSuccessful) {
                     val body = response.body()
 
@@ -361,11 +402,15 @@ class OtaService : Service() {
                 val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 val serviceIntent = Intent(this, OtaService::class.java)
                 serviceIntent.action = ACTION_REQUEST_CHECKING
-                serviceIntent.putExtra(EXTRA_DOWNLOAD_DIRECTLY, true)
-                val pendingIntent = PendingIntent.getService(this, 1000, serviceIntent,
-                    PendingIntent.FLAG_CANCEL_CURRENT)
-                alarmManager.set(AlarmManager.RTC_WAKEUP,
-                    System.currentTimeMillis() + CHECK_INTERVAL, pendingIntent)
+                serviceIntent.putExtra(EXTRA_DOWNLOAD_DIRECTLY, false)
+                val pendingIntent = PendingIntent.getService(
+                    this, 1000, serviceIntent,
+                    PendingIntent.FLAG_CANCEL_CURRENT
+                )
+                alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    System.currentTimeMillis() + CHECK_INTERVAL, pendingIntent
+                )
             }
             ACTION_START_SERVICE -> {
                 clientId = intent.getStringExtra(EXTRA_CLIENT_ID)
@@ -383,11 +428,15 @@ class OtaService : Service() {
                 val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
                 val serviceIntent = Intent(this, OtaService::class.java)
                 serviceIntent.action = ACTION_REQUEST_CHECKING
-                serviceIntent.putExtra(EXTRA_DOWNLOAD_DIRECTLY, true)
-                val pendingIntent = PendingIntent.getService(this, 1000, serviceIntent,
-                    PendingIntent.FLAG_CANCEL_CURRENT)
-                alarmManager.set(AlarmManager.RTC_WAKEUP,
-                    System.currentTimeMillis() + CHECK_INTERVAL, pendingIntent)
+                serviceIntent.putExtra(EXTRA_DOWNLOAD_DIRECTLY, false)
+                val pendingIntent = PendingIntent.getService(
+                    this, 1000, serviceIntent,
+                    PendingIntent.FLAG_CANCEL_CURRENT
+                )
+                alarmManager.set(
+                    AlarmManager.RTC_WAKEUP,
+                    System.currentTimeMillis() + CHECK_INTERVAL, pendingIntent
+                )
             }
             ACTION_REQUEST_DOWNLOAD -> {
                 val id = intent.getLongExtra(EXTRA_ID, -1L)

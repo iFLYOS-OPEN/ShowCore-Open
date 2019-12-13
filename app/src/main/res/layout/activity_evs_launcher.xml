@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -7,5 +9,60 @@
         android:id="@+id/fragment_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
+    <LinearLayout
+        android:id="@+id/error_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:alpha="0"
+        android:orientation="vertical"
+        android:visibility="gone"
+        tools:alpha="1"
+        tools:visibility="visible">
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_20"
+            android:background="@drawable/bg_error_bar" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_8"
+            android:background="#ff4d4d" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/welcome_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:alpha="0"
+        android:background="@android:color/white"
+        android:visibility="gone"
+        tools:alpha="1">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/H1"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/dp_16"
+                android:text="@string/welcome_using" />
+
+            <com.airbnb.lottie.LottieAnimationView
+                android:id="@+id/welcome_loading"
+                android:layout_width="@dimen/dp_48"
+                android:layout_height="@dimen/dp_48"
+                app:lottie_autoPlay="true"
+                app:lottie_rawRes="@raw/animation_loading_l" />
+        </LinearLayout>
+
+    </FrameLayout>
 
 </FrameLayout>

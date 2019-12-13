@@ -18,17 +18,17 @@ package com.iflytek.cyber.iot.show.core.widget
 
 import android.content.Context
 import android.graphics.Color
-import android.graphics.Paint
 import android.os.Build
 import android.text.Html
 import android.util.AttributeSet
 import androidx.appcompat.widget.AppCompatTextView
 import com.iflytek.cyber.iot.show.core.R
+import kotlin.math.max
 
 
 class HighlightTextView
-@JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0)
-    : AppCompatTextView(context, attrs, defStyleAttr) {
+@JvmOverloads constructor(context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0) :
+    AppCompatTextView(context, attrs, defStyleAttr) {
     private val timestampArray = ArrayList<Long>()
 
     private val textArray = ArrayList<String>()
@@ -51,7 +51,8 @@ class HighlightTextView
             attrs, R.styleable.HighlightTextView, 0, 0
         )
 
-        mHighlightColor = typedArray.getColor(R.styleable.HighlightTextView_highlightColor, mHighlightColor)
+        mHighlightColor =
+            typedArray.getColor(R.styleable.HighlightTextView_highlightColor, mHighlightColor)
         mNormalColor = typedArray.getColor(R.styleable.HighlightTextView_normalColor, mNormalColor)
 
         typedArray.recycle()
@@ -77,10 +78,18 @@ class HighlightTextView
         }
     }
 
+    fun isAnimationStarted(): Boolean {
+        return !animationStopped
+    }
+
     fun stopAnimation() {
+        if (!isAnimationStarted())
+            return
         animationStopped = true
         currentHighlightLine = -1
 
+        if (textArray.isEmpty())
+            return
         val stringBuilder = StringBuilder()
         textArray.mapIndexed { sIndex, s ->
             stringBuilder.append("<font color=${toHexColor(mHighlightColor)}>$s</font><br/>")
@@ -98,7 +107,7 @@ class HighlightTextView
             val value = timestampArray[index]
             if (position < value) {
                 if (currentHighlightLine != index) {
-                    val target = Math.max(0, index - 1)
+                    val target = max(0, index - 1)
 
                     this.currentHighlightLine = target
 
@@ -116,6 +125,11 @@ class HighlightTextView
                         Html.fromHtml(stringBuilder.toString())
                     }
                     text = htmlText
+                    val lineHeight = if (height <= 0) {
+                        lineHeight
+                    } else {
+                        height / lineCount
+                    }
                     onHighlightChangeListener?.onHighlightChange(this, target, target * lineHeight)
                     return
                 }

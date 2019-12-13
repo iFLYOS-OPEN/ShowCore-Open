@@ -21,13 +21,11 @@ package com.iflytek.cyber.iot.show.core.fragment
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
-import android.util.Log
 import android.view.View
 import android.view.animation.Animation
 import androidx.annotation.Nullable
 import androidx.fragment.app.Fragment
 import com.iflytek.cyber.iot.show.core.EvsLauncherActivity
-import com.iflytek.cyber.iot.show.core.task.SleepWorker
 import me.yokeyword.fragmentation.*
 import me.yokeyword.fragmentation.anim.FragmentAnimator
 
@@ -164,9 +162,6 @@ open class BaseFragment : Fragment(), ISupportFragment {
      */
     override fun onSupportVisible() {
         mDelegate.onSupportVisible()
-        if (context != null) {
-            SleepWorker.get(context!!).setCurrentTopFragment(getTopFragment())
-        }
     }
 
     /**

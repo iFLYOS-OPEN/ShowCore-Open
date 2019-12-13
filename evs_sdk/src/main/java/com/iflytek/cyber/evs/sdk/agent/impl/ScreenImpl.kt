@@ -1,5 +1,6 @@
 package com.iflytek.cyber.evs.sdk.agent.impl
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.provider.Settings
 import com.iflytek.cyber.evs.sdk.agent.Screen
@@ -19,7 +20,14 @@ class ScreenImpl(private val context: Context) : Screen() {
         return ScreenUtil.getBrightness(context)
     }
 
+    @SuppressLint("MissingPermission")
     override fun setBrightness(brightness: Long): Boolean {
-        return true
+        try {
+            ScreenUtil.setBrightness(context, brightness * 255 / 100)
+            return true
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
+        return false
     }
 }

@@ -1,17 +1,14 @@
 package com.iflytek.cyber.evs.sdk.agent.impl
 
-import android.content.Context
 import com.alibaba.fastjson.JSONObject
-import com.iflytek.cyber.evs.sdk.EvsService
-import com.iflytek.cyber.evs.sdk.RequestManager
 import com.iflytek.cyber.evs.sdk.agent.System
 
-class SystemImpl(private val context: Context) : System() {
+class SystemImpl : System() {
     override fun checkSoftWareUpdate() {
 
     }
 
-    override fun onPing(payload: JSONObject) {
+    override fun onPing(timestamp: Long) {
 
     }
 

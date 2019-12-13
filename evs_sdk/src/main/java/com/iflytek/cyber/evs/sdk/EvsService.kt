@@ -2,6 +2,10 @@ package com.iflytek.cyber.evs.sdk
 
 import android.app.Service
 import android.content.SharedPreferences
+import android.media.AudioAttributes
+import android.media.AudioManager
+import android.media.SoundPool
+import android.os.Build
 import android.os.Handler
 import android.os.HandlerThread
 import com.iflytek.cyber.evs.sdk.agent.*
@@ -15,6 +19,7 @@ import com.iflytek.cyber.evs.sdk.utils.AppUtil
 import com.iflytek.cyber.evs.sdk.utils.Log
 import java.lang.Exception
 import kotlin.IllegalArgumentException
+import kotlin.math.roundToInt
 
 /**
  * EVS服务抽象类，需要派生出具体类来使用EVS服务。
@@ -42,6 +47,7 @@ abstract class EvsService : Service() {
     private lateinit var system: System
     private var template: Template? = null
     private var videoPlayer: VideoPlayer? = null
+    private var wakeWord: WakeWord? = null
 
     private var externalAudioFocusChannels: List<AudioFocusChannel> = emptyList()
     private var externalVisualFocusChannels: List<VisualFocusChannel> = emptyList()
@@ -50,6 +56,9 @@ abstract class EvsService : Service() {
 
     private var handlerThread: HandlerThread? = null
     private var requestHandler: Handler? = null
+
+    private var responseSoundPool: SoundPool? = null
+    private var responseSoundIds = mutableListOf<Int>()
 
     var isEvsConnected = false
         private set
@@ -124,14 +133,24 @@ abstract class EvsService : Service() {
                     }
                 }
                 AudioFocusManager.CHANNEL_CONTENT -> {
-                    if (type == AudioFocusManager.TYPE_PLAYBACK) {
-                        when (status) {
+                    when (type) {
+                        AudioFocusManager.TYPE_PLAYBACK -> when (status) {
                             FocusStatus.Background -> audioPlayer.moveToBackground(AudioPlayer.TYPE_PLAYBACK)
                             FocusStatus.Idle -> audioPlayer.stop(AudioPlayer.TYPE_PLAYBACK)
                             else -> audioPlayer.moveToForegroundIfAvailable(AudioPlayer.TYPE_PLAYBACK)
                         }
-                    } else {
-                        isConsumed = false
+                        AudioFocusManager.TYPE_VIDEO -> {
+                            videoPlayer?.let {
+                                when (status) {
+                                    FocusStatus.Idle -> it.stop()
+                                    FocusStatus.Background -> it.moveToBackground()
+                                    else -> it.moveToForegroundIfAvailable()
+                                }
+                            }
+                        }
+                        else -> {
+                            isConsumed = false
+                        }
                     }
                 }
                 AudioFocusManager.CHANNEL_DIAL -> {
@@ -211,7 +230,9 @@ abstract class EvsService : Service() {
                     if (audioFocusChannel.getChannelName() == channel
                         && audioFocusChannel.getExternalType() == type
                     ) {
-                        audioFocusChannel.onFocusChanged(status)
+                        handler.post {
+                            audioFocusChannel.onFocusChanged(status)
+                        }
                     }
                 }
             }
@@ -246,7 +267,9 @@ abstract class EvsService : Service() {
                     if (visualFocusChannel.getChannelName() == channel
                         && visualFocusChannel.getExternalType() == type
                     ) {
-                        visualFocusChannel.onFocusChanged(status)
+                        handler.post {
+                            visualFocusChannel.onFocusChanged(status)
+                        }
                     }
                 }
             }
@@ -304,6 +327,8 @@ abstract class EvsService : Service() {
         system = overrideSystem()
         template = overrideTemplate()
         videoPlayer = overrideVideoPlayer()
+        wakeWord = overrideWakeWord()
+        initResponseSoundPool()
 
         ResponseProcessor.init(
             this,
@@ -318,7 +343,8 @@ abstract class EvsService : Service() {
             speaker,
             system,
             template,
-            videoPlayer
+            videoPlayer,
+            wakeWord
         )
         RequestBuilder.init(
             alarm,
@@ -332,7 +358,8 @@ abstract class EvsService : Service() {
             speaker,
             system,
             template,
-            videoPlayer
+            videoPlayer,
+            wakeWord
         )
 
         ResponseProcessor.initHandler(handler)
@@ -495,6 +522,14 @@ abstract class EvsService : Service() {
 
     }
 
+    fun setCustomIflyosContext(customContext: String?) {
+        RequestBuilder.customIflyosContext = customContext
+    }
+
+    fun getCurrentIflyosContext(): String {
+        return RequestBuilder.buildContext().toString()
+    }
+
     /**
      * 断开与iFLYOS的连接。
      */
@@ -569,6 +604,13 @@ abstract class EvsService : Service() {
     fun getLauncher() = launcher
 
     /**
+     * 获得语音唤醒词实例。
+     */
+    @Suppress("unused")
+    fun getWakeWord() = wakeWord
+
+
+    /**
      * 创建App操作模块，返回null则不启动该模块。
      */
     open fun overrideAppAction(): AppAction? {
@@ -626,7 +668,7 @@ abstract class EvsService : Service() {
      * 创建系统模块，返回null则不启用该模块。
      */
     open fun overrideSystem(): System {
-        return SystemImpl(this)
+        return SystemImpl()
     }
 
     /**
@@ -640,6 +682,13 @@ abstract class EvsService : Service() {
      * 创建视频播放器，返回null则不启用该模块。
      */
     open fun overrideVideoPlayer(): VideoPlayer? {
+        return null
+    }
+
+    /**
+     * 创建语音唤醒词端能力，返回 null 则不启用该模块
+     */
+    open fun overrideWakeWord(): WakeWord? {
         return null
     }
 
@@ -689,6 +738,63 @@ abstract class EvsService : Service() {
 
     open fun getExternalVisualFocusChannels(): List<VisualFocusChannel> {
         return emptyList()
+    }
+
+    open fun isResponseSoundEnabled(): Boolean {
+        return true
+    }
+
+    open fun getResponseSoundVolume(): Float {
+        return 1f
+    }
+
+    open fun getResponseSoundPool(): SoundPool? {
+        val maxStream = 3
+        val streamType = AudioManager.STREAM_MUSIC
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            SoundPool.Builder()
+                .setMaxStreams(maxStream)
+                .setAudioAttributes(
+                    AudioAttributes.Builder()
+                        .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setLegacyStreamType(streamType)
+                        .build()
+                )
+                .build()
+        } else {
+            @Suppress("DEPRECATION")
+            SoundPool(maxStream, streamType, 0)
+        }
+    }
+
+    open fun getResponseSoundResources(): Array<Int> {
+        return arrayOf(R.raw.response_sound_1, R.raw.response_sound_2)
+    }
+
+    fun initResponseSoundPool() {
+        responseSoundPool = getResponseSoundPool()
+        responseSoundPool?.let { soundPool ->
+            responseSoundIds.clear()
+            getResponseSoundResources().map {
+                responseSoundIds.add(soundPool.load(baseContext, it, 1))
+            }
+        }
+    }
+
+    fun playResponseSound() {
+        responseSoundPool?.let { soundPool ->
+            val random = Math.random()
+            val index = ((responseSoundIds.size - 1) * random).roundToInt()
+            soundPool.play(
+                responseSoundIds[index],
+                getResponseSoundVolume(),
+                getResponseSoundVolume(),
+                1,
+                0,
+                1f
+            )
+        }
     }
 
     /**

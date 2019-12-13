@@ -9,11 +9,13 @@
     android:paddingStart="@dimen/dp_24"
     android:paddingTop="@dimen/dp_20"
     android:paddingEnd="@dimen/dp_24"
-    android:paddingBottom="@dimen/dp_24">
+    android:paddingBottom="@dimen/dp_24"
+    tools:layout_height="@dimen/dp_300">
 
-    <androidx.constraintlayout.widget.ConstraintLayout
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:orientation="horizontal">
 
         <ImageView
@@ -24,37 +26,41 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             tools:layout_constraintWidth_percent="0"
-            tools:layout_width="0dp"
             tools:src="@drawable/ic_reload_24dp" />
 
         <TextView
             android:id="@+id/dialog_title"
             style="@style/H4"
-            android:layout_width="0dp"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_alignTop="@id/dialog_icon"
+            android:layout_alignBottom="@id/dialog_icon"
             android:layout_marginStart="@dimen/dp_8"
+            android:layout_toEndOf="@id/dialog_icon"
             android:ellipsize="end"
+            android:gravity="center_vertical"
             android:maxLines="1"
-            app:layout_constraintBottom_toBottomOf="@id/dialog_icon"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toEndOf="@id/dialog_icon"
-            app:layout_constraintTop_toTopOf="@id/dialog_icon"
             tools:text="Dialog Title" />
 
-        <androidx.appcompat.widget.AppCompatTextView
-            android:id="@+id/dialog_message"
-            style="@style/Body16.Grey"
-            android:layout_width="0dp"
+        <ScrollView
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/dp_32"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintStart_toStartOf="@id/dialog_title"
-            app:layout_constraintTop_toBottomOf="@id/dialog_icon"
-            app:lineHeight="@dimen/dp_26"
-            tools:text="Dialog Message. It could be morn than 1 line. It means multiline and it should be nice." />
+            android:layout_below="@id/dialog_title"
+            android:layout_alignStart="@id/dialog_title"
+            android:layout_marginTop="@dimen/dp_6"
+            android:layout_marginBottom="@dimen/dp_32">
 
-    </androidx.constraintlayout.widget.ConstraintLayout>
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/dialog_message"
+                style="@style/Body16.Grey"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:lineHeight="@dimen/dp_26"
+                tools:text="Dialog Message. It could be morn than 1 line. It means multiline and it should be nice." />
+
+        </ScrollView>
+
+    </RelativeLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"

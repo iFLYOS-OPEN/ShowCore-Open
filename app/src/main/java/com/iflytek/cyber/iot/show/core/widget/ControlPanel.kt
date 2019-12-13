@@ -17,49 +17,57 @@ class ControlPanel @JvmOverloads constructor(
     private var panel: View? = null
     private var panelBackground: View? = null
     var onReleaseCallback: OnReleaseCallback? = null
-    private val mDragger: ViewDragHelper = ViewDragHelper.create(this, 1f, object : ViewDragHelper.Callback() {
-        private var currentY = 0
-        private var currentX = 0
+    var onInterceptTouchListener: OnTouchListener? = null
+    private val mDragger: ViewDragHelper =
+        ViewDragHelper.create(this, 1f, object : ViewDragHelper.Callback() {
+            private var currentY = 0
+            private var currentX = 0
 
-        override fun onViewPositionChanged(changedView: View, left: Int, top: Int, dx: Int, dy: Int) {
-            super.onViewPositionChanged(changedView, left, top, dx, dy)
-            currentX = left
-            currentY = top
-        }
+            override fun onViewPositionChanged(
+                changedView: View,
+                left: Int,
+                top: Int,
+                dx: Int,
+                dy: Int
+            ) {
+                super.onViewPositionChanged(changedView, left, top, dx, dy)
+                currentX = left
+                currentY = top
+            }
 
-        override fun tryCaptureView(child: View, pointerId: Int): Boolean {
-            return panel == child
-        }
+            override fun tryCaptureView(child: View, pointerId: Int): Boolean {
+                return panel == child
+            }
 
-        override fun clampViewPositionHorizontal(child: View, left: Int, dx: Int): Int {
-            return 0
-        }
+            override fun clampViewPositionHorizontal(child: View, left: Int, dx: Int): Int {
+                return 0
+            }
 
-        override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
-            return Math.min(top, 0)
-        }
+            override fun clampViewPositionVertical(child: View, top: Int, dy: Int): Int {
+                return Math.min(top, 0)
+            }
 
-        override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
-            super.onViewReleased(releasedChild, xvel, yvel)
+            override fun onViewReleased(releasedChild: View, xvel: Float, yvel: Float) {
+                super.onViewReleased(releasedChild, xvel, yvel)
 
-            if (releasedChild == panel) {
-                onReleaseCallback?.onRelease(releasedChild, currentX, currentY)?.let { result ->
-                    if (!result) {
-                        getDragger().settleCapturedViewAt(0, 0)
-                        invalidate()
+                if (releasedChild == panel) {
+                    onReleaseCallback?.onRelease(releasedChild, currentX, currentY)?.let { result ->
+                        if (!result) {
+                            getDragger().settleCapturedViewAt(0, 0)
+                            invalidate()
+                        }
                     }
                 }
             }
-        }
 
-        override fun getViewHorizontalDragRange(child: View): Int {
-            return measuredWidth - child.measuredWidth
-        }
+            override fun getViewHorizontalDragRange(child: View): Int {
+                return measuredWidth - child.measuredWidth
+            }
 
-        override fun getViewVerticalDragRange(child: View): Int {
-            return measuredHeight - child.measuredHeight
-        }
-    })
+            override fun getViewVerticalDragRange(child: View): Int {
+                return measuredHeight - child.measuredHeight
+            }
+        })
 
     init {
         mDragger.setEdgeTrackingEnabled(ViewDragHelper.EDGE_TOP)
@@ -81,6 +89,7 @@ class ControlPanel @JvmOverloads constructor(
     }
 
     override fun onInterceptTouchEvent(ev: MotionEvent): Boolean {
+        onInterceptTouchListener?.onTouch(this, ev)
         return mDragger.shouldInterceptTouchEvent(ev)
     }
 

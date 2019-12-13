@@ -18,8 +18,8 @@ import com.iflytek.cyber.iot.show.core.BuildConfig
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.SelfBroadcastReceiver
 import com.iflytek.cyber.iot.show.core.impl.system.EvsSystem
-import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
-import com.iflytek.cyber.iot.show.core.utils.PackageUtils
+import com.iflytek.cyber.iot.show.core.utils.*
+import com.iflytek.cyber.iot.show.core.widget.StyledAlertDialog
 import com.iflytek.cyber.product.ota.OtaService
 import com.iflytek.cyber.product.ota.PackageEntityNew
 
@@ -38,6 +38,8 @@ class CheckUpdateFragment : BaseFragment() {
     private var failedContainer: View? = null
     private var tvProgressDescription: TextView? = null
     private var tvFailed: TextView? = null
+    private var tvDownloadCompleted: TextView? = null
+    private var progressBarCompleted: ProgressBar? = null
 
     private var packageEntity: PackageEntityNew? = null
     private var downloadedPath: String? = null
@@ -91,6 +93,13 @@ class CheckUpdateFragment : BaseFragment() {
                     updateButton?.isVisible = true
                     updateButton?.setText(R.string.install_now)
 
+                    tvDownloadCompleted?.isVisible = true
+                    tvProgress?.isVisible = false
+                    progressBar?.isVisible = false
+                    progressBarCompleted?.isVisible = true
+
+                    downloadProgressCallback.onDownloadProgress(packageEntity?.id!!, 100)
+
                     downloadedPath = intent.getStringExtra(OtaService.EXTRA_PATH)
 
                     tvProgressDescription?.setText(R.string.download_completed)
@@ -126,22 +135,23 @@ class CheckUpdateFragment : BaseFragment() {
     }
     private val downloadProgressCallback = object : OtaService.DownloadProgressCallback {
         override fun onDownloadProgress(id: Long, progress: Int) {
+            val context = context ?: return
             if (id != packageEntity?.id)
                 return
-            if (!isSupportVisible)
+            if (!isSupportVisible || isDetached)
                 return
             tvProgress?.post {
-                tvProgress?.text = getString(R.string.count_of_percent, progress)
+                tvProgress?.text = context.getString(R.string.count_of_percent, progress)
 
                 progressBar?.progress = progress
 
                 if (progress == 100) {
                     tvProgressDescription?.setText(R.string.download_completed)
                 } else {
+                    showProgress()
+
                     tvProgressDescription?.setText(R.string.downloading_software)
                 }
-
-                showProgress()
             }
         }
     }
@@ -180,6 +190,8 @@ class CheckUpdateFragment : BaseFragment() {
         failedContainer = view.findViewById(R.id.failed_container)
         tvProgressDescription = view.findViewById(R.id.progress_description)
         tvFailed = view.findViewById(R.id.failed_message)
+        tvDownloadCompleted = view.findViewById(R.id.download_completed)
+        progressBarCompleted = view.findViewById(R.id.progress_bar_completed)
 
         view.findViewById<View>(R.id.back)?.setOnClickListener {
             pop()
@@ -190,7 +202,41 @@ class CheckUpdateFragment : BaseFragment() {
             context?.startService(checkUpdate)
         }
         updateButton?.setOnClickListener {
+            val checkSize = if (downloadedPath != null) {
+                1.0 * 1024 * 1024 * 1024
+            } else {
+                1.5 * 1024 * 1024 * 1024
+            }
+            if (CleanerUtils.getSdcardFreeSpace() <= checkSize) {
+                // 下载或升级要求剩余控件 1.5G 以上
+                fragmentManager?.let {
+                    StyledAlertDialog.Builder()
+                        .setTitle("设备可用空间不足")
+                        .setMessage("设备可用空间不足，是否清理缓存")
+                        .setPositiveButton("清理", View.OnClickListener { view ->
+                            TerminalUtils.execute("rm /sdcard/ota_update.zip")
+                            CleanerUtils.clearRecordDebugFiles()
+                            CleanerUtils.clearWakeWordCache(view.context)
+                            CleanerUtils.clearCache(view.context)
+                        })
+                        .setNegativeButton(getString(R.string.cancel), null)
+                        .show(it)
+                }
+                return@setOnClickListener
+            }
             downloadedPath?.let { path ->
+                if (DeviceUtils.getBatteryLevel(context) < 40) {
+                    // 下载或升级要求剩余控件 1.5G 以上
+                    fragmentManager?.let {
+                        StyledAlertDialog.Builder()
+                            .setTitle("设备电量不足")
+                            .setMessage("请将设备电量保持在 40% 上再进行固件更新")
+                            .setPositiveButton(getString(R.string.ensure), null)
+                            .show(it)
+                    }
+                    return@setOnClickListener
+                }
+
                 PackageUtils.notifyInstallApk(it.context, path)
 
                 ConfigUtils.putBoolean(ConfigUtils.KEY_OTA_REQUEST, true)

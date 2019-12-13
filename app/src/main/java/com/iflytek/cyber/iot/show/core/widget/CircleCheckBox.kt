@@ -57,7 +57,7 @@ class CircleCheckBox @JvmOverloads constructor(context: Context, attrs: Attribut
 
         val checkBoxOnLp = LayoutParams(checkBoxSize, checkBoxSize)
         checkBoxOnLp.gravity = Gravity.CENTER_VERTICAL
-        checkBoxView.setAnimation(R.raw.animation_checkbox_turn_on)
+        checkBoxView.setAnimation(R.raw.animation_checkbox_1)
         addView(checkBoxView, checkBoxOnLp)
 
         val textLp = LayoutParams(LayoutParams.WRAP_CONTENT, LayoutParams.WRAP_CONTENT)

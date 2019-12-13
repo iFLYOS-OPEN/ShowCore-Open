@@ -37,13 +37,12 @@
         android:layout_width="@dimen/dp_24"
         android:layout_height="@dimen/dp_24"
         android:layout_gravity="center_vertical|end"
-        app:lottie_rawRes="@raw/animation_checkbox_turn_on"/>
+        app:lottie_rawRes="@raw/animation_checkbox_turn_on" />
 
     <View
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_1"
         android:layout_gravity="bottom"
-        android:alpha="0.1"
-        android:background="@android:color/black" />
+        android:background="@color/divider_line" />
 
 </FrameLayout>

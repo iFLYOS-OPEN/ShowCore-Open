@@ -16,8 +16,10 @@ import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.model.Song
 import com.iflytek.cyber.iot.show.core.utils.RoundedCornersTransformation
 
-class VideoListAdapter(private val videoList: ArrayList<Song>,
-                       private val onItemClickListener: (song: Song) -> Unit) : RecyclerView.Adapter<VideoListAdapter.VideoListHolder>() {
+class VideoListAdapter(
+    private val videoList: ArrayList<Song>,
+    private val onItemClickListener: (song: Song) -> Unit
+) : RecyclerView.Adapter<VideoListAdapter.VideoListHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VideoListHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_video, parent, false)
@@ -36,11 +38,17 @@ class VideoListAdapter(private val videoList: ArrayList<Song>,
             holder.onlyDesc.isVisible = false
             val resource = holder.itemView.resources
             Glide.with(holder.cover)
-                    .load(song.metadata.art?.sources?.get(0)?.url)
-                    .apply(RequestOptions().transform(
+                .load(song.metadata.art?.sources?.get(0)?.url)
+                .apply(
+                    RequestOptions()
+                        .centerCrop()
+                        .transform(
                             RoundedCornersTransformation(
-                                    resource.getDimensionPixelSize(R.dimen.dp_4), 0)))
-                    .into(holder.cover)
+                                resource.getDimensionPixelSize(R.dimen.dp_4), 0
+                            )
+                        )
+                )
+                .into(holder.cover)
         } else {
             holder.desc.isVisible = false
             holder.cover.isVisible = false
@@ -49,9 +57,19 @@ class VideoListAdapter(private val videoList: ArrayList<Song>,
         }
         val video = ContentStorage.get().video
         if (TextUtils.equals(video?.resourceId, song.stream.token)) {
-            holder.desc.setTextColor(ContextCompat.getColor(holder.desc.context, R.color.setup_primary))
+            holder.desc.setTextColor(
+                ContextCompat.getColor(
+                    holder.desc.context,
+                    R.color.setup_primary
+                )
+            )
         } else {
-            holder.desc.setTextColor(ContextCompat.getColor(holder.desc.context, R.color.semi_black))
+            holder.desc.setTextColor(
+                ContextCompat.getColor(
+                    holder.desc.context,
+                    R.color.semi_black
+                )
+            )
         }
         holder.itemView.setOnClickListener {
             onItemClickListener.invoke(song)

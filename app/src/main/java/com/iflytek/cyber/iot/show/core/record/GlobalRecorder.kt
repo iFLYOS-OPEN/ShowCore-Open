@@ -1,5 +1,6 @@
 package com.iflytek.cyber.iot.show.core.record
 
+import android.content.Context
 import android.media.AudioFormat
 import android.media.AudioRecord
 import android.media.MediaRecorder
@@ -7,6 +8,7 @@ import android.os.Build
 import android.os.Handler
 import android.util.Log
 import com.iflytek.cyber.evs.sdk.agent.Recognizer
+import org.json.JSONObject
 
 object GlobalRecorder {
     private const val TAG = "GlobalRecorder"
@@ -17,36 +19,49 @@ object GlobalRecorder {
     private val observerSet = HashSet<Observer>()
     private var mRecordThread: RecordThread? = null
     private val minBufferSize = AudioRecord.getMinBufferSize(
-            Recognizer.getSampleRateInHz(),
-            Recognizer.getAudioChannel(),
-            Recognizer.getAudioFormatEncoding()
+        Recognizer.getSampleRateInHz(),
+        Recognizer.getAudioChannel(),
+        Recognizer.getAudioFormatEncoding()
     )
+    private val ivwListener = object : EvsIvwHandler.IvwHandlerListener {
+        override fun onWakeUp(angle: Int, beam: Int, params: String?) {
+            try {
+                observerSet.map {
+                    it.onWakeUp(0, 0, params)
+                }
+            } catch (t: Throwable) {
+                t.printStackTrace()
+            }
+        }
+    }
+    private var ivwHandler: EvsIvwHandler? = null
 
-    fun init() {
+    fun init(context: Context) {
         mAudioRecord = createAudioRecord()
+        ivwHandler = EvsIvwHandler(context, ivwListener)
     }
 
     private fun getAudioSource() = MediaRecorder.AudioSource.DEFAULT
 
     private fun createAudioRecord() = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
         AudioRecord.Builder()
-                .setAudioFormat(
-                        AudioFormat.Builder()
-                                .setEncoding(Recognizer.getAudioFormatEncoding())
-                                .setSampleRate(Recognizer.getSampleRateInHz())
-                                .setChannelMask(Recognizer.getAudioChannel())
-                                .build()
-                )
-                .setAudioSource(getAudioSource())
-                .setBufferSizeInBytes(minBufferSize)
-                .build()
+            .setAudioFormat(
+                AudioFormat.Builder()
+                    .setEncoding(Recognizer.getAudioFormatEncoding())
+                    .setSampleRate(Recognizer.getSampleRateInHz())
+                    .setChannelMask(Recognizer.getAudioChannel())
+                    .build()
+            )
+            .setAudioSource(getAudioSource())
+            .setBufferSizeInBytes(minBufferSize)
+            .build()
     } else {
         AudioRecord(
-                getAudioSource(),
-                Recognizer.getSampleRateInHz(),
-                Recognizer.getAudioChannel(),
-                Recognizer.getAudioFormatEncoding(),
-                minBufferSize
+            getAudioSource(),
+            Recognizer.getSampleRateInHz(),
+            Recognizer.getAudioChannel(),
+            Recognizer.getAudioFormatEncoding(),
+            minBufferSize
         )
     }
 
@@ -114,6 +129,8 @@ object GlobalRecorder {
                     if (isReady()) {
                         val bytesRecord = mAudioRecord?.read(tempBuffer, 0, minBufferSize) ?: -1
 
+                        ivwHandler?.write(tempBuffer, bytesRecord)
+
                         publishAudioData(tempBuffer, 0, bytesRecord)
                     }
                 }
@@ -127,5 +144,6 @@ object GlobalRecorder {
 
     interface Observer {
         fun onAudioData(array: ByteArray, offset: Int, length: Int)
+        fun onWakeUp(angle: Int, beam: Int, params: String?)
     }
 }

@@ -28,13 +28,14 @@ import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
-import com.google.android.exoplayer2.upstream.*
+import com.google.android.exoplayer2.upstream.DataSource
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
+import com.google.android.exoplayer2.upstream.FileDataSourceFactory
+import com.google.android.exoplayer2.upstream.HttpDataSource
 import com.google.android.exoplayer2.util.Util
 import java.io.IOException
 
-class MediaSourceFactory internal constructor(
-    private val mContext: Context, private val mName: String
-) {
+class MediaSourceFactory(context: Context) {
     private val mMainHandler: Handler
     private val mPlaylistParser = PlaylistParser()
     private val mMediaSourceListener = MediaSourceListener()
@@ -42,7 +43,7 @@ class MediaSourceFactory internal constructor(
     private val mHttpDataSourceFactory: DataSource.Factory
 
     init {
-        mHttpDataSourceFactory = buildHttpDataSourceFactory(mContext)
+        mHttpDataSourceFactory = buildHttpDataSourceFactory(context)
 
         mMainHandler = Handler()
     }//        mLogger = logger;
@@ -60,7 +61,7 @@ class MediaSourceFactory internal constructor(
     }
 
     @Throws(Exception::class)
-    internal fun createFileMediaSource(uri: Uri): MediaSource {
+    fun createFileMediaSource(uri: Uri): MediaSource {
         return createMediaSource(
             uri, mFileDataSourceFactory, mMediaSourceListener, mMainHandler,
             mPlaylistParser
@@ -68,7 +69,7 @@ class MediaSourceFactory internal constructor(
     }
 
     @Throws(Exception::class)
-    internal fun createHttpMediaSource(uri: Uri): MediaSource {
+    fun createHttpMediaSource(uri: Uri): MediaSource {
         return createMediaSource(
             uri, mHttpDataSourceFactory, mMediaSourceListener, mMainHandler,
             mPlaylistParser

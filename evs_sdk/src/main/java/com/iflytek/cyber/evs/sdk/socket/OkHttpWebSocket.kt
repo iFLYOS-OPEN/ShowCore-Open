@@ -6,6 +6,8 @@ import com.iflytek.cyber.evs.sdk.model.Constant
 import okhttp3.*
 import okio.ByteString
 import java.io.EOFException
+import java.net.SocketException
+import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.nio.ByteBuffer
 import java.security.SecureRandom
@@ -152,9 +154,9 @@ internal class OkHttpWebSocket : SocketManager.EvsWebSocket() {
 
             Log.w(TAG, "onClosing, code=$code, reason=$reason")
 
-            if (code == EvsError.Code.ERROR_SERVER_DISCONNECTED) {
-                onDisconnected(code, reason, true)
+            onDisconnected(code, reason, true)
 
+            if (code == EvsError.Code.ERROR_SERVER_DISCONNECTED) {
                 disconnect()
             }
         }
@@ -181,6 +183,16 @@ internal class OkHttpWebSocket : SocketManager.EvsWebSocket() {
                     }
                     is EOFException -> {
                         onDisconnected(EvsError.Code.ERROR_CLIENT_DISCONNECTED, null, false)
+
+                        disconnect()
+                    }
+                    is SocketException -> {
+                        onDisconnected(EvsError.Code.ERROR_SERVER_DISCONNECTED, null, false)
+
+                        disconnect()
+                    }
+                    is SocketTimeoutException -> {
+                        onSendFailed(EvsError.Code.ERROR_SOCKET_TIMEOUT, "")
 
                         disconnect()
                     }

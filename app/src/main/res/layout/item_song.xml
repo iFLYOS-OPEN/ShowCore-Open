@@ -61,11 +61,11 @@
 
         <TextView
             android:id="@+id/song_title"
+            style="@style/H5"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:ellipsize="end"
             android:maxLines="1"
-            style="@style/H5"
             tools:text="无条件" />
 
         <TextView
@@ -94,7 +94,7 @@
     <View
         android:id="@+id/divider"
         android:layout_width="match_parent"
-        android:layout_height="1dp"
+        android:layout_height="@dimen/dp_1"
         android:layout_gravity="bottom"
         android:background="@color/divider_line" />
 

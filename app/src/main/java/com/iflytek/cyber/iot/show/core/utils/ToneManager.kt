@@ -35,13 +35,13 @@ class ToneManager private constructor(context: Context) {
                 .setMaxStreams(3)
                 .setAudioAttributes(AudioAttributes.Builder()
                         .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .setLegacyStreamType(AudioManager.STREAM_MUSIC)
-                        .setUsage(AudioAttributes.USAGE_MEDIA)
+                        .setLegacyStreamType(AudioManager.STREAM_NOTIFICATION)
+                        .setUsage(AudioAttributes.USAGE_NOTIFICATION)
                         .build())
                 .build()
     } else {
         @Suppress("DEPRECATION") // Android L 之前未被标为过时
-        SoundPool(3, AudioManager.STREAM_MUSIC, 0)
+        SoundPool(3, AudioManager.STREAM_NOTIFICATION, 0)
     }
 
     private val tones = SparseIntArray()

@@ -24,6 +24,7 @@ class ContentStorage {
         private set
 
     var playerInfo: PlayerInfoPayload? = null
+        private set
 
     var video: Video? = null
 
@@ -39,7 +40,7 @@ class ContentStorage {
         this.playerInfo = playerInfo
     }
 
-    fun saveVideo(video: Video) {
+    fun saveVideo(video: Video?) {
         this.video = video
     }
 

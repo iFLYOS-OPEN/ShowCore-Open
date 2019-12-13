@@ -65,7 +65,7 @@ class WifiConnectingFragment(private val ssid: String? = null) : BaseFragment() 
     fun handleWifiConfigFailed() {
         WifiUtils.forget(context, ssid)
 
-        startWithPop(WifiConnectFailedFragment())
+        startWithPop(WifiConnectFailedFragment.newInstance("您的网络异常，请确定网络可用后重试"))
 
         countHandler.stopCount()
     }

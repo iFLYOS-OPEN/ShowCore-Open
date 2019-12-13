@@ -45,6 +45,10 @@ object VisualFocusManager {
     fun requestActive(activeChannel: String, type: String) {
         if (statusMap[activeChannel] == FocusStatus.Foreground) {
             if (latestForegroundMap[activeChannel] != type) {
+                statusMap[activeChannel] = FocusStatus.Idle
+                onInternalFocusChanged(activeChannel)
+
+                statusMap[activeChannel] = FocusStatus.Foreground
                 latestForegroundMap[activeChannel] = type
                 onInternalFocusChanged(activeChannel)
             } else {
@@ -128,7 +132,7 @@ object VisualFocusManager {
             }
         } else {
             statusMap[abandonChannel] = FocusStatus.Idle
-            onInternalFocusChanged(abandonChannel)
+//            onInternalFocusChanged(abandonChannel)
             latestForegroundMap.remove(abandonChannel)
 
             when (abandonChannel) {

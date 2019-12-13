@@ -14,7 +14,8 @@ abstract class AudioPlayer {
         get() = "1.1"
 
     companion object {
-        const val NAME_PLAYBACK_PROGRESS_SYNC = "${Constant.NAMESPACE_AUDIO_PLAYER}.playback.progress_sync"
+        const val NAME_PLAYBACK_PROGRESS_SYNC =
+            "${Constant.NAMESPACE_AUDIO_PLAYER}.playback.progress_sync"
         const val NAME_RING_PROGRESS_SYNC = "${Constant.NAMESPACE_AUDIO_PLAYER}.ring.progress_sync"
         const val NAME_TTS_PROGRESS_SYNC = "${Constant.NAMESPACE_AUDIO_PLAYER}.tts.progress_sync"
         const val NAME_TTS_TEXT_IN = "${Constant.NAMESPACE_AUDIO_PLAYER}.tts.text_in"
@@ -72,7 +73,7 @@ abstract class AudioPlayer {
         private set
     var playbackState = PLAYBACK_STATE_IDLE
         private set
-    var playbackOffset = 0L
+    var playbackOffset = Long.MIN_VALUE
 
     fun addListener(listener: MediaStateChangedListener) {
         listeners.add(listener)
@@ -118,7 +119,12 @@ abstract class AudioPlayer {
      * @param offset 时间进度，单位：毫秒
      * @return 是否成功
      */
-    abstract fun seekTo(type: String, offset: Long): Boolean
+    @CallSuper
+    open fun seekTo(type: String, offset: Long): Boolean {
+        if (type == TYPE_PLAYBACK)
+            playbackOffset = offset
+        return false
+    }
 
     /**
      * 获取当前播放时间进度。
@@ -172,6 +178,7 @@ abstract class AudioPlayer {
      * @param resourceId 资源id
      */
     fun onStarted(type: String, resourceId: String) {
+        Log.d("AudioPlayer", "onStarted($type, $resourceId)")
         if (type == TYPE_PLAYBACK) {
             playbackState = PLAYBACK_STATE_PLAYING
             playbackResourceId = resourceId
@@ -193,6 +200,7 @@ abstract class AudioPlayer {
      * @param resourceId 资源id
      */
     fun onResumed(type: String, resourceId: String) {
+        Log.d("AudioPlayer", "onResumed($type, $resourceId)")
         if (type == TYPE_PLAYBACK) {
             playbackState = PLAYBACK_STATE_PLAYING
 
@@ -213,6 +221,7 @@ abstract class AudioPlayer {
      * @param resourceId 资源id
      */
     fun onPaused(type: String, resourceId: String) {
+        Log.d("AudioPlayer", "onPaused($type, $resourceId)")
         if (type == TYPE_PLAYBACK) {
             playbackState = PLAYBACK_STATE_PAUSED
         }
@@ -231,6 +240,7 @@ abstract class AudioPlayer {
      * @param resourceId 资源id
      */
     fun onStopped(type: String, resourceId: String) {
+        Log.d("AudioPlayer", "onStopped($type, $resourceId)")
         if (type == TYPE_PLAYBACK) {
             playbackState = PLAYBACK_STATE_PAUSED
         }
@@ -249,6 +259,7 @@ abstract class AudioPlayer {
      * @param resourceId 资源id
      */
     fun onCompleted(type: String, resourceId: String) {
+        Log.d("AudioPlayer", "onCompleted($type, $resourceId)")
         if (type == TYPE_PLAYBACK) {
             playbackState = PLAYBACK_STATE_PAUSED
         }
@@ -288,7 +299,9 @@ abstract class AudioPlayer {
      * @param errorCode 错误码
      */
     fun onError(type: String, resourceId: String, errorCode: String) {
-        playbackState = PLAYBACK_STATE_PAUSED
+        Log.d("AudioPlayer", "onError($type, $resourceId, $errorCode)")
+        if (type == TYPE_PLAYBACK)
+            playbackState = PLAYBACK_STATE_PAUSED
         listeners.map {
             try {
                 it.onError(this, type, resourceId, errorCode)

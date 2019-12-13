@@ -21,10 +21,11 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.net.UnknownHostException
 
-class MediaFragment : BaseFragment() {
+class MediaFragment : BaseFragment(), PageScrollable {
 
     private lateinit var tabLayout: TabLayout
     private lateinit var viewPager: ViewPager2
+    private var placeholderView: View? = null
 
     private var adapter: MediaPagerAdapter? = null
 
@@ -44,10 +45,31 @@ class MediaFragment : BaseFragment() {
         tabLayout = view.findViewById(R.id.tab_layout)
         viewPager = view.findViewById(R.id.view_pager)
 
+        placeholderView = view.findViewById(R.id.placeholder)
+
         getMediaSections()
 
         view.findViewById<View>(R.id.refresh)?.setOnClickListener {
+            showPlaceholder()
             getMediaSections()
+        }
+    }
+
+    private fun showPlaceholder() {
+        placeholderView?.let { placeholder ->
+            placeholder.isVisible = true
+            placeholder.animate().alpha(1f).setDuration(350)
+                .start()
+        }
+    }
+
+    private fun hidePlaceholder() {
+        placeholderView?.let { placeholder ->
+            placeholder.animate().alpha(0f).setDuration(350)
+                .withEndAction {
+                    placeholder.isVisible = false
+                }
+                .start()
         }
     }
 
@@ -66,6 +88,9 @@ class MediaFragment : BaseFragment() {
             override fun onFailure(call: Call<ArrayList<Group>>, t: Throwable) {
                 t.printStackTrace()
 
+                if (isDetached || isRemoving)
+                    return
+                hidePlaceholder()
                 if (t is UnknownHostException) {
                     view?.findViewById<View>(R.id.error_container)?.let { errorContainer ->
                         errorContainer.isVisible = true
@@ -87,6 +112,9 @@ class MediaFragment : BaseFragment() {
                 call: Call<ArrayList<Group>>,
                 response: Response<ArrayList<Group>>
             ) {
+                if (isDetached || isRemoving)
+                    return
+                hidePlaceholder()
                 if (response.isSuccessful) {
                     val groups = response.body()
                     val groupMap = groups?.groupBy { it.abbr }
@@ -110,6 +138,28 @@ class MediaFragment : BaseFragment() {
         } else {
             null
         }
+    }
+
+    override fun scrollToNext(): Boolean {
+        val currentItem = viewPager.currentItem
+        if (currentItem < (adapter?.itemCount ?: 0) - 1 || currentItem < 0) {
+            viewPager.post {
+                viewPager.setCurrentItem(currentItem + 1, true)
+            }
+            return true
+        }
+        return false
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        val currentItem = viewPager.currentItem
+        if (currentItem > 0) {
+            viewPager.post {
+                viewPager.setCurrentItem(currentItem - 1, true)
+            }
+            return true
+        }
+        return false
     }
 
     inner class MediaPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {

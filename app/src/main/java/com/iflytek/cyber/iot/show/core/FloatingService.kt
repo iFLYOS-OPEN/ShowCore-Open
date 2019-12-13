@@ -1,5 +1,6 @@
 package com.iflytek.cyber.iot.show.core
 
+import android.accessibilityservice.AccessibilityServiceInfo
 import android.animation.Animator
 import android.animation.AnimatorInflater
 import android.animation.ValueAnimator
@@ -14,6 +15,7 @@ import android.graphics.Point
 import android.graphics.drawable.Drawable
 import android.media.AudioManager
 import android.net.*
+import android.net.wifi.WifiManager
 import android.os.*
 import android.provider.Settings
 import android.text.Editable
@@ -22,40 +24,43 @@ import android.text.TextWatcher
 import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
+import android.view.accessibility.AccessibilityManager
 import android.widget.*
+import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
+import androidx.core.content.getSystemService
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
+import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
-import com.cunoraz.gifview.library.GifView
 import com.google.gson.JsonParser
+import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.agent.Alarm
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
-import com.iflytek.cyber.evs.sdk.agent.Screen
-import com.iflytek.cyber.iot.show.core.EvsLauncherActivity.Companion.ACTION_NEXT
-import com.iflytek.cyber.iot.show.core.EvsLauncherActivity.Companion.ACTION_PAUSE
-import com.iflytek.cyber.iot.show.core.EvsLauncherActivity.Companion.ACTION_PLAY
-import com.iflytek.cyber.iot.show.core.EvsLauncherActivity.Companion.ACTION_PREVIOUS
-import com.iflytek.cyber.iot.show.core.EvsLauncherActivity.Companion.ACTION_QUIT
+import com.iflytek.cyber.evs.sdk.agent.PlaybackController
+import com.iflytek.cyber.evs.sdk.agent.Template
+import com.iflytek.cyber.evs.sdk.socket.Result
 import com.iflytek.cyber.iot.show.core.EvsLauncherActivity.Companion.ACTION_START_PLAYER
+import com.iflytek.cyber.iot.show.core.accessibility.TouchAccessibility
+import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
+import com.iflytek.cyber.iot.show.core.impl.playback.EvsPlaybackController
 import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager
 import com.iflytek.cyber.iot.show.core.impl.screen.EvsScreen
 import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.model.PlayerInfoPayload
-import com.iflytek.cyber.iot.show.core.task.SleepWorker
 import com.iflytek.cyber.iot.show.core.template.BodyTemplateView1
 import com.iflytek.cyber.iot.show.core.template.BodyTemplateView3
 import com.iflytek.cyber.iot.show.core.template.TemplateViewBuilder
 import com.iflytek.cyber.iot.show.core.utils.*
 import com.iflytek.cyber.iot.show.core.widget.*
-import org.greenrobot.eventbus.EventBus
 import org.greenrobot.eventbus.Subscribe
 import org.greenrobot.eventbus.ThreadMode
 import java.lang.ref.SoftReference
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.math.*
 
 class FloatingService : Service() {
@@ -70,8 +75,6 @@ class FloatingService : Service() {
     private var musicTitle: TextView? = null
     private var musicCover: ImageView? = null
     private var tvQuit: TextView? = null
-    private var sleepView: View? = null
-    private var sleepTime: TextView? = null
     private var templateContainer: FrameLayout? = null
     private var alarmView: View? = null
     private var volumeAnimator: Animator? = null
@@ -82,20 +85,28 @@ class FloatingService : Service() {
     private var isControlPanelEnabled = false
     private var isBackgroundRecognize = false
     private var currentTemplateId: String? = null
+    private var microphoneAnimator: Animator? = null
 
-    private var isShowSleepTime = false
-    private var isPanelOpened = false
-    private var isWakeUpEnabled = false
+    private var isShowRecognize = false
         set(value) {
-            if (value) {
-                voiceButtonView?.isVisible =
-                    ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_BUTTON_ENABLED, true)
-                        && ConfigUtils.getBoolean(ConfigUtils.KEY_SETUP_COMPLETED, false)
-            } else {
-                voiceButtonView?.isVisible = false
-            }
             field = value
+
+            EvsSpeaker.get(baseContext).isVisualFocusGain = isVisualFocusGain
+            EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
         }
+    private var isShowTemplate = false
+        set(value) {
+            field = value
+
+            EvsSpeaker.get(baseContext).isVisualFocusGain = isVisualFocusGain
+            EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
+        }
+    private val isVisualFocusGain: Boolean
+        get() {
+            return isShowRecognize || isShowTemplate
+        }
+
+    private var isPanelOpened = false
 
     private var timerHandler: TimerHandler? = null
 
@@ -134,9 +145,11 @@ class FloatingService : Service() {
         }
     }
     private var networkCallback: Any? = null // 不声明 NetworkCallback 的类，否则 L 以下会找不到类
+    private val hideVoiceButtonHandler = HideVoiceButtonHandler(this)
     private val clearCardHandler = ClearCardHandler(this)
     private val clearNotificationHandler = ClearNotificationHandler(this)
     private val clearSideIndicatorHandler = ClearSideIndicatorHandler(this)
+    private val panelCloseCountHandler = PanelCloseCountHandler(this)
     private val brightnessObserver = object : ContentObserver(Handler()) {
         override fun onChange(selfChange: Boolean, uri: Uri) {
             if (BRIGHTNESS_MODE_URI == uri) {
@@ -186,7 +199,7 @@ class FloatingService : Service() {
                         if (volume == -1)
                             return
                         if (type == AudioManager.STREAM_MUSIC) {
-                            EvsSpeaker.get(baseContext).updateCurrentVolume()
+//                            EvsSpeaker.get(baseContext).updateCurrentVolume()
                             slidePanel?.findViewById<BoxedHorizontal>(R.id.volume_slider)
                                 ?.let { slider ->
 
@@ -199,78 +212,6 @@ class FloatingService : Service() {
                 }
             }
         }
-    private val audioPlayerStateReceiver = object : SelfBroadcastReceiver(
-        EngineService.ACTION_AUDIO_PLAYER_STARTED,
-        EngineService.ACTION_AUDIO_PLAYER_STOPPED,
-        EngineService.ACTION_AUDIO_PLAYER_COMPLETED,
-        EngineService.ACTION_AUDIO_PLAYER_PAUSED,
-        EngineService.ACTION_AUDIO_PLAYER_POSITION_UPDATED
-    ) {
-        override fun onReceiveAction(action: String, intent: Intent) {
-            val type = intent.getStringExtra(EngineService.EXTRA_PLAYER_TYPE)
-            val resourceId = intent.getStringExtra(EngineService.EXTRA_RESOURCE_ID)
-            when (action) {
-                EngineService.ACTION_AUDIO_PLAYER_STARTED -> {
-                    when (type) {
-                        AudioPlayer.TYPE_TTS -> {
-                            val currentTemplateId = currentTemplateId ?: return
-                            val requestId = RequestIdMap.findRequestByTts(resourceId)
-                            val templateRequest =
-                                RequestIdMap.findRequestByTemplate(currentTemplateId)
-                            if (requestId != templateRequest)
-                                return
-                            (templateContainer?.getChildAt(0) as? BodyTemplateView1)?.startBodyAnimation()
-                        }
-                        AudioPlayer.TYPE_RING -> {
-                            isAlarmPlaying = true
-                        }
-                    }
-                }
-                EngineService.ACTION_AUDIO_PLAYER_COMPLETED,
-                EngineService.ACTION_AUDIO_PLAYER_PAUSED,
-                EngineService.ACTION_AUDIO_PLAYER_STOPPED -> {
-                    when (type) {
-                        AudioPlayer.TYPE_TTS -> {
-                            val currentTemplateId = currentTemplateId ?: return
-                            val requestId = RequestIdMap.findRequestByTts(resourceId)
-                            val templateRequest =
-                                RequestIdMap.findRequestByTemplate(currentTemplateId)
-                            if (requestId != templateRequest)
-                                return
-                            templateContainer?.getChildAt(0)?.let { templateView ->
-                                (templateView as? BodyTemplateView1)?.stopBodyAnimation()
-                                clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
-                            }
-                        }
-                        AudioPlayer.TYPE_RING -> {
-
-                            val currentTemplateId = currentTemplateId ?: return
-                            val requestId = RequestIdMap.findRequestByTts(resourceId)
-                            val templateRequest =
-                                RequestIdMap.findRequestByTemplate(currentTemplateId)
-                            if (requestId != templateRequest)
-                                return
-                            isAlarmPlaying = false
-                            templateContainer?.getChildAt(0)?.let { templateView ->
-                                clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
-                            }
-                        }
-                    }
-                }
-                EngineService.ACTION_AUDIO_PLAYER_POSITION_UPDATED -> {
-                    if (type != AudioPlayer.TYPE_TTS)
-                        return
-                    var position = intent.getLongExtra(EngineService.EXTRA_POSITION, -1)
-                    if (position == -1L) {
-                        position = intent.getIntExtra(EngineService.EXTRA_POSITION, -1).toLong()
-                    }
-                    (templateContainer?.getChildAt(0) as? BodyTemplateView1)?.updateBodyPosition(
-                        position
-                    )
-                }
-            }
-        }
-    }
     private val alarmStateReceiver = object : SelfBroadcastReceiver(
         EngineService.ACTION_ALARM_STATE_CHANGED
     ) {
@@ -327,28 +268,191 @@ class FloatingService : Service() {
             }
         }
     }
-    private val onConfigChangedListener = object : ConfigUtils.OnConfigChangedListener {
-        override fun onConfigChanged(key: String, value: Any?) {
-            if (key == ConfigUtils.KEY_VOICE_BUTTON_ENABLED) {
-                if (!isBackgroundRecognize)
-                    voiceButtonView?.isVisible = value == true
-            }
-            if (key == ConfigUtils.KEY_SETUP_COMPLETED) {
-                if (value != true) {
-                    voiceButtonView?.isVisible = false
-                } else {
-                    voiceButtonView?.isVisible = isWakeUpEnabled &&
-                        ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_BUTTON_ENABLED, true)
-                }
-            }
-        }
-    }
     private val brightnessChangedCallback = object : EvsScreen.BrightnessChangedCallback {
         override fun onBrightnessChanged(brightness: Int) {
             if (!isPanelOpened) {
                 showSideIndicator(R.raw.animation_brightness_level, brightness)
             }
         }
+    }
+    private val configChangedListener = object : ConfigUtils.OnConfigChangedListener {
+        override fun onConfigChanged(key: String, value: Any?) {
+            when (key) {
+                ConfigUtils.KEY_VOICE_WAKEUP_ENABLED -> {
+                    slidePanel?.let { panel ->
+                        if (value == true) {
+                            enableMicrophoneAnimation()
+                        } else {
+                            disableMicrophoneAnimation()
+                        }
+                    }
+                }
+            }
+        }
+    }
+    private val wifiStateReceiver = object : SelfBroadcastReceiver(
+        WifiManager.WIFI_STATE_CHANGED_ACTION
+    ) {
+        override fun onReceiveAction(action: String, intent: Intent) {
+            when (action) {
+                WifiManager.WIFI_STATE_CHANGED_ACTION -> {
+                    val state = intent.getIntExtra(WifiManager.EXTRA_WIFI_STATE, -1)
+                    if (state == WifiManager.WIFI_STATE_DISABLED) {
+                        disableWifiIcon()
+                    } else if (state == WifiManager.WIFI_STATE_ENABLED) {
+                        enableWifiIcon()
+                    }
+                }
+            }
+        }
+    }
+    private val audioPlayerStateListener = object : AudioPlayer.MediaStateChangedListener {
+
+        override fun onStarted(player: AudioPlayer, type: String, resourceId: String) {
+            when (type) {
+                AudioPlayer.TYPE_TTS -> {
+                    val currentTemplateId = currentTemplateId ?: return
+                    val requestId = RequestIdMap.findRequestByTts(resourceId)
+                    val templateRequest =
+                        RequestIdMap.findRequestByTemplate(currentTemplateId)
+                    if (requestId != templateRequest)
+                        return
+                    (templateContainer?.getChildAt(0) as? BodyTemplateView1)?.startBodyAnimation()
+                }
+                AudioPlayer.TYPE_RING -> {
+                    isAlarmPlaying = true
+                }
+                AudioPlayer.TYPE_PLAYBACK -> {
+                    updateMusicPanel(ContentStorage.get().playerInfo)
+                }
+            }
+        }
+
+        override fun onResumed(player: AudioPlayer, type: String, resourceId: String) {
+            if (type == AudioPlayer.TYPE_PLAYBACK) {
+                updateMusicPanel(ContentStorage.get().playerInfo)
+            }
+        }
+
+        override fun onPaused(player: AudioPlayer, type: String, resourceId: String) {
+            when (type) {
+                AudioPlayer.TYPE_TTS -> {
+                    val currentTemplateId = currentTemplateId ?: return
+                    val requestId = RequestIdMap.findRequestByTts(resourceId)
+                    val templateRequest =
+                        RequestIdMap.findRequestByTemplate(currentTemplateId)
+                    if (requestId != templateRequest)
+                        return
+                    templateContainer?.getChildAt(0)?.let { templateView ->
+                        (templateView as? BodyTemplateView1)?.stopBodyAnimation()
+                        clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
+                    }
+                }
+                AudioPlayer.TYPE_RING -> {
+                    val currentTemplateId = currentTemplateId ?: return
+                    val requestId = RequestIdMap.findRequestByTts(resourceId)
+                    val templateRequest =
+                        RequestIdMap.findRequestByTemplate(currentTemplateId)
+                    if (requestId != templateRequest)
+                        return
+                    isAlarmPlaying = false
+                    templateContainer?.getChildAt(0)?.let { templateView ->
+                        clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
+                    }
+                }
+                AudioPlayer.TYPE_PLAYBACK -> {
+                    updateMusicPanel(ContentStorage.get().playerInfo)
+                }
+            }
+        }
+
+        override fun onStopped(player: AudioPlayer, type: String, resourceId: String) {
+            when (type) {
+                AudioPlayer.TYPE_TTS -> {
+                    val currentTemplateId = currentTemplateId ?: return
+                    val requestId = RequestIdMap.findRequestByTts(resourceId)
+                    val templateRequest =
+                        RequestIdMap.findRequestByTemplate(currentTemplateId)
+                    if (requestId != templateRequest)
+                        return
+                    templateContainer?.getChildAt(0)?.let { templateView ->
+                        (templateView as? BodyTemplateView1)?.stopBodyAnimation()
+                        clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
+                    }
+                }
+                AudioPlayer.TYPE_RING -> {
+                    val currentTemplateId = currentTemplateId ?: return
+                    val requestId = RequestIdMap.findRequestByTts(resourceId)
+                    val templateRequest =
+                        RequestIdMap.findRequestByTemplate(currentTemplateId)
+                    if (requestId != templateRequest)
+                        return
+                    isAlarmPlaying = false
+                    templateContainer?.getChildAt(0)?.let { templateView ->
+                        clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
+                    }
+                }
+                AudioPlayer.TYPE_PLAYBACK -> {
+                    updateMusicPanel(null)
+                }
+            }
+        }
+
+        override fun onCompleted(player: AudioPlayer, type: String, resourceId: String) {
+            when (type) {
+                AudioPlayer.TYPE_TTS -> {
+                    val currentTemplateId = currentTemplateId ?: return
+                    val requestId = RequestIdMap.findRequestByTts(resourceId)
+                    val templateRequest =
+                        RequestIdMap.findRequestByTemplate(currentTemplateId)
+                    if (requestId != templateRequest)
+                        return
+                    templateContainer?.getChildAt(0)?.let { templateView ->
+                        (templateView as? BodyTemplateView1)?.stopBodyAnimation()
+                        clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
+                    }
+                }
+                AudioPlayer.TYPE_RING -> {
+
+                    val currentTemplateId = currentTemplateId ?: return
+                    val requestId = RequestIdMap.findRequestByTts(resourceId)
+                    val templateRequest =
+                        RequestIdMap.findRequestByTemplate(currentTemplateId)
+                    if (requestId != templateRequest)
+                        return
+                    isAlarmPlaying = false
+                    templateContainer?.getChildAt(0)?.let { templateView ->
+                        clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
+                    }
+                }
+                AudioPlayer.TYPE_PLAYBACK -> {
+                }
+            }
+        }
+
+        override fun onPositionUpdated(
+            player: AudioPlayer,
+            type: String,
+            resourceId: String,
+            position: Long
+        ) {
+            if (type == AudioPlayer.TYPE_TTS)
+                (templateContainer?.getChildAt(0) as? BodyTemplateView1)?.let {
+                    if (it.isBodyAnimating()) {
+                        it.updateBodyPosition(position)
+                    }
+                }
+        }
+
+        override fun onError(
+            player: AudioPlayer,
+            type: String,
+            resourceId: String,
+            errorCode: String
+        ) {
+            ContentStorage.get().isMusicPlaying = false
+        }
+
     }
 
     companion object {
@@ -358,17 +462,15 @@ class FloatingService : Service() {
         const val ACTION_INTERMEDIATE_TEXT = "$ACTION_PREFIX.INTERMEDIATE_TEXT"
         const val ACTION_UPDATE_VOLUME = "$ACTION_PREFIX.UPDATE_VOLUME"
         const val ACTION_INIT_OVERLAY = "$ACTION_PREFIX.INIT_CONTROL_PANEL"
+        const val ACTION_INIT_CONFIG = "$ACTION_PREFIX.INIT_CONFIG"
         const val ACTION_RENDER_TEMPLATE = "$ACTION_PREFIX.RENDER_TEMPLATE"
         const val ACTION_CLEAR_TEMPLATE = "$ACTION_PREFIX.CLEAR_TEMPLATE"
         const val ACTION_SET_CONTROL_PANEL_ENABLED = "$ACTION_PREFIX.SET_CONTROL_PANEL_ENABLED"
         const val ACTION_UPDATE_MUSIC = "$ACTION_PREFIX.UPDATE_MUSIC"
         const val ACTION_UPDATE_MUSIC_CONTROL_BUTTON = "$ACTION_PREFIX.UPDATE_MUSIC_CONTROL_BUTTON"
-        const val ACTION_SHOW_SLEEP = "$ACTION_PREFIX.SHOW_SLEEP"
-        const val ACTION_HIDE_SLEEP = "$ACTION_PREFIX.HIDE_SLEEP"
         const val ACTION_SHOW_NOTIFICATION = "$ACTION_PREFIX.SHOW_NOTIFICATION"
         const val ACTION_DISMISS_NOTIFICATION = "$ACTION_PREFIX.DISMISS_NOTIFICATION"
         const val ACTION_SET_BACKGROUND_RECOGNIZE = "$ACTION_PREFIX.SET_BACKGROUND_RECOGNIZE"
-        const val ACTION_SET_WAKE_UP_ENABLED = "$ACTION_PREFIX.SET_WAKE_UP_ENABLED"
 
         const val EXTRA_TEXT = "text"
         const val EXTRA_ENABLED = "enabled"
@@ -448,6 +550,28 @@ class FloatingService : Service() {
                     }
                 }
 
+                override fun onLinkPropertiesChanged(
+                    network: Network?,
+                    linkProperties: LinkProperties?
+                ) {
+                    super.onLinkPropertiesChanged(network, linkProperties)
+
+                    slidePanel?.post {
+                        slidePanel?.let { panel ->
+                            val tvSsid: TextView = panel.findViewById(R.id.tv_ssid)
+                            WifiUtils.getConnectedSsid(baseContext)?.let { ssid ->
+                                if (ssid.isNotEmpty()) {
+                                    tvSsid.text = ssid
+                                } else {
+                                    tvSsid.setText(R.string.wlan)
+                                }
+                            } ?: run {
+                                tvSsid.setText(R.string.wlan)
+                            }
+                        }
+                    }
+                }
+
                 override fun onLost(network: Network?) {
                     super.onLost(network)
                     slidePanel?.post {
@@ -467,8 +591,8 @@ class FloatingService : Service() {
 
         startTimer()
 
-        audioPlayerStateReceiver.register(this)
         alarmStateReceiver.register(this)
+        wifiStateReceiver.register(this)
 
         batteryReceiver.register(this)
 
@@ -476,7 +600,28 @@ class FloatingService : Service() {
 
         EvsScreen.get(this).registerBrightnessChangedCallback(brightnessChangedCallback)
 
-        ConfigUtils.registerOnConfigChangedListener(onConfigChangedListener)
+        ConfigUtils.registerOnConfigChangedListener(configChangedListener)
+
+        ConfigUtils.registerOnConfigChangedListener(VoiceButtonUtils)
+        VoiceButtonUtils.onVoiceButtonVisibleCallback =
+            object : VoiceButtonUtils.OnVoiceButtonVisibleCallback {
+                override fun onShow() {
+                    showVoiceButton()
+                }
+
+                override fun onDisappear() {
+                    hideVoiceButton()
+                }
+
+                override fun onScreenTouched() {
+                    strongVoiceButton()
+
+                    if (isServiceEnabled())
+                        hideVoiceButtonHandler.postScrollEvent()
+                }
+            }
+
+        EvsAudioPlayer.get(this).addListener(audioPlayerStateListener)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -484,6 +629,28 @@ class FloatingService : Service() {
             ACTION_INIT_OVERLAY -> {
                 if (slidePanel == null)
                     initOverlay()
+            }
+            ACTION_INIT_CONFIG -> {
+                // 初始化 WiFi 名称
+                val tvSsid: TextView? = slidePanel?.findViewById(R.id.tv_ssid)
+
+                WifiUtils.getConnectedSsid(baseContext)?.let { ssid ->
+                    if (ssid.isNotEmpty())
+                        tvSsid?.text = ssid
+                    else
+                        tvSsid?.setText(R.string.wlan)
+                } ?: run {
+                    tvSsid?.setText(R.string.wlan)
+                }
+
+                // 初始化语音唤醒状态
+                val isMicrophoneEnabled =
+                    ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)
+                if (isMicrophoneEnabled) {
+                    enableMicrophoneAnimation()
+                } else {
+                    disableMicrophoneAnimation()
+                }
             }
             ACTION_SHOW_RECOGNIZE -> {
                 val isExpectReply = intent.getBooleanExtra(EXTRA_EXPECT_REPLY, false)
@@ -526,12 +693,6 @@ class FloatingService : Service() {
                 val endPlayId = intent.getStringExtra("endPlayId")
                 updateMusicControlButton(firstPlayId, endPlayId)
             }
-            ACTION_SHOW_SLEEP -> {
-                showSleepView()
-            }
-            ACTION_HIDE_SLEEP -> {
-                hideSleepView()
-            }
             ACTION_SHOW_NOTIFICATION -> {
                 val message = intent.getStringExtra(EXTRA_MESSAGE)
                 val tag = intent.getStringExtra(EXTRA_TAG)
@@ -554,7 +715,11 @@ class FloatingService : Service() {
                         Pair(positiveButtonText, View.OnClickListener {
                             dismissNotification()
                             positiveButtonAction?.let {
-                                sendBroadcast(Intent(it))
+                                val broadcast = Intent(it)
+                                intent.extras?.let { extras ->
+                                    broadcast.putExtras(extras)
+                                }
+                                sendBroadcast(broadcast)
                             }
                         }),
                     if (negativeButtonText.isNullOrEmpty())
@@ -563,7 +728,11 @@ class FloatingService : Service() {
                         Pair(negativeButtonText, View.OnClickListener {
                             dismissNotification()
                             negativeButtonAction?.let {
-                                sendBroadcast(Intent(it))
+                                val broadcast = Intent(it)
+                                intent.extras?.let { extras ->
+                                    broadcast.putExtras(extras)
+                                }
+                                sendBroadcast(broadcast)
                             }
                         }),
                     keeping,
@@ -590,17 +759,9 @@ class FloatingService : Service() {
                     dismissRecognizeView()
 
                     showBackgroundRecognizeView()
-
-                    voiceButtonView?.isVisible = false
                 } else {
                     dismissBackgroundRecognizeView()
-
-                    voiceButtonView?.isVisible =
-                        ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_BUTTON_ENABLED, true)
                 }
-            }
-            ACTION_SET_WAKE_UP_ENABLED -> {
-                isWakeUpEnabled = intent.getBooleanExtra(EXTRA_ENABLED, true)
             }
         }
         return super.onStartCommand(intent, flags, startId)
@@ -624,8 +785,8 @@ class FloatingService : Service() {
                     connectivityManager.unregisterNetworkCallback(networkCallback)
                 }
         }
-        audioPlayerStateReceiver.unregister(this)
         alarmStateReceiver.unregister(this)
+        wifiStateReceiver.unregister(this)
 
         batteryReceiver.unregister(this)
 
@@ -633,7 +794,11 @@ class FloatingService : Service() {
 
         EvsScreen.get(this).unregisterBrightnessChangedCallback(brightnessChangedCallback)
 
-        ConfigUtils.unregisterOnConfigChangedListener(onConfigChangedListener)
+        EvsAudioPlayer.get(this).removeListener(audioPlayerStateListener)
+
+        ConfigUtils.unregisterOnConfigChangedListener(configChangedListener)
+
+        ConfigUtils.unregisterOnConfigChangedListener(VoiceButtonUtils)
     }
 
     private fun showSideIndicator(animatorRes: Int, value: Int) {
@@ -714,6 +879,10 @@ class FloatingService : Service() {
     }
 
     private fun clearCurrentTemplate() {
+        TouchAccessibility.isBodyTemplate = false
+
+        isShowTemplate = false
+
         EvsTemplate.get().isOtherTemplateFocused = false
 
         EvsTemplate.get().templateType = null
@@ -756,6 +925,10 @@ class FloatingService : Service() {
         val templateId = json.get("template_id").asString
         val type = json.get("type").asString
 
+        if (type == Template.TYPE_BODY_1 || type == Template.TYPE_BODY_2) {
+            TouchAccessibility.isBodyTemplate = true
+        }
+
         EvsTemplate.get().templateType = type
 
         currentTemplateId = templateId
@@ -778,6 +951,8 @@ class FloatingService : Service() {
             if (childView is BodyTemplateView3) {
                 alarmView?.findViewById<View>(R.id.alarm_placeholder)?.visibility = View.GONE
             }
+
+            isShowTemplate = true
 
             val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             templateContainer?.let { templateContainer ->
@@ -827,6 +1002,14 @@ class FloatingService : Service() {
                 view.findViewById<View>(R.id.alarm_placeholder).visibility = View.VISIBLE
             }
 
+            view.findViewById<TextView>(R.id.close_alarm_message)?.let { tvMessage ->
+                val array = resources.getStringArray(R.array.alert_tips)
+                tvMessage.text = getString(
+                    R.string.you_can_say,
+                    array[((array.size - 1) * Math.random()).roundToInt()]
+                )
+            }
+
             view.alpha = 0f
             view.animate()
                 .alpha(1f)
@@ -868,6 +1051,7 @@ class FloatingService : Service() {
         if (hasPermission()) {
             val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
+            // Template UI
             run {
                 val view = InterceptFrameLayout(baseContext)
 
@@ -889,14 +1073,19 @@ class FloatingService : Service() {
                 layoutParams.height = 0
 
                 view.onInterceptTouchListener = View.OnTouchListener { _, _ ->
+                    VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
                     templateContainer?.getChildAt(0)?.let { templateView ->
-                        val stopAudioPlayer = Intent(this, EngineService::class.java)
-                        stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
-                        stopAudioPlayer.putExtra(
-                            EngineService.EXTRA_PLAYER_TYPE,
-                            AudioPlayer.TYPE_TTS
-                        )
-                        startService(stopAudioPlayer)
+                        //                        val stopAudioPlayer = Intent(this, EngineService::class.java)
+//                        stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
+//                        stopAudioPlayer.putExtra(
+//                            EngineService.EXTRA_PLAYER_TYPE,
+//                            AudioPlayer.TYPE_TTS
+//                        )
+//                        startService(stopAudioPlayer)
+
+                        if (templateView is BodyTemplateView1) {
+                            templateView.stopBodyAnimation()
+                        }
 
                         val stopAlarm = Intent(this, EngineService::class.java)
                         stopAlarm.action = EngineService.ACTION_REQUEST_STOP_ALARM
@@ -947,6 +1136,7 @@ class FloatingService : Service() {
                 templateContainer = view
             }
 
+            // 闹钟关闭 UI
             run {
                 val view = View.inflate(this, R.layout.layout_alarm_active, null)
 
@@ -971,6 +1161,9 @@ class FloatingService : Service() {
                     stopAlarm.action = EngineService.ACTION_REQUEST_STOP_ALARM
                     startService(stopAlarm)
 
+                    EvsSpeaker.get(baseContext).isVisualFocusGain = false
+                    EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
+
                     clearCurrentTemplate()
                     clearAlarmActiveView()
                 }
@@ -980,6 +1173,7 @@ class FloatingService : Service() {
                 alarmView = view
             }
 
+            // 辅助语音唤醒按钮
             run {
                 val view = FrameLayout(this)
 
@@ -987,8 +1181,6 @@ class FloatingService : Service() {
                 view.isFocusable = true
 
                 val onClickListener = View.OnClickListener {
-                    PromptManager.playWakeSound()
-
                     val intent = Intent(this, EngineService::class.java)
                     intent.action = EngineService.ACTION_SEND_AUDIO_IN
                     startService(intent)
@@ -1002,6 +1194,7 @@ class FloatingService : Service() {
 
                     private var actionDownTime = 0L
                     override fun onTouch(v: View?, event: MotionEvent?): Boolean {
+                        VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
                         when (event?.action) {
                             MotionEvent.ACTION_DOWN -> {
                                 actionDownTime = System.currentTimeMillis()
@@ -1101,21 +1294,24 @@ class FloatingService : Service() {
                 layoutParams.width = resources.getDimensionPixelSize(R.dimen.dp_88)
                 layoutParams.height = resources.getDimensionPixelSize(R.dimen.dp_88)
 
-                view.isVisible = ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_BUTTON_ENABLED, true)
-                    && ConfigUtils.getBoolean(ConfigUtils.KEY_SETUP_COMPLETED, false)
-                    && isWakeUpEnabled
+                view.isVisible = false
 
                 windowManager.addView(view, layoutParams)
+
+                view.post {
+                    if (isServiceEnabled())
+                        hideVoiceButtonHandler.postScrollEvent()
+                }
 
                 voiceButtonView = view
             }
 
+            // IAT 识别 UI
             run {
                 val view = View.inflate(this, R.layout.layout_recognize, null)
                 view.setOnClickListener {
                     dismissRecognizeView()
 
-                    SleepWorker.get(this).doTouchWork(this)
                     val intent = Intent(this, EngineService::class.java)
                     intent.action = EngineService.ACTION_REQUEST_CANCEL
                     startService(intent)
@@ -1140,6 +1336,7 @@ class FloatingService : Service() {
                 recognizeView = view
             }
 
+            // 背景录音识别 UI
             run {
                 val view = View.inflate(this, R.layout.layout_background_recognize, null)
 
@@ -1160,11 +1357,6 @@ class FloatingService : Service() {
 
                 windowManager.addView(view, layoutParams)
 
-                view.findViewById<GifView>(R.id.background_animation)?.let { gifView ->
-                    gifView.gifResource = R.raw.animation_voice_listening
-
-                    gifView.play()
-                }
                 view.findViewById<TextView>(R.id.background_iat)?.let { tvText ->
                     tvText.addTextChangedListener(object : TextWatcher {
                         override fun afterTextChanged(s: Editable?) {
@@ -1185,6 +1377,13 @@ class FloatingService : Service() {
 
                     })
                 }
+                view.findViewById<ImageView>(R.id.background_recognize_img)?.setOnClickListener {
+                    dismissBackgroundRecognizeView()
+
+                    val intent = Intent(this, EngineService::class.java)
+                    intent.action = EngineService.ACTION_REQUEST_CANCEL
+                    startService(intent)
+                }
 
                 view.alpha = 0f
                 view.isVisible = false
@@ -1192,6 +1391,7 @@ class FloatingService : Service() {
                 backgroundRecognizeView = view
             }
 
+            // 显示通知
             run {
                 val view = View.inflate(this, R.layout.layout_notification, null)
 
@@ -1222,6 +1422,7 @@ class FloatingService : Service() {
                 notificationView = view
             }
 
+            // 右侧控制条 UI，显示语音控制音量、亮度调节结果
             run {
                 val view = View.inflate(this, R.layout.layout_side_indicator_bar, null)
 
@@ -1251,6 +1452,7 @@ class FloatingService : Service() {
                 sideIndicatorView = view
             }
 
+            // 下拉控制栏
             run {
                 val view = View.inflate(this, R.layout.layout_control_panel, null)
 
@@ -1275,6 +1477,11 @@ class FloatingService : Service() {
                             false
                         }
                     }
+                }
+                panel.onInterceptTouchListener = View.OnTouchListener { _, _ ->
+                    VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
+                    panelCloseCountHandler.postNewCount()
+                    false
                 }
                 view.findViewById<View>(R.id.panel_background).setOnTouchListener { _, event ->
                     if (isPanelOpened)
@@ -1465,6 +1672,14 @@ class FloatingService : Service() {
                         e.printStackTrace()
                     }
                 }
+                view.findViewById<View>(R.id.panel_microphone)?.setOnClickListener {
+                    val isMicrophoneEnabled =
+                        ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)
+                    ConfigUtils.putBoolean(
+                        ConfigUtils.KEY_VOICE_WAKEUP_ENABLED,
+                        !isMicrophoneEnabled
+                    )
+                }
                 view.findViewById<View>(R.id.panel_message_board)?.setOnClickListener {
                     when {
                         alarmView?.alpha == 1f -> {
@@ -1512,26 +1727,72 @@ class FloatingService : Service() {
                 playPause = view.findViewById(R.id.iv_play_pause)
                 ivNext = view.findViewById(R.id.iv_next)
                 musicPanel?.setOnClickListener {
-                    EventBus.getDefault().post(ACTION_START_PLAYER)
+                    val intent = Intent(it.context, EvsLauncherActivity::class.java)
+                    intent.action = ACTION_START_PLAYER
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    startActivity(intent)
+
                     dismissPanel()
                 }
                 ivNext?.setOnClickListener {
-                    EventBus.getDefault().post(ACTION_NEXT)
+                    EvsPlaybackController.get()
+                        .sendCommand(PlaybackController.Command.Next, object :
+                            RequestCallback {
+                            override fun onResult(result: Result) {
+                                if (!result.isSuccessful) {
+                                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                                    intent.putExtra(EngineService.EXTRA_RESULT, result)
+                                    sendBroadcast(intent)
+                                }
+                            }
+                        })
                 }
                 ivPrevious?.setOnClickListener {
-                    EventBus.getDefault().post(ACTION_PREVIOUS)
+                    EvsPlaybackController.get()
+                        .sendCommand(PlaybackController.Command.Previous, object :
+                            RequestCallback {
+                            override fun onResult(result: Result) {
+                                if (!result.isSuccessful) {
+                                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                                    intent.putExtra(EngineService.EXTRA_RESULT, result)
+                                    sendBroadcast(intent)
+                                }
+                            }
+                        })
                 }
                 playPause?.setOnClickListener {
-                    if (ContentStorage.get().isMusicPlaying) {
-                        playPause?.setImageResource(R.drawable.ic_music_play)
-                        EventBus.getDefault().post(ACTION_PAUSE)
+                    val audioPlayer = EvsAudioPlayer.get(this)
+                    if (audioPlayer.playbackResourceId.isNullOrEmpty()) {
+                        EvsPlaybackController.get()
+                            .sendCommand(PlaybackController.Command.Resume, object :
+                                RequestCallback {
+                                override fun onResult(result: Result) {
+                                    if (!result.isSuccessful) {
+                                        val intent =
+                                            Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                                        intent.putExtra(EngineService.EXTRA_RESULT, result)
+                                        sendBroadcast(intent)
+                                    }
+                                }
+                            })
                     } else {
-                        playPause?.setImageResource(R.drawable.ic_music_pause)
-                        EventBus.getDefault().post(ACTION_PLAY)
+                        if (audioPlayer.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
+                            playPause?.setImageResource(R.drawable.ic_music_play)
+                            EvsAudioPlayer.get(this).pause(AudioPlayer.TYPE_PLAYBACK)
+                        } else {
+                            playPause?.setImageResource(R.drawable.ic_music_pause)
+                            EvsAudioPlayer.get(this).resume(AudioPlayer.TYPE_PLAYBACK)
+                        }
                     }
                 }
                 tvQuit?.setOnClickListener {
-                    EventBus.getDefault().post(ACTION_QUIT)
+                    EvsAudioPlayer.get(this).stop(AudioPlayer.TYPE_PLAYBACK)
+
+                    val storage = ContentStorage.get()
+                    storage.isMusicPlaying = false
+
+                    updateMusicPanel(null)
                 }
 
                 updateMusicPanel(ContentStorage.get().playerInfo)
@@ -1551,6 +1812,14 @@ class FloatingService : Service() {
                 layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT
 
                 view.post {
+                    val isMicrophoneEnabled =
+                        ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)
+                    if (isMicrophoneEnabled) {
+                        enableMicrophoneAnimation()
+                    } else {
+                        disableMicrophoneAnimation()
+                    }
+
                     animatePanel(0f)
                     view.visibility = View.GONE
 
@@ -1563,6 +1832,7 @@ class FloatingService : Service() {
                 slidePanel = view
             }
 
+            // 下拉控制栏手势监听区域
             run {
                 val view = object : View(this) {
                     var touchY = 0f
@@ -1575,7 +1845,11 @@ class FloatingService : Service() {
                                     ?: 0).toFloat()
                             else
                                 resources.getDimensionPixelSize(R.dimen.panel_min_height).toFloat()
-                        if (!isPanelOpened && isControlPanelEnabled) {
+                        if (!isPanelOpened && isControlPanelEnabled && ConfigUtils.getBoolean(
+                                ConfigUtils.KEY_SETUP_COMPLETED,
+                                false
+                            )
+                        ) {
                             when (event.action) {
                                 MotionEvent.ACTION_DOWN -> {
                                     touchY = event.y
@@ -1620,14 +1894,14 @@ class FloatingService : Service() {
                 layoutParams.flags =
                     WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                         WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
-                layoutParams.gravity = Gravity.TOP or Gravity.END
-                layoutParams.width =
-                    metrics.widthPixels - resources.getDimensionPixelSize(R.dimen.dp_80)
-                layoutParams.height = resources.getDimensionPixelSize(R.dimen.dp_16)
+                layoutParams.gravity = Gravity.TOP or Gravity.CENTER_HORIZONTAL
+                layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+                layoutParams.height = resources.getDimensionPixelSize(R.dimen.dp_12)
 
                 windowManager.addView(view, layoutParams)
             }
 
+            // 左侧右滑 UI 展示
             run {
                 val view = LottieAnimationView(this)
 
@@ -1652,8 +1926,10 @@ class FloatingService : Service() {
                 windowManager.addView(view, layoutParams)
 
                 backAnimationView = view
+                backAnimationView?.isVisible = false
             }
 
+            // 左侧右滑手势监听区域
             run {
                 val view = View(this)
 
@@ -1669,7 +1945,7 @@ class FloatingService : Service() {
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
                     WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
                 layoutParams.gravity = Gravity.START or Gravity.BOTTOM
-                layoutParams.width = resources.getDimensionPixelSize(R.dimen.dp_24)
+                layoutParams.width = resources.getDimensionPixelSize(R.dimen.dp_8)
                 layoutParams.height =
                     resources.displayMetrics.heightPixels - resources.getDimensionPixelSize(R.dimen.dp_56)
 
@@ -1677,6 +1953,7 @@ class FloatingService : Service() {
                     var touchX = 0f
                     val limit = resources.getDimensionPixelSize(R.dimen.dp_80)
                     touchView.setOnTouchListener { _, event ->
+                        VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
                         when (event.action) {
                             MotionEvent.ACTION_DOWN -> {
                                 touchX = event.x
@@ -1686,6 +1963,10 @@ class FloatingService : Service() {
 
                                 val percent = max(0f, min(1f, 1f * distance / limit))
 
+                                if (backAnimationView?.isVisible == false) {
+                                    backAnimationView?.isVisible = true
+                                }
+
                                 backAnimationView?.alpha = percent
                                 backAnimationView?.progress = percent
                             }
@@ -1694,6 +1975,7 @@ class FloatingService : Service() {
                                     ?.alpha(0f)
                                     ?.setDuration(200)
                                     ?.withEndAction {
+                                        backAnimationView?.isVisible = false
                                         backAnimationView?.progress = 0f
                                     }
                                     ?.start()
@@ -1778,6 +2060,31 @@ class FloatingService : Service() {
         animator.duration = 450
         animator.interpolator = FastOutSlowInInterpolator()
         animator.start()
+    }
+
+    private fun hideVoiceButton() {
+        voiceButtonView?.isVisible = false
+    }
+
+    private fun showVoiceButton() {
+        voiceButtonView?.isVisible = true
+    }
+
+    private fun weakVoiceButton() {
+        val voiceButton = voiceButtonView ?: return
+        if (voiceButton.isVisible) {
+            val isLeft = (voiceButton.layoutParams as? WindowManager.LayoutParams)?.x == 0
+            if (isLeft)
+                voiceButton.animate().translationX(-voiceButton.width.toFloat()).setDuration(500).start()
+            else
+                voiceButton.animate().translationX(voiceButton.width.toFloat()).setDuration(500).start()
+        }
+    }
+
+    private fun strongVoiceButton() {
+        val voiceButton = voiceButtonView ?: return
+        if (voiceButton.isVisible)
+            voiceButton.animate().translationX(0f).setDuration(300).start()
     }
 
     private fun showNotification(
@@ -1871,13 +2178,15 @@ class FloatingService : Service() {
             ))?.let { intent ->
 
             val status: Int = intent.getIntExtra(BatteryManager.EXTRA_STATUS, -1)
-            val isCharging: Boolean = status == BatteryManager.BATTERY_STATUS_CHARGING
-                || status == BatteryManager.BATTERY_STATUS_FULL
 
             // How are we charging?
             val chargePlug: Int = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1)
             val usbCharge: Boolean = chargePlug == BatteryManager.BATTERY_PLUGGED_USB
             val acCharge: Boolean = chargePlug == BatteryManager.BATTERY_PLUGGED_AC
+
+            val isCharging: Boolean =
+                (status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL)
+                    && chargePlug == BatteryManager.BATTERY_PLUGGED_USB
 
             val level: Int = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, -1)
             val scale: Int = intent.getIntExtra(BatteryManager.EXTRA_SCALE, -1)
@@ -1893,70 +2202,121 @@ class FloatingService : Service() {
         }
     }
 
+    private fun enableWifiIcon() {
+        slidePanel?.let {
+            it.findViewById<ImageView>(R.id.iv_wlan).isSelected = false
+            it.findViewById<View>(R.id.panel_wlan).isSelected = false
+        }
+    }
+
+    private fun disableWifiIcon() {
+        slidePanel?.let {
+            it.findViewById<ImageView>(R.id.iv_wlan).isSelected = true
+            it.findViewById<View>(R.id.panel_wlan).isSelected = true
+        }
+    }
+
+    private fun disableMicrophoneAnimation() {
+        slidePanel?.findViewById<View>(R.id.panel_microphone)?.isSelected = true
+        slidePanel?.findViewById<ImageView>(R.id.microphone_animation)
+            ?.let { animationView ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    (animationView.drawable as? AnimatedVectorDrawableCompat)?.let {
+                        if (it.isRunning) {
+                            it.stop()
+                        }
+                    }
+                    val drawable = AnimatedVectorDrawableCompat.create(
+                        this,
+                        R.drawable.anim_microphone_enabled_to_disabled
+                    )
+                    animationView.setImageDrawable(drawable)
+                    drawable?.start()
+                } else {
+                    microphoneAnimator?.cancel()
+
+                    val animator = ValueAnimator.ofFloat(0f, 1f)
+                    animator.addUpdateListener {
+                        val value = it.animatedValue as Float
+
+                        val scale = 0.8f
+
+                        if (value < 0.5f) {
+                            animationView.scaleX = min(1f, 1 - (1 - scale) * value / 0.5f)
+                            animationView.scaleY = min(1f, 1 - (1 - scale) * value / 0.5f)
+                        } else {
+                            if (animationView.tag != R.drawable.ic_microphone_disabled_black_40dp) {
+                                animationView.tag = R.drawable.ic_microphone_disabled_black_40dp
+                                animationView.setImageResource(R.drawable.ic_microphone_disabled_black_40dp)
+                            }
+                            animationView.scaleX =
+                                min(1f, scale + (1 - scale) * (value - 0.5f) / 0.5f)
+                            animationView.scaleY =
+                                min(1f, scale + (1 - scale) * (value - 0.5f) / 0.5f)
+                        }
+                    }
+                    animator.duration = 500
+                    animator.interpolator = FastOutSlowInInterpolator()
+                    animator.start()
+                }
+
+            }
+    }
+
+    private fun enableMicrophoneAnimation() {
+        slidePanel?.findViewById<View>(R.id.panel_microphone)?.isSelected = false
+        slidePanel?.findViewById<ImageView>(R.id.microphone_animation)
+            ?.let { animationView ->
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                    (animationView.drawable as? AnimatedVectorDrawableCompat)?.let {
+                        if (it.isRunning) {
+                            it.stop()
+                        }
+                    }
+                    val drawable = AnimatedVectorDrawableCompat.create(
+                        this,
+                        R.drawable.anim_microphone_disabled_to_enabled
+                    )
+                    animationView.setImageDrawable(drawable)
+                    drawable?.start()
+                } else {
+                    microphoneAnimator?.cancel()
+
+                    val animator = ValueAnimator.ofFloat(0f, 1f)
+                    animator.addUpdateListener {
+                        val value = it.animatedValue as Float
+
+                        val scale = 0.8f
+
+                        if (value < 0.5f) {
+                            animationView.scaleX = min(1f, 1 - (1 - scale) * value / 0.5f)
+                            animationView.scaleY = min(1f, 1 - (1 - scale) * value / 0.5f)
+                        } else {
+                            if (animationView.tag != R.drawable.ic_microphone_enabled_black_40dp) {
+                                animationView.tag = R.drawable.ic_microphone_enabled_black_40dp
+                                animationView.setImageResource(R.drawable.ic_microphone_enabled_black_40dp)
+                            }
+                            animationView.scaleX =
+                                min(1f, scale + (1 - scale) * (value - 0.5f) / 0.5f)
+                            animationView.scaleY =
+                                min(1f, scale + (1 - scale) * (value - 0.5f) / 0.5f)
+                        }
+                    }
+                    animator.duration = 500
+                    animator.interpolator = FastOutSlowInInterpolator()
+                    animator.start()
+
+                    microphoneAnimator = animator
+                }
+            }
+    }
+
     private fun startTimer() {
         if (timerHandler == null) {
             timerHandler = TimerHandler(this)
         }
         timerHandler?.removeCallbacksAndMessages(null)
         timerHandler?.sendEmptyMessageDelayed(0, 1000)
-    }
-
-    private fun hideSleepView() {
-        if (!hasPermission() || !isShowSleepTime) {
-            return
-        }
-
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-        windowManager.removeView(sleepView)
-        isShowSleepTime = false
-    }
-
-    @SuppressLint("ClickableViewAccessibility")
-    private fun showSleepView() {
-        if (!hasPermission() || isShowSleepTime) {
-            return
-        }
-
-        val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
-
-        if (sleepView == null) {
-            sleepView = View.inflate(this, R.layout.layout_sleep, null)
-            sleepTime = sleepView?.findViewById(R.id.sleep_time)
-            sleepView?.setOnTouchListener { _, _ ->
-                EvsScreen.get(this).setState(Screen.STATE_ON)
-
-                return@setOnTouchListener true
-            }
-        }
-
-        if (!isShowSleepTime) {
-            val layoutParams = WindowManager.LayoutParams()
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-                layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
-            } else {
-                @Suppress("DEPRECATION")
-                layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE
-            }
-            layoutParams.flags =
-                WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
-                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN
-            layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
-            layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT
-
-            val flag = View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY or
-                View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-            sleepView?.rootView?.systemUiVisibility = flag
-
-            updateCurrentTime()
-
-            layoutParams.windowAnimations = R.style.AnimationAlpha
-
-            windowManager.addView(sleepView, layoutParams)
-
-            isShowSleepTime = true
-        }
     }
 
     private fun updateMusicControlButton(firstPlayId: String?, endPlayId: String?) {
@@ -2012,7 +2372,7 @@ class FloatingService : Service() {
             ) {
                 musicTitle?.text = playerInfo.content?.musicArtist
             }
-            if (ContentStorage.get().isMusicPlaying) {
+            if (EvsAudioPlayer.get(this).playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
                 playPause?.setImageResource(R.drawable.ic_music_pause)
             } else {
                 playPause?.setImageResource(R.drawable.ic_music_play)
@@ -2021,6 +2381,7 @@ class FloatingService : Service() {
     }
 
     private fun showPanel() {
+        panelCloseCountHandler.postNewCount()
         isPanelOpened = true
         slidePanel?.let { view ->
             val startValue = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -2033,12 +2394,32 @@ class FloatingService : Service() {
                 val value = it.animatedValue as Float
                 animatePanel(value)
             }
+            animator.doOnEnd {
+                slidePanel?.post {
+                    slidePanel?.let { panel ->
+                        val tvSsid: TextView = panel.findViewById(R.id.tv_ssid)
+                        WifiUtils.getConnectedSsid(baseContext)?.let { ssid ->
+                            if (ssid.isNotEmpty()) {
+                                tvSsid.text = ssid
+                            } else {
+                                tvSsid.setText(R.string.wlan)
+                            }
+                        } ?: run {
+                            tvSsid.setText(R.string.wlan)
+                        }
+                    }
+                }
+                view.findViewById<TextView>(R.id.tv_ssid).requestFocus()
+            }
             animator.duration = 200
             animator.start()
         }
     }
 
     private fun animatePanel(percent: Float) {
+        if (slidePanel?.visibility == View.GONE) {
+            slidePanel?.visibility = View.VISIBLE
+        }
         slidePanel?.let { slidePanel ->
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 slidePanel.alpha = percent
@@ -2055,6 +2436,7 @@ class FloatingService : Service() {
     }
 
     private fun dismissPanel() {
+        panelCloseCountHandler.clearCount()
         isPanelOpened = false
         slidePanel?.let { view ->
             val startValue = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -2171,11 +2553,28 @@ class FloatingService : Service() {
         }
     }
 
+    private fun getRes(arrayResId: Int): IntArray {
+        val typedArray = resources.obtainTypedArray(arrayResId)
+        val len = typedArray.length()
+        val resId = IntArray(len)
+        for (i in 0 until len) {
+            resId[i] = typedArray.getResourceId(i, -1)
+        }
+        typedArray.recycle()
+        return resId
+    }
+
     private fun showBackgroundRecognizeView() {
         backgroundRecognizeView?.let { view ->
-            view.findViewById<GifView>(R.id.background_animation)?.let { gifView ->
-                gifView.gifResource = R.raw.animation_voice_listening
-                gifView.play()
+            VoiceButtonUtils.isBackgroundRecognizing = true
+            view.findViewById<ImageView>(R.id.background_recognize_img)?.let { imageView ->
+                val animation = imageView.tag as? FrameAnimation
+                if (animation == null) {
+                    val animations = getRes(R.array.animation_listening_res)
+                    val frameAnimation = FrameAnimation(imageView, animations, 30, true)
+                    frameAnimation.startAnimation()
+                    imageView.tag = frameAnimation
+                }
             }
             view.isVisible = true
             view.animate()
@@ -2189,12 +2588,20 @@ class FloatingService : Service() {
 
     private fun dismissBackgroundRecognizeView() {
         backgroundRecognizeView?.let { view ->
+            VoiceButtonUtils.isBackgroundRecognizing = false
+
+            view.findViewById<ImageView>(R.id.background_recognize_img)?.let { imageView ->
+                val animation = imageView.tag as? FrameAnimation
+                if (animation != null) {
+                    animation.stopAnimation()
+                    imageView.tag = null
+                }
+            }
             view.animate()
                 .alpha(0f)
                 .setDuration(250)
                 .withEndAction {
                     view.isVisible = false
-                    view.findViewById<GifView>(R.id.background_animation)?.pause()
                 }
                 .start()
         }
@@ -2203,6 +2610,9 @@ class FloatingService : Service() {
     private fun dismissRecognizeView() {
         recognizeView?.let { view ->
             Log.d(TAG, "dismissRecognizeView")
+
+            isShowRecognize = false
+
             view.animate()
                 .alpha(0f)
                 .setDuration(200)
@@ -2218,6 +2628,8 @@ class FloatingService : Service() {
             Log.d(TAG, "showRecognizeView")
             view.visibility = View.VISIBLE
 
+            isShowRecognize = true
+
             val recognizeWaveView = view.findViewById<RecognizeWaveView>(R.id.recognize_view)
             recognizeWaveView.startEnterAnimation()
 
@@ -2227,15 +2639,26 @@ class FloatingService : Service() {
         }
     }
 
+    private fun isServiceEnabled(): Boolean {
+        val accessibilityManager = getSystemService<AccessibilityManager>()
+            ?: return false
+        val accessibilityServices =
+            accessibilityManager.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC)
+        for (info in accessibilityServices) {
+            if (info.id == "$packageName/.accessibility.TouchAccessibility") {
+                return true
+            }
+        }
+        return false
+    }
+
     fun updateCurrentTime() {
         val calendar = Calendar.getInstance()
         val hour = calendar.get(Calendar.HOUR_OF_DAY)
         val minute = calendar.get(Calendar.MINUTE)
-        sleepTime?.text = String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
 
         slidePanel?.findViewById<TextView>(R.id.time)?.text =
             String.format(Locale.getDefault(), "%02d:%02d", hour, minute)
-        SleepWorker.get(this).startSleep(this)
     }
 
     private class TimerHandler internal constructor(
@@ -2249,6 +2672,31 @@ class FloatingService : Service() {
             if (service != null) {
                 service.updateCurrentTime()
                 sendEmptyMessageDelayed(0, 1000)
+            }
+        }
+    }
+
+    private class HideVoiceButtonHandler(service: FloatingService) : Handler() {
+        private val softRef = SoftReference(service)
+        private val delay = 10 * 1000L
+        private var flag = -1
+        fun postScrollEvent() {
+            Log.d("HideVoiceButtonHandler", "startCount")
+            flag = UUID.randomUUID().hashCode()
+            val msg = Message.obtain()
+            msg.what = 1
+            msg.arg1 = flag
+            sendMessageDelayed(msg, delay)
+        }
+
+        override fun handleMessage(msg: Message?) {
+            super.handleMessage(msg)
+            val service = softRef.get() ?: return
+            if (msg?.what == 1) {
+                val flag = flag
+                if (msg.arg1 == flag) {
+                    service.weakVoiceButton()
+                }
             }
         }
     }
@@ -2338,6 +2786,39 @@ class FloatingService : Service() {
                                 service.hideSideIndicator()
                             }
                         }
+                    }
+                }
+            }
+        }
+    }
+
+    private class PanelCloseCountHandler(service: FloatingService) : Handler() {
+        private val softRef = SoftReference(service)
+        private val countTime = TimeUnit.SECONDS.toMillis(10)
+        private var time = 0L
+
+        fun postNewCount() {
+            val newTime = System.currentTimeMillis()
+            val msg = Message.obtain()
+            msg.what = 1
+            msg.obj = newTime
+            sendMessageDelayed(msg, countTime)
+
+            this.time = newTime
+        }
+
+        fun clearCount() {
+            removeCallbacksAndMessages(null)
+        }
+
+        override fun handleMessage(msg: Message?) {
+            super.handleMessage(msg)
+            if (msg?.what == 1) {
+                val currentTime = msg.obj as? Long
+                if (currentTime == time) {
+                    softRef.get()?.let { service ->
+                        if (service.isPanelOpened)
+                            service.dismissPanel()
                     }
                 }
             }

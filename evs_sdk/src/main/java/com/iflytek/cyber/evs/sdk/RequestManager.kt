@@ -12,20 +12,54 @@ internal object RequestManager {
     private var handler: Handler? = null
     private var service: EvsService? = null
 
+    const val MESSAGE_END = "__END__"
+    const val MESSAGE_CANCEL = "__CANCEL__"
+
+    var currentManualRequestId: String? = null
+        private set
+
     fun initHandler(handler: Handler?, service: EvsService) {
         this.handler = handler
         this.service = service
     }
 
-    fun sendRequest(name: String, payload: JSONObject, requestCallback: RequestCallback? = null) {
+    fun sendRequest(
+        name: String,
+        payload: JSONObject,
+        requestCallback: RequestCallback? = null,
+        isManual: Boolean = false
+    ) {
         handler?.post {
-            val requestBody = RequestBuilder.buildRequestBody(name, payload)
+            val requestBody = RequestBuilder.buildRequestBody(name, payload, isManual)
 
-            val requestId = requestBody.request.header.requestId
-            if (requestId.startsWith(RequestBuilder.PREFIX_REQUEST))
-                ResponseProcessor.updateCurrentRequestId(requestId)
+            if (isManual) {
+                currentManualRequestId = requestBody.request.header.requestId
+
+                ResponseProcessor.clearPendingManualExecuting()
+            }
+
+//            val requestId = requestBody.request.header.requestId
+//            if (requestId.startsWith(RequestBuilder.PREFIX_REQUEST))
+//                ResponseProcessor.updateCurrentRequestId(requestId)
 
             val result = SocketManager.send(requestBody.toString())
+
+            requestCallback?.onResult(result)
+        } ?: run {
+            requestCallback?.onResult(Result(Result.CODE_UNINITIALIZED, null))
+            throw IllegalStateException("Must init handler for RequestManager at first.")
+        }
+    }
+
+    fun sendRawString(
+        raw: String,
+        requestCallback: RequestCallback? = null
+    ) {
+        handler?.post {
+            if (raw == MESSAGE_CANCEL)
+                currentManualRequestId = null
+
+            val result = SocketManager.send(raw)
 
             requestCallback?.onResult(result)
         } ?: run {

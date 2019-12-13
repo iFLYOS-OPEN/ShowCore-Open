@@ -1,21 +1,25 @@
 package com.iflytek.cyber.iot.show.core.accessibility
 
 import android.accessibilityservice.AccessibilityService
-import android.util.Log
 import android.view.accessibility.AccessibilityEvent
-import com.iflytek.cyber.iot.show.core.fragment.MainFragment2
-import com.iflytek.cyber.iot.show.core.task.SleepWorker
-import java.util.*
+import com.iflytek.cyber.iot.show.core.utils.VoiceButtonUtils
 
 class TouchAccessibility : AccessibilityService() {
+    companion object {
+        var isMainFragment = false
+        var isBodyTemplate = false
+        val isIgnoreTouchEvent: Boolean
+            get() = isMainFragment || isBodyTemplate
+    }
 
     override fun onInterrupt() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        if (SleepWorker.get(this).topFragment is MainFragment2) {
+        if (isIgnoreTouchEvent) {
             return
         }
-        SleepWorker.get(this).doTouchWork(this)
+        VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
+//        SleepWorker.get(this).doTouchWork(this)
     }
 }

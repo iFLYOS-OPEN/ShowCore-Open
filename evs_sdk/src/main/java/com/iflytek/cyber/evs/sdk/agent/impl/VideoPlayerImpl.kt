@@ -38,7 +38,11 @@ class VideoPlayerImpl : VideoPlayer {
             lastPlayState = -1
         }
 
-        override fun onPlayerStateChanged(player: VideoPlayerInstance, playWhenReady: Boolean, playbackState: Int) {
+        override fun onPlayerStateChanged(
+            player: VideoPlayerInstance,
+            playWhenReady: Boolean,
+            playbackState: Int
+        ) {
             Log.d(TAG, "onPlayerStateChanged($playWhenReady, $playbackState)")
             val isPlayingChanged = this.playWhenReady != playWhenReady
             this.playWhenReady = playWhenReady
@@ -165,7 +169,16 @@ class VideoPlayerImpl : VideoPlayer {
         return true
     }
 
+    override fun exit(): Boolean {
+        val player = getPlayer()
+        player?.stop() ?: run {
+            return false
+        }
+        return true
+    }
+
     override fun seekTo(offset: Long): Boolean {
+        super.seekTo(offset)
         val player = getPlayer()
         player?.let {
             it.seekTo(offset)
@@ -212,7 +225,7 @@ class VideoPlayerImpl : VideoPlayer {
                 val step = 0.05f
                 while (volGrowFlag && nextVolume != targetVolume) {
                     nextVolume =
-                            if (nextVolume + step > targetVolume) targetVolume else nextVolume + step
+                        if (nextVolume + step > targetVolume) targetVolume else nextVolume + step
                     try {
                         sleep(30)
                     } catch (_: Exception) {

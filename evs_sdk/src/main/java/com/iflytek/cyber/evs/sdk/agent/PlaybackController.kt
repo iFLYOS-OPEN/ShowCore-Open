@@ -1,6 +1,7 @@
 package com.iflytek.cyber.evs.sdk.agent
 
 import com.alibaba.fastjson.JSONObject
+import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.RequestManager
 
 /**
@@ -19,7 +20,7 @@ abstract class PlaybackController {
      * 发送控制命令。
      * @param command 命令
      */
-    fun sendCommand(command: Command) {
+    fun sendCommand(command: Command, requestCallback: RequestCallback? = null) {
         val payload = JSONObject()
         when (command) {
             Command.Exit -> payload[KEY_TYPE] = "EXIT"
@@ -28,7 +29,7 @@ abstract class PlaybackController {
             Command.Previous -> payload[KEY_TYPE] = "PREVIOUS"
             Command.Resume -> payload[KEY_TYPE] = "RESUME"
         }
-        RequestManager.sendRequest(NAME_CONTROL_COMMAND, payload)
+        RequestManager.sendRequest(NAME_CONTROL_COMMAND, payload, requestCallback, true)
     }
 
     /**

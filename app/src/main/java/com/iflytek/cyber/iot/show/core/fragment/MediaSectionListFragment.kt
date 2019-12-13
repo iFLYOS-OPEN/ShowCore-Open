@@ -7,6 +7,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.core.os.bundleOf
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.R
@@ -19,22 +20,31 @@ import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 
-class MediaSectionListFragment : BaseFragment() {
+class MediaSectionListFragment : BaseFragment(), PageScrollable {
 
     companion object {
         fun instance(id: String, typeName: String?): MediaSectionListFragment {
             return MediaSectionListFragment().apply {
-                arguments = bundleOf(Pair("id", id),
-                                Pair("type", "SECTION"),
-                                Pair("name", typeName))
+                arguments = bundleOf(
+                    Pair("id", id),
+                    Pair("type", "SECTION"),
+                    Pair("name", typeName)
+                )
             }
         }
 
-        fun instance(group: Group, abbr: String?): MediaSectionListFragment {
+        fun instance(
+            group: Group,
+            abbr: String?,
+            typeName: String? = null
+        ): MediaSectionListFragment {
             return MediaSectionListFragment().apply {
-                arguments = bundleOf(Pair("group", group),
-                        Pair("type", "MUSIC"),
-                        Pair("abbr", abbr))
+                arguments = bundleOf(
+                    Pair("group", group),
+                    Pair("type", if (typeName == null) "MUSIC" else "SECTION"),
+                    Pair("abbr", abbr),
+                    Pair("name", typeName)
+                )
             }
         }
     }
@@ -44,8 +54,13 @@ class MediaSectionListFragment : BaseFragment() {
     private var albumAdapter: AlbumAdapter? = null
     private var name: String? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return LayoutInflater.from(context).inflate(R.layout.fragment_media_section_list, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return LayoutInflater.from(context)
+            .inflate(R.layout.fragment_media_section_list, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -60,13 +75,18 @@ class MediaSectionListFragment : BaseFragment() {
         val group = arguments?.getParcelable<Group>("group")
         val id = arguments?.getString("id")
         val abbr = arguments?.getString("abbr")
-        name =  arguments?.getString("name")
+        name = arguments?.getString("name")
         if (TextUtils.equals(type, "MUSIC")) {
             title.text = abbr
             val items = findAnchorList(abbr, group?.items)
             setupRecyclerView(items)
         } else if (TextUtils.equals(type, "SECTION")) {
-            id?.let { getMediaSections(it) }
+            if (group != null) {
+                title.text = group.name
+                setupRecyclerView(group.items)
+            } else {
+                id?.let { getMediaSections(it) }
+            }
         }
     }
 
@@ -123,5 +143,32 @@ class MediaSectionListFragment : BaseFragment() {
         } else {
             null
         }
+    }
+
+    override fun scrollToNext(): Boolean {
+        sectionList.let { recyclerView ->
+            val lastItem =
+                (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
+            val itemCount = albumAdapter?.itemCount ?: 0
+            if (lastItem == itemCount - 1 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, recyclerView.height)
+            }
+        }
+        return true
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        sectionList.let { recyclerView ->
+            val scrollY = recyclerView.computeVerticalScrollOffset()
+            val itemCount = albumAdapter?.itemCount
+            if (scrollY == 0 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, -recyclerView.height)
+            }
+        }
+        return true
     }
 }

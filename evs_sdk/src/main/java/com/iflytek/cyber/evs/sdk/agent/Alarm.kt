@@ -1,5 +1,6 @@
 package com.iflytek.cyber.evs.sdk.agent
 
+import androidx.annotation.CallSuper
 import com.alibaba.fastjson.JSONObject
 import com.alibaba.fastjson.annotation.JSONField
 import com.iflytek.cyber.evs.sdk.RequestManager
@@ -62,7 +63,19 @@ abstract class Alarm {
 
     private var listeners = HashSet<AlarmStateChangedListener>()
 
-    internal var onAlarmUpdatedListener: OnAlarmUpdatedListener? = null
+    private var alarmUpdateListeners = HashSet<OnAlarmUpdatedListener>()
+
+    internal var onAlarmUpdatedListener = object : OnAlarmUpdatedListener {
+        override fun onAlarmUpdated() {
+            alarmUpdateListeners.map {
+                try {
+                    it.onAlarmUpdated()
+                } catch (t: Throwable) {
+                    t.printStackTrace()
+                }
+            }
+        }
+    }
 
     /**
      * 获取本地闹钟。
@@ -80,16 +93,18 @@ abstract class Alarm {
      * 设置闹钟。
      * @param alarm 闹钟对象
      */
+    @CallSuper
     open fun setAlarm(alarm: Item) {
-        onAlarmUpdatedListener?.onAlarmUpdated()
+        onAlarmUpdated()
     }
 
     /**
      * 删除闹钟。
      * @param alarmId 闹钟id
      */
+    @CallSuper
     open fun deleteAlarm(alarmId: String) {
-        onAlarmUpdatedListener?.onAlarmUpdated()
+        onAlarmUpdated()
     }
 
     /**
@@ -116,8 +131,12 @@ abstract class Alarm {
         listeners.remove(listener)
     }
 
-    fun setOnAlarmUpdatedListener(onAlarmUpdatedListener: OnAlarmUpdatedListener) {
-        this.onAlarmUpdatedListener = onAlarmUpdatedListener
+    fun addOnAlarmUpdatedListener(onAlarmUpdatedListener: OnAlarmUpdatedListener) {
+        alarmUpdateListeners.add(onAlarmUpdatedListener)
+    }
+
+    fun removeOnAlarmUpdatedListener(onAlarmUpdatedListener: OnAlarmUpdatedListener) {
+        alarmUpdateListeners.remove(onAlarmUpdatedListener)
     }
 
     fun onAlarmStarted(alarmId: String) {
@@ -126,7 +145,10 @@ abstract class Alarm {
         payload[KEY_ALARM_ID] = alarmId
         RequestManager.sendRequest(NAME_STATE_SYNC, payload)
 
-        AudioFocusManager.requestActive(AudioFocusManager.CHANNEL_ALARM, AudioFocusManager.TYPE_ALARM)
+        AudioFocusManager.requestActive(
+            AudioFocusManager.CHANNEL_ALARM,
+            AudioFocusManager.TYPE_ALARM
+        )
 
         onAlarmStateChanged(alarmId, AlarmState.Started)
     }
@@ -137,9 +159,16 @@ abstract class Alarm {
         payload[KEY_ALARM_ID] = alarmId
         RequestManager.sendRequest(NAME_STATE_SYNC, payload)
 
-        AudioFocusManager.requestAbandon(AudioFocusManager.CHANNEL_ALARM, AudioFocusManager.TYPE_ALARM)
+        AudioFocusManager.requestAbandon(
+            AudioFocusManager.CHANNEL_ALARM,
+            AudioFocusManager.TYPE_ALARM
+        )
 
         onAlarmStateChanged(alarmId, AlarmState.Stopped)
+    }
+
+    fun onAlarmUpdated() {
+        onAlarmUpdatedListener?.onAlarmUpdated()
     }
 
     open fun onAlarmStateChanged(alarmId: String, state: AlarmState) {

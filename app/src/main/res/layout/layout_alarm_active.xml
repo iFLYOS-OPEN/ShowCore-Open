@@ -24,11 +24,11 @@
         android:background="@color/alarm_background">
 
         <TextView
+            android:id="@+id/close_alarm_message"
             style="@style/H5.White"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:text="你可以说：“蓝小飞，关闭闹钟”" />
+            android:layout_gravity="center" />
     </FrameLayout>
 
     <TextView

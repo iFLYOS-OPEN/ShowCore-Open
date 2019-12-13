@@ -2,133 +2,96 @@ package com.iflytek.cyber.iot.show.core.impl.videoplayer
 
 import android.content.Context
 import android.os.Build
-import android.os.Handler
 import android.util.Log
-import android.view.SurfaceView
-import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.iflytek.cyber.evs.sdk.agent.VideoPlayer
-import com.iflytek.cyber.evs.sdk.agent.impl.VideoPlayerInstance
-import com.iflytek.cyber.evs.sdk.focus.AudioFocusChannel
-import com.iflytek.cyber.evs.sdk.focus.AudioFocusManager
-import com.iflytek.cyber.evs.sdk.focus.FocusStatus
-import java.lang.Thread.sleep
+import com.kk.taurus.playerbase.player.IPlayer
+import com.kk.taurus.playerbase.widget.SuperContainer
 import java.net.URLEncoder
 
-class EvsVideoPlayer : VideoPlayer {
+class EvsVideoPlayer private constructor(context: Context) : VideoPlayer() {
 
     companion object {
-        private const val TAG = "VideoPlayerImpl"
+        private const val TAG = "EvsVideoPlayer"
+
+        private var instance: EvsVideoPlayer? = null
+
+        fun get(context: Context?): EvsVideoPlayer {
+            instance?.let {
+                return it
+            } ?: run {
+                val player = EvsVideoPlayer(context!!)
+                instance = player
+                return player
+            }
+        }
     }
 
-    private var player: VideoPlayerInstance? = null
+    private var player: EvsVideoPlayerInstance? = null
 
     private var volGrowFlag = false
 
-    constructor(context: Context) {
-        player?.destroy()
-        player = VideoPlayerInstance(context)
-        player?.setListener(listener)
-    }
+    var exitCallback: ExitCallback? = null
 
-    fun setManager(manager: AudioFocusManager) {
-        videoChannel.setupManager(manager)
-    }
-
-    val videoChannel = object : AudioFocusChannel() {
-        override fun onFocusChanged(focusStatus: FocusStatus) {
-            when (focusStatus) {
-                FocusStatus.Background -> player?.pause()
-                FocusStatus.Idle -> player?.pause()
-                else -> player?.resume()
-            }
-        }
-
-        override fun getChannelName(): String {
-            return AudioFocusManager.CHANNEL_CONTENT
-        }
-
-        override fun getType(): String {
-            return "Video"
-        }
-    }
-
-    private val listener = object : VideoPlayerInstance.Listener {
-        private var playWhenReady = false
+    private val listener = object : EvsVideoPlayerInstance.Listener {
 
         override fun onPlayerStateChanged(
-            player: VideoPlayerInstance,
-            playWhenReady: Boolean,
+            player: EvsVideoPlayerInstance,
             playbackState: Int
         ) {
-            Log.d(TAG, "onPlayerStateChanged($playWhenReady, $playbackState)")
-            val isPlayingChanged = this.playWhenReady != playWhenReady
-            this.playWhenReady = playWhenReady
+            Log.d(TAG, "onPlayerStateChanged($playbackState)")
 
             when (playbackState) {
-                Player.STATE_ENDED -> {
-                    if (playWhenReady)
-                        onCompleted(player.resourceId ?: "")
+                IPlayer.STATE_END, IPlayer.STATE_PLAYBACK_COMPLETE -> {
+                    onCompleted(player.resourceId ?: "")
                 }
                 Player.STATE_BUFFERING -> {
                     // ignore
                 }
-                Player.STATE_IDLE -> {
-                    if (!playWhenReady) {
-                        onStopped(player.resourceId ?: "")
+                IPlayer.STATE_IDLE, IPlayer.STATE_STOPPED -> {
+                    onStopped(player.resourceId ?: "")
+                }
+                IPlayer.STATE_STARTED -> {
+                    if (player.getOffset() > 0) {
+                        onResumed(player.resourceId ?: "")
+                    } else {
+                        onStarted(player.resourceId ?: "")
                     }
                 }
-                Player.STATE_READY -> {
-                    if (isPlayingChanged) {
-                        if (playWhenReady) {
-                            onResumed(player.resourceId ?: "")
-                        } else {
-                            onPaused(player.resourceId ?: "")
-                        }
-                    }
+                IPlayer.STATE_PAUSED -> {
+                    onPaused(player.resourceId ?: "")
                 }
             }
         }
 
-        override fun onPlayerPositionUpdated(player: VideoPlayerInstance, position: Long) {
+        override fun onPlayerPositionUpdated(player: EvsVideoPlayerInstance, position: Long) {
             onPositionUpdated(player.resourceId ?: "", position)
         }
 
-        override fun onPlayerError(player: VideoPlayerInstance, error: ExoPlaybackException?) {
-            val errorCode: String = when (error?.type) {
-                ExoPlaybackException.TYPE_UNEXPECTED -> {
-                    MEDIA_ERROR_UNKNOWN
-                }
-                ExoPlaybackException.TYPE_SOURCE -> {
-                    MEDIA_ERROR_INVALID_REQUEST
-                }
-                ExoPlaybackException.TYPE_REMOTE -> {
-                    MEDIA_ERROR_SERVICE_UNAVAILABLE
-                }
-                ExoPlaybackException.TYPE_RENDERER -> {
-                    MEDIA_ERROR_INTERNAL_SERVER_ERROR
-                }
-                ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
-                    MEDIA_ERROR_INTERNAL_DEVICE_ERROR
-                }
-                else -> {
-                    MEDIA_ERROR_UNKNOWN
-                }
-            }
+        override fun onPlayerError(
+            player: EvsVideoPlayerInstance,
+            errorCode: String,
+            errorMessage: String?
+        ) {
             onError(player.resourceId ?: "", errorCode)
         }
     }
 
-    private fun getPlayer(): VideoPlayerInstance? {
+    init {
+        player?.destroy()
+        player = EvsVideoPlayerInstance()
+        player?.setListener(listener)
+    }
+
+    private fun getPlayer(): EvsVideoPlayerInstance? {
         return player
     }
 
-    fun setVideoSurfaceView(surfaceView: SurfaceView) {
-        getPlayer()?.setVideoSurfaceView(surfaceView)
+    fun setSuperContainer(superContainer: SuperContainer?) {
+        getPlayer()?.setSuperContainer(superContainer)
     }
 
     override fun play(resourceId: String, url: String): Boolean {
-        Log.d(TAG, "try to play $url on video player")
         val player = getPlayer()
         player?.let {
             it.resourceId = resourceId
@@ -146,8 +109,7 @@ class EvsVideoPlayer : VideoPlayer {
             } else {
                 it.play(url)
             }
-            onStarted(player.resourceId ?: "")
-            videoChannel.requestActive()
+            onStarted(resourceId)
             return true
         } ?: run {
             return false
@@ -159,7 +121,6 @@ class EvsVideoPlayer : VideoPlayer {
         player?.resume() ?: run {
             return false
         }
-        videoChannel.requestActive()
         return true
     }
 
@@ -168,7 +129,6 @@ class EvsVideoPlayer : VideoPlayer {
         player?.pause() ?: run {
             return false
         }
-        videoChannel.requestAbandon()
         return true
     }
 
@@ -177,7 +137,16 @@ class EvsVideoPlayer : VideoPlayer {
         player?.stop() ?: run {
             return false
         }
-        videoChannel.requestAbandon()
+        return true
+    }
+
+    override fun exit(): Boolean {
+        getPlayer()?.let { player ->
+            player.stop()
+            exitCallback?.onRequestExit()
+        } ?: run {
+            return false
+        }
         return true
     }
 
@@ -187,6 +156,7 @@ class EvsVideoPlayer : VideoPlayer {
     }
 
     override fun seekTo(offset: Long): Boolean {
+        super.seekTo(offset)
         val player = getPlayer()
         player?.let {
             it.seekTo(offset)
@@ -206,12 +176,12 @@ class EvsVideoPlayer : VideoPlayer {
 
     override fun moveToBackground(): Boolean {
         getPlayer()?.run {
+            isAudioBackground = true
+
             synchronized(volGrowFlag) {
                 volGrowFlag = false
-                val targetVolume = .1f
-                Handler(getLooper()).post {
-                    setVolume(targetVolume)
-                }
+
+                setVolume(EvsVideoPlayerInstance.VOLUME_BACKGROUND)
             }
             return true
         } ?: run {
@@ -221,40 +191,21 @@ class EvsVideoPlayer : VideoPlayer {
 
     override fun moveToForegroundIfAvailable(): Boolean {
         getPlayer()?.run {
+            isAudioBackground = false
+
             synchronized(volGrowFlag) {
                 volGrowFlag = true
             }
 
-            val volume = getVolume()
-            val targetVolume = 1f
-
-            Thread {
-                var nextVolume = volume
-                val step = 0.05f
-                while (volGrowFlag && nextVolume != targetVolume) {
-                    nextVolume =
-                        if (nextVolume + step > targetVolume) targetVolume else nextVolume + step
-                    try {
-                        sleep(30)
-                    } catch (_: Exception) {
-                        //ignore
-                    }
-
-                    synchronized(volGrowFlag) {
-                        if (volGrowFlag) {
-                            Handler(getLooper()).post {
-                                setVolume(nextVolume)
-                            }
-                        } else {
-                            return@Thread
-                        }
-                    }
-                }
-            }.start()
+            setVolume(1f)
 
             return true
         } ?: run {
             return false
         }
+    }
+
+    interface ExitCallback {
+        fun onRequestExit()
     }
 }

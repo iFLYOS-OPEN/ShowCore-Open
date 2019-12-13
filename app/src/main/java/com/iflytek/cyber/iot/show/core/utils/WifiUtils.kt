@@ -62,6 +62,20 @@ object WifiUtils {
         return true
     }
 
+    fun forgetAll(context: Context?): Boolean {
+        (context?.applicationContext?.getSystemService(Context.WIFI_SERVICE)
+            as? WifiManager)?.let { wm ->
+            val iterator = wm.configuredNetworks.iterator()
+            while (iterator.hasNext()) {
+                val configuration = iterator.next()
+                iterator.remove()
+                wm.removeNetwork(configuration.networkId)
+            }
+            return false
+        }
+        return false
+    }
+
     fun forget(context: Context?, ssid: String?): Boolean {
         (context?.applicationContext?.getSystemService(Context.WIFI_SERVICE)
             as? WifiManager)?.let { wm ->
@@ -110,7 +124,8 @@ object WifiUtils {
     @SuppressLint("HardwareIds")
     fun getMacAddress(context: Context): String? {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) {
-            val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+            val wifiManager =
+                context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
             return wifiManager.connectionInfo.macAddress
         } else {
             try {
@@ -157,7 +172,8 @@ object WifiUtils {
                 }
 
             } else if (info.type == ConnectivityManager.TYPE_WIFI) {//当前使用无线网络
-                val wifiManager = context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
+                val wifiManager =
+                    context.applicationContext.getSystemService(Context.WIFI_SERVICE) as WifiManager
                 val wifiInfo = wifiManager.connectionInfo
                 return intIP2StringIP(wifiInfo.ipAddress)//得到IPV4地址
             }

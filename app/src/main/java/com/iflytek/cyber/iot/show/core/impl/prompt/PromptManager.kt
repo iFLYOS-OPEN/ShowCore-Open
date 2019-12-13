@@ -2,13 +2,14 @@ package com.iflytek.cyber.iot.show.core.impl.prompt
 
 
 import android.content.Context
-import android.media.AudioManager
 import android.net.Uri
 import android.os.Handler
-import android.util.Log
 import android.util.SparseArray
 import android.util.SparseIntArray
-import com.google.android.exoplayer2.*
+import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.ExoPlayerFactory
+import com.google.android.exoplayer2.Player
+import com.google.android.exoplayer2.SimpleExoPlayer
 import com.google.android.exoplayer2.audio.AudioAttributes
 import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.trackselection.AdaptiveTrackSelection
@@ -21,7 +22,9 @@ import com.iflytek.cyber.evs.sdk.focus.AudioFocusChannel
 import com.iflytek.cyber.evs.sdk.focus.AudioFocusManager
 import com.iflytek.cyber.evs.sdk.focus.FocusStatus
 import com.iflytek.cyber.iot.show.core.R
+import com.iflytek.cyber.iot.show.core.impl.audioplayer.MediaSourceFactory
 import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
+import com.iflytek.cyber.iot.show.core.utils.ToneManager
 import java.lang.Math.random
 import java.lang.ref.SoftReference
 import kotlin.math.roundToInt
@@ -56,6 +59,8 @@ object PromptManager {
     private var contextRef: SoftReference<Context>? = null
 
     private var currentSound = -1
+
+    private var mMediaSourceFactory: MediaSourceFactory? = null
 
     private val withoutFocusArray = arrayOf(
         VOLUME, WAKE_1, WAKE_2, WAKE_3,
@@ -105,9 +110,13 @@ object PromptManager {
         val bandwidthMeter = DefaultBandwidthMeter.Builder(context).build()
         val selectionFactory = AdaptiveTrackSelection.Factory(bandwidthMeter)
         val trackSelector = DefaultTrackSelector(selectionFactory)
+
+        mMediaSourceFactory = MediaSourceFactory(context)
+
         mPlayer = ExoPlayerFactory.newSimpleInstance(context, trackSelector)
 
         mPlayer?.audioAttributes = AudioAttributes.Builder()
+            .setContentType(C.CONTENT_TYPE_SONIFICATION)
             .setUsage(C.USAGE_ASSISTANCE_SONIFICATION)
             .build()
 
@@ -127,7 +136,7 @@ object PromptManager {
 
         EvsSpeaker.get(context).let { evsSpeaker ->
             evsSpeaker.addOnVolumeChangedListener(onVolumeChangeListener)
-            mPlayer?.volume = evsSpeaker.getCurrentVolume()/100f
+            mPlayer?.volume = evsSpeaker.getCurrentVolume() / 100f
         }
     }
 
@@ -142,6 +151,21 @@ object PromptManager {
         this.onEnd = onEnd
 
         play(id)
+    }
+
+    fun playUrl(url: String) {
+        mPlayer?.let { player ->
+            Handler(player.applicationLooper).post {
+                player.stop()
+
+                val uri = Uri.parse(url)
+                val mediaSource = mMediaSourceFactory?.createHttpMediaSource(uri)
+                player.prepare(mediaSource, true, false)
+                player.playWhenReady = true
+
+                promptAudioChannel.requestActive()
+            }
+        }
     }
 
     private fun play(id: Int) {
@@ -194,6 +218,8 @@ object PromptManager {
         // simple
         val array = arrayOf(WAKE_1, WAKE_2)
         play(array[(random() * (array.size - 1)).roundToInt()], onEnd)
+//        val context = contextRef?.get() ?: return
+//        ToneManager[context].play(ToneManager.TONE_WAKE, 0.3f)
     }
 
     fun isPlaying(): Boolean {

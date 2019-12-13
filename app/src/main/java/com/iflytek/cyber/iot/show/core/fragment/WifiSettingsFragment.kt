@@ -1,6 +1,7 @@
 package com.iflytek.cyber.iot.show.core.fragment
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.app.ProgressDialog
 import android.content.Context
 import android.content.Intent
@@ -8,11 +9,7 @@ import android.net.*
 import android.net.wifi.ScanResult
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
-import android.os.Build
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.util.Log
+import android.os.*
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -24,8 +21,11 @@ import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.PermissionChecker
+import androidx.core.view.isVisible
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
+import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.SelfBroadcastReceiver
 import com.iflytek.cyber.iot.show.core.utils.WifiUtils
@@ -34,7 +34,7 @@ import com.iflytek.cyber.iot.show.core.widget.StyledSwitch
 import java.util.*
 import kotlin.Comparator
 
-class WifiSettingsFragment : BaseFragment() {
+class WifiSettingsFragment : BaseFragment(), PageScrollable {
     private val scanReceiver = ScanReceiver()
 
     private val uiHandler = Handler(Looper.getMainLooper())
@@ -47,11 +47,14 @@ class WifiSettingsFragment : BaseFragment() {
     private var connected: String? = null
     private var isAvailable = true
 
+    private var recyclerView: RecyclerView? = null
     private var adapter: WifiAdapter? = null
     private var wifiSwitch: StyledSwitch? = null
     private var ivRefresh: ImageView? = null
+    private var nextStep: TextView? = null
     private var loadingView: LottieAnimationView? = null
     private var refreshContainer: View? = null
+    private var wifiWakeLock: PowerManager.WakeLock? = null
 
     private var warningAlert: AlertDialog? = null
 
@@ -118,6 +121,8 @@ class WifiSettingsFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        val fromSetup = arguments?.getBoolean("from_setup")
+
         adapter = WifiAdapter(view.context)
 
         val list = view.findViewById<RecyclerView>(R.id.wifi_list)
@@ -129,6 +134,7 @@ class WifiSettingsFragment : BaseFragment() {
                 .build()
         )
         list.adapter = adapter
+        recyclerView = list
 
         view.findViewById<View>(R.id.back).setOnClickListener {
             pop()
@@ -138,11 +144,17 @@ class WifiSettingsFragment : BaseFragment() {
         loadingView = view.findViewById(R.id.loading)
         refreshContainer = view.findViewById(R.id.refresh_container)
         ivRefresh = view.findViewById(R.id.refresh)
+        nextStep = view.findViewById(R.id.next_step)
 
         ivRefresh?.setOnClickListener {
             if (!isScanning) {
                 startScan()
             }
+        }
+
+        view.findViewById<View>(R.id.next_step_container)?.isVisible = fromSetup == true
+        nextStep?.setOnClickListener {
+            start(PairFragment2())
         }
 
         Handler().postDelayed({
@@ -264,6 +276,9 @@ class WifiSettingsFragment : BaseFragment() {
         if (wm?.isWifiEnabled == true) {
             startScan()
         }
+
+        if (context?.let { AuthDelegate.getAuthResponseFromPref(it) == null } == true)
+            acquireWakeLock()
     }
 
     @Suppress("DEPRECATION")
@@ -293,6 +308,31 @@ class WifiSettingsFragment : BaseFragment() {
 
         uiHandler.removeCallbacksAndMessages(null)
         warningAlert?.dismiss()
+
+        releaseWakeLock()
+    }
+
+    @SuppressLint("WakelockTimeout")
+    private fun acquireWakeLock() {
+        wifiWakeLock?.acquire() ?: run {
+            val powerManager = context?.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val flag = PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+            val wakeLock = powerManager.newWakeLock(flag, "iflytek:wifi")
+
+            wakeLock.acquire()
+            wifiWakeLock = wakeLock
+        }
+    }
+
+    private fun releaseWakeLock() {
+        wifiWakeLock?.release()
+        wifiWakeLock = null
+    }
+
+    override fun onBackPressedSupport(): Boolean {
+        if (getPreFragment() == null)
+            return true
+        return super.onBackPressedSupport()
     }
 
     override fun onDestroy() {
@@ -319,17 +359,20 @@ class WifiSettingsFragment : BaseFragment() {
             val configuredNetworks = it.configuredNetworks
             if (configuredNetworks?.isNotEmpty() == true)
                 for (config in it.configuredNetworks) {
-                    val ssid = config.SSID.substring(1, config.SSID.length - 1)
-                    configs[ssid] = config
+                    val ssid = config.SSID?.substring(1, config.SSID.length - 1)
+                    if (!ssid.isNullOrEmpty() && ssid.trim().isNotEmpty())
+                        configs[ssid] = config
                 }
 
             connected = WifiUtils.getConnectedSsid(context)
 
             val map = HashMap<String, ScanResult>()
             for (o1 in it.scanResults) {
-                val o2 = map[o1.SSID]
-                if ((o2 == null || o2.level < o1.level) && o1.level != 0) {
-                    map[o1.SSID] = o1
+                if (!o1.SSID.isNullOrEmpty() && o1.SSID.trim().isNotEmpty()) {
+                    val o2 = map[o1.SSID]
+                    if ((o2 == null || o2.level < o1.level) && o1.level != 0) {
+                        map[o1.SSID] = o1
+                    }
                 }
             }
             val list = ArrayList(map.values)
@@ -364,16 +407,14 @@ class WifiSettingsFragment : BaseFragment() {
                 start(WifiConnectingFragment(scan.SSID))
             } ?: run {
                 if (!WifiUtils.isEncrypted(scan)) {
+                    WifiUtils.connect(context, scan.SSID)
                     start(WifiConnectingFragment(scan.SSID))
                 } else {
                     start(InputNetworkFragment(scan))
                 }
             }
         } else {
-            if (fromSetup)
-                start(PairFragment2())
-            else
-                start(WifiInfoFragment(scan))
+            start(WifiInfoFragment(scan))
         }
     }
 
@@ -383,6 +424,34 @@ class WifiSettingsFragment : BaseFragment() {
 
     private fun handleAddManual() {
         start(InputNetworkFragment())
+    }
+
+    override fun scrollToNext(): Boolean {
+        recyclerView?.let { recyclerView ->
+            val lastItem =
+                (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
+            val itemCount = adapter?.itemCount ?: 0
+            if (lastItem == itemCount - 1 || adapter?.itemCount == 0
+            ) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, recyclerView.height)
+            }
+        }
+        return true
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        recyclerView?.let { recyclerView ->
+            val scrollY = recyclerView.computeVerticalScrollOffset()
+            val itemCount = adapter?.itemCount ?: 0
+            if (scrollY == 0 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, -recyclerView.height)
+            }
+        }
+        return true
     }
 
     private inner class WifiAdapter internal constructor(context: Context) :
@@ -426,38 +495,25 @@ class WifiSettingsFragment : BaseFragment() {
                         wifiSwitch.setOnCheckedChangeListener(object :
                             StyledSwitch.OnCheckedChangeListener {
                             override fun onCheckedChange(switch: StyledSwitch, isChecked: Boolean) {
-                                if (refreshContainer?.visibility == View.GONE && isChecked) {
-                                    ivRefresh?.alpha = 0f
-                                    loadingView?.alpha = 1f
-                                    loadingView?.playAnimation()
-                                }
-                                refreshContainer?.visibility = if (isChecked) View.VISIBLE else View.GONE
-
                                 progressDialog?.dismiss()
+                                val target = wifiSwitch.isChecked
+                                if (target == wm?.isWifiEnabled)
+                                    return
                                 progressDialog = ProgressDialog.show(
                                     context, null,
                                     if (isChecked) "正在开启" else "正在关闭", false, true
                                 )
 
                                 post {
-                                    val target = wifiSwitch.isChecked
                                     val result = wm?.setWifiEnabled(target)
                                     progressDialog?.dismiss()
 
-                                    scans = null
-                                    adapter?.notifyDataSetChanged()
-
                                     if (result != true) {
                                         wifiSwitch.isChecked = wm?.isWifiEnabled == true
-
-                                        if (wm?.isWifiEnabled == true) {
-                                            refreshContainer?.visibility = View.VISIBLE
-
-                                            startScan()
-                                        } else {
-                                            refreshContainer?.visibility = View.GONE
-                                        }
                                     }
+
+                                    if (!wifiSwitch.isChecked)
+                                        refreshContainer?.isVisible = false
                                 }
                             }
                         })
@@ -479,7 +535,7 @@ class WifiSettingsFragment : BaseFragment() {
         }
 
         override fun getItemCount(): Int {
-            val isWifiEnabled = wifiSwitch?.isChecked == true
+            val isWifiEnabled = wm?.isWifiEnabled == true
             return if (isWifiEnabled) (scans?.size ?: 0) + 2 else 1
         }
 
@@ -557,9 +613,23 @@ class WifiSettingsFragment : BaseFragment() {
                     if (state == WifiManager.WIFI_STATE_ENABLED) {
                         if (wifiSwitch?.isChecked != true)
                             wifiSwitch?.isChecked = true
+
+                        refreshContainer?.visibility = View.VISIBLE
+                        startScan()
                     } else if (state == WifiManager.WIFI_STATE_DISABLED) {
                         if (wifiSwitch?.isChecked != false)
                             wifiSwitch?.isChecked = false
+
+                        refreshContainer?.visibility = View.GONE
+                    }
+
+                    scans = null
+                    adapter?.notifyDataSetChanged()
+
+                    if (refreshContainer?.visibility == View.GONE && wifiSwitch?.isChecked == true) {
+                        ivRefresh?.alpha = 0f
+                        loadingView?.alpha = 1f
+                        loadingView?.playAnimation()
                     }
                 }
             }

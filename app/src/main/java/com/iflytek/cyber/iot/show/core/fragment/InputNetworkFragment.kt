@@ -74,4 +74,9 @@ class InputNetworkFragment(private val scanResult: ScanResult? = null) : BaseFra
             titleView.text = "手动添加"
         }
     }
+
+    override fun onDestroyView() {
+        KeyboardUtils.closeKeyboard(view)
+        super.onDestroyView()
+    }
 }

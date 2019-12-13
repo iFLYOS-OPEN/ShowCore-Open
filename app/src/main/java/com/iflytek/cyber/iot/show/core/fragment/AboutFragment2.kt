@@ -1,5 +1,6 @@
 package com.iflytek.cyber.iot.show.core.fragment
 
+import android.app.ProgressDialog
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -7,25 +8,38 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.DefaultItemAnimator
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.JsonParser
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.iot.show.core.BuildConfig
+import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.R
-import com.iflytek.cyber.iot.show.core.utils.WifiUtils
-import okhttp3.OkHttpClient
-import okhttp3.Request
+import com.iflytek.cyber.iot.show.core.api.DeviceApi
+import com.iflytek.cyber.iot.show.core.utils.*
+import com.iflytek.cyber.iot.show.core.widget.StyledAlertDialog
+import okhttp3.ResponseBody
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
-class AboutFragment2 : BaseFragment() {
+
+class AboutFragment2 : BaseFragment(), PageScrollable {
+
     private var recyclerView: RecyclerView? = null
     private val aboutList = mutableListOf<Item>()
     private val adapter = ListAdapter()
 
     private var deviceName: String? = null
-    private var speakerName: String? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_about_2, container, false)
     }
 
@@ -39,43 +53,67 @@ class AboutFragment2 : BaseFragment() {
         recyclerView = view.findViewById(R.id.about_list)
         recyclerView?.itemAnimator = DefaultItemAnimator()
 
-        // init about item
-        updateAboutContent()
-
         recyclerView?.adapter = adapter
 
         requestDeviceInfo()
     }
 
+    override fun onSupportVisible() {
+        super.onSupportVisible()
+
+        // init about item
+        updateAboutContent()
+    }
+
+    override fun scrollToNext(): Boolean {
+        recyclerView?.let { recyclerView ->
+            val lastItem =
+                (recyclerView.layoutManager as? LinearLayoutManager)?.findLastCompletelyVisibleItemPosition()
+            val itemCount = adapter.itemCount
+            if (lastItem == itemCount - 1 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, recyclerView.height)
+            }
+        }
+        return true
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        recyclerView?.let { recyclerView ->
+            val scrollY = recyclerView.computeVerticalScrollOffset()
+            val itemCount = adapter.itemCount
+            if (scrollY == 0 || itemCount == 0) {
+                return false
+            } else {
+                recyclerView.smoothScrollBy(0, -recyclerView.height)
+            }
+        }
+        return true
+    }
+
     private fun requestDeviceInfo() {
-        Thread {
-            try {
-                val context = context ?: return@Thread
+        getDeviceApi()?.get()?.enqueue(object : Callback<ResponseBody> {
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                t.printStackTrace()
+            }
 
-                val client = OkHttpClient.Builder()
-                    .build()
-
-                val authResponse = AuthDelegate.getAuthResponseFromPref(context)
-
-                val request = Request.Builder()
-                    .url("https://staging-api.iflyos.cn/showcore/api/v1/device")
-                    .header("Authorization", "Bearer ${authResponse?.accessToken}")
-                    .get()
-                    .build()
-
-                val response = client.newCall(request).execute()
-
+            override fun onResponse(
+                call: Call<ResponseBody>,
+                response: Response<ResponseBody>
+            ) {
                 if (response.isSuccessful) {
-                    val body = response.body()?.string()
-                    println(body)
+                    val responseBody = response.body()
+                    val body = responseBody?.string()
 
                     val json = JsonParser().parse(body).asJsonObject
 
                     val alias = json.get("alias")?.asString
                     val speakerName = json.get("speaker")?.asString
 
-                    this.deviceName = alias
-                    this.speakerName = speakerName
+                    this@AboutFragment2.deviceName = alias
+
+                    responseBody?.close()
 
                     post {
                         updateAboutContent()
@@ -83,10 +121,9 @@ class AboutFragment2 : BaseFragment() {
                 } else {
                     Log.d("About", "request failed: ${response.code()}")
                 }
-            } catch (e: Exception) {
-                e.printStackTrace()
             }
-        }.start()
+
+        })
     }
 
     private fun updateAboutContent() {
@@ -99,9 +136,13 @@ class AboutFragment2 : BaseFragment() {
             aboutList.add(deviceNameItem)
         }
 
-        speakerName?.let {
-            val speakerNameItem = Item("发音人", it)
-            aboutList.add(speakerNameItem)
+        DeviceUtils.getIvwVersion().let {
+            val ivwVersionItem =
+                if (it.isNullOrEmpty())
+                    Item("唤醒词引擎版本", "暂不支持显示")
+                else
+                    Item("唤醒词引擎版本", it)
+            aboutList.add(ivwVersionItem)
         }
 
         try {
@@ -126,12 +167,15 @@ class AboutFragment2 : BaseFragment() {
             aboutList.add(macAddressItem)
         }
 
-        val versionItem = Item("系统版本", BuildConfig.VERSION_NAME)
+        val versionItem = Item(getString(R.string.system_version), DeviceUtils.getSystemVersionName())
         aboutList.add(versionItem)
+
+        aboutList.add(Item(getString(R.string.factory_reset), ""))
 
         if (prefSize > 0) {
             adapter.notifyItemRangeChanged(0, prefSize)
             if (aboutList.size > prefSize) {
+
                 adapter.notifyItemRangeInserted(prefSize, aboutList.size)
             }
         } else {
@@ -139,12 +183,79 @@ class AboutFragment2 : BaseFragment() {
         }
     }
 
+    private fun getDeviceApi(): DeviceApi? {
+        val context = context ?: return null
+        return CoreApplication.from(context).createApi(DeviceApi::class.java)
+    }
+
     private inner class ListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val holder = AboutItemViewHolder(
-                LayoutInflater.from(parent.context).inflate(R.layout.item_two_lines, parent, false))
+                LayoutInflater.from(parent.context).inflate(R.layout.item_two_lines, parent, false)
+            )
             holder.itemView.setOnClickListener {
+                val position = holder.adapterPosition
+                val item = aboutList[position]
+                when (item.title) {
+                    getString(R.string.factory_reset) -> {
+                        val fragmentManager = fragmentManager ?: return@setOnClickListener
+                        StyledAlertDialog.Builder()
+                            .setTitle(getString(R.string.factory_reset))
+                            .setMessage(getString(R.string.factory_reset_message))
+                            .setPositiveButton(
+                                getString(R.string.ensure),
+                                View.OnClickListener { view ->
+                                    val context = view.context
 
+                                    val progressDialog = ProgressDialog(context)
+                                    progressDialog.setMessage("正在恢复")
+                                    progressDialog.show()
+
+                                    CoreApplication.from(context).createApi(DeviceApi::class.java)
+                                        ?.postRestoreFactory()
+                                        ?.enqueue(object : Callback<ResponseBody> {
+                                            override fun onFailure(
+                                                call: Call<ResponseBody>,
+                                                t: Throwable
+                                            ) {
+                                                t.printStackTrace()
+                                                try {
+                                                    progressDialog.dismiss()
+                                                } catch (tInside: Throwable) {
+
+                                                }
+                                                Toast.makeText(
+                                                    context,
+                                                    "恢复出厂设置服务端验证失败，请稍后再试",
+                                                    Toast.LENGTH_SHORT
+                                                ).show()
+                                            }
+
+                                            override fun onResponse(
+                                                call: Call<ResponseBody>,
+                                                response: Response<ResponseBody>
+                                            ) {
+                                                try {
+                                                    progressDialog.dismiss()
+                                                } catch (t: Throwable) {
+
+                                                }
+                                                if (!response.isSuccessful) {
+                                                    Toast.makeText(
+                                                        context,
+                                                        "恢复出厂设置服务端验证失败，请稍后再试",
+                                                        Toast.LENGTH_SHORT
+                                                    ).show()
+                                                }
+                                            }
+
+                                        })
+                                })
+                            .setNegativeButton(getString(R.string.cancel), null)
+                            .setWarningAction(true)
+                            .show(fragmentManager)
+                    }
+                }
             }
             return holder
         }
@@ -157,6 +268,7 @@ class AboutFragment2 : BaseFragment() {
             if (holder is AboutItemViewHolder) {
                 holder.tvTitle.text = aboutList[position].title
                 holder.tvSummary.text = aboutList[position].summary
+                holder.tvSummary.isVisible = aboutList[position].summary.isNotEmpty()
             }
         }
 

@@ -5,8 +5,10 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.os.bundleOf
+import androidx.core.widget.NestedScrollView
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
@@ -20,8 +22,10 @@ import com.iflytek.cyber.iot.show.core.utils.dp2Px
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import kotlin.math.max
+import kotlin.math.min
 
-class SkillDetailFragment : BaseFragment() {
+class SkillDetailFragment : BaseFragment(), PageScrollable {
 
     private lateinit var tvSkillName: TextView
     private lateinit var tvSkillDesc: TextView
@@ -30,6 +34,8 @@ class SkillDetailFragment : BaseFragment() {
     private lateinit var tvDate: TextView
     private lateinit var ivSkillIcon: ImageView
     private lateinit var recyclerView: RecyclerView
+    private var scrollView: NestedScrollView? = null
+    private var contentContainer: View? = null
 
     companion object {
         fun newInstance(skill: Skill): SkillDetailFragment {
@@ -37,16 +43,30 @@ class SkillDetailFragment : BaseFragment() {
                 arguments = bundleOf(Pair("skill", skill))
             }
         }
+
+        fun newInstance(skillDetail: SkillDetail): SkillDetailFragment {
+            return SkillDetailFragment().apply {
+                arguments = bundleOf(Pair("skill_detail", skillDetail))
+            }
+        }
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return LayoutInflater.from(context).inflate(R.layout.fragment_skill_detail, container, false)
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return LayoutInflater.from(context)
+            .inflate(R.layout.fragment_skill_detail, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.back).setOnClickListener { launcher?.onBackPressed() }
+
+        scrollView = view.findViewById(R.id.scroll_view)
+        contentContainer = view.findViewById(R.id.content_container)
 
         tvSkillName = view.findViewById(R.id.tv_skill_name)
         tvSkillDesc = view.findViewById(R.id.tv_skill_desc)
@@ -56,16 +76,23 @@ class SkillDetailFragment : BaseFragment() {
         ivSkillIcon = view.findViewById(R.id.iv_skill_icon)
         recyclerView = view.findViewById(R.id.example_list)
 
-        val skill = arguments?.getParcelable<Skill>("skill")
-        skill?.let { loadDetail(it.id) }
+        val skillDetail = arguments?.getParcelable<SkillDetail>("skill_detail")
+        if (skillDetail != null) {
+            setupUI(skillDetail)
+        } else {
+            val skill = arguments?.getParcelable<Skill>("skill")
+            skill?.let { loadDetail(it.id) }
+        }
     }
 
     private fun setupUI(detail: SkillDetail) {
         Glide.with(ivSkillIcon.context)
-                .load(detail.icon)
-                .apply(RequestOptions()
-                        .transform(RoundedCornersTransformation(16.dp2Px(), 0)))
-                .into(ivSkillIcon)
+            .load(detail.icon)
+            .apply(
+                RequestOptions()
+                    .transform(RoundedCornersTransformation(16.dp2Px(), 0))
+            )
+            .into(ivSkillIcon)
         tvSkillName.text = detail.name
         tvSkillDesc.text = detail.description
         tvDate.text = detail.updatedTime
@@ -99,10 +126,48 @@ class SkillDetailFragment : BaseFragment() {
         }
     }
 
-    inner class ExampleAdapter(val examples: ArrayList<String>) : RecyclerView.Adapter<ExampleAdapter.ExampleHolder>() {
+    override fun scrollToNext(): Boolean {
+        scrollView?.let { scrollView ->
+            val pageHeight = scrollView.height
+            val scrollY = scrollView.scrollY
+            val contentHeight = contentContainer?.height ?: 0
+            if (scrollY == contentHeight - pageHeight) {
+                return false
+            }
+            val target = min(contentHeight - pageHeight, scrollY + pageHeight)
+            smoothScrollTo(target)
+            return true
+        } ?: run {
+            return false
+        }
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        scrollView?.let { scrollView ->
+            val pageHeight = scrollView.height
+            val scrollY = scrollView.scrollY
+            if (scrollY == 0) {
+                return false
+            }
+            val target = max(0, scrollY - pageHeight)
+            smoothScrollTo(target)
+            return true
+        } ?: run {
+            return false
+        }
+    }
+
+    private fun smoothScrollTo(scrollY: Int) {
+        scrollView?.isSmoothScrollingEnabled = true
+        scrollView?.smoothScrollTo(0, scrollY)
+    }
+
+    inner class ExampleAdapter(val examples: ArrayList<String>) :
+        RecyclerView.Adapter<ExampleAdapter.ExampleHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExampleHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_example, parent, false)
+            val view =
+                LayoutInflater.from(parent.context).inflate(R.layout.item_example, parent, false)
             return ExampleHolder(view)
         }
 

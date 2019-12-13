@@ -4,6 +4,7 @@ import android.animation.ValueAnimator
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.view.LayoutInflater
@@ -15,6 +16,7 @@ import android.widget.TextView
 import androidx.fragment.app.Fragment
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
+import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.iot.show.core.CoreApplication
@@ -24,8 +26,10 @@ import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.api.MediaApi
 import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager
 import com.iflytek.cyber.iot.show.core.model.Banner
+import com.iflytek.cyber.iot.show.core.model.Error
 import com.iflytek.cyber.iot.show.core.model.MusicBody
 import com.iflytek.cyber.iot.show.core.widget.StyledAlertDialog
+import com.iflytek.cyber.iot.show.core.widget.StyledQRCodeDialog
 import me.yokeyword.fragmentation.ISupportFragment
 import retrofit2.Call
 import retrofit2.Callback
@@ -218,26 +222,30 @@ class BannerFragment : Fragment() {
                                     } else {
                                         try {
                                             val body = response.errorBody()?.string()
-                                            val json = JsonParser().parse(body).asJsonObject
-                                            val errorJson = json["error"].asJsonObject
-
-                                            val showNotification =
-                                                Intent(context, FloatingService::class.java)
-                                            showNotification.action =
-                                                FloatingService.ACTION_SHOW_NOTIFICATION
-                                            showNotification.putExtra(
-                                                FloatingService.EXTRA_MESSAGE,
-                                                errorJson.get("message").asString
-                                            )
-                                            showNotification.putExtra(
-                                                FloatingService.EXTRA_ICON_RES,
-                                                R.drawable.ic_default_error_black_40dp
-                                            )
-                                            showNotification.putExtra(
-                                                FloatingService.EXTRA_POSITIVE_BUTTON_TEXT,
-                                                getString(R.string.i_got_it)
-                                            )
-                                            context?.startService(showNotification)
+                                            val error = Gson().fromJson(body, Error::class.java)
+                                            if (error.redirectUrl.isNullOrEmpty()) {
+                                                val intent = Intent(context, FloatingService::class.java)
+                                                intent.action = FloatingService.ACTION_SHOW_NOTIFICATION
+                                                intent.putExtra(FloatingService.EXTRA_MESSAGE, error.message)
+                                                intent.putExtra(FloatingService.EXTRA_POSITIVE_BUTTON_TEXT, "我知道了")
+                                                context?.startService(intent)
+                                            } else {
+                                                val context = context ?: return
+                                                val uri = Uri.parse(error.redirectUrl)
+                                                val codeUrl = uri.buildUpon()
+                                                    .appendQueryParameter(
+                                                        "token",
+                                                        AuthDelegate.getAuthResponseFromPref(context)?.accessToken
+                                                    )
+                                                    .build()
+                                                    .toString()
+                                                StyledQRCodeDialog.Builder()
+                                                    .setTitle(error.message)
+                                                    .setMessage(getString(R.string.scan_qrcode_to_continue))
+                                                    .setCode(codeUrl)
+                                                    .setButton(getString(R.string.close), null)
+                                                    .show(fragmentManager)
+                                            }
                                         } catch (t: Throwable) {
                                             t.printStackTrace()
 
@@ -273,20 +281,26 @@ class BannerFragment : Fragment() {
     override fun onResume() {
         super.onResume()
 
-        handler.postDelayed(updateSummaryRunnable(), 6 * 1000)
+        postNextUpdateSummary()
     }
 
-    private fun updateSummaryRunnable(): Runnable = Runnable {
+    private val updateSummaryRunnable: Runnable = Runnable {
         banner?.let { banner ->
             if (isResumed) {
                 if (banner.descriptions?.isNotEmpty() == true && banner.descriptions.size > 1) {
                     val next = (currentSummary + 1) % banner.descriptions.size
                     currentSummary = next
                     startUpdateSummaryAnimator(banner.descriptions[next])
+
+                    postNextUpdateSummary()
                 }
-                handler.postDelayed(updateSummaryRunnable(), 6 * 1000)
             }
         }
+    }
+
+    private fun postNextUpdateSummary() {
+        handler.removeCallbacksAndMessages(null)
+        handler.postDelayed(updateSummaryRunnable, 6 * 1000)
     }
 
     private fun startUpdateSummaryAnimator(newText: String) {
@@ -309,7 +323,7 @@ class BannerFragment : Fragment() {
     override fun onPause() {
         super.onPause()
 
-        handler.removeCallbacks(null)
+        handler.removeCallbacksAndMessages(null)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

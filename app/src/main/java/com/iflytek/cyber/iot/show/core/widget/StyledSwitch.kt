@@ -11,6 +11,10 @@ import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
 import com.iflytek.cyber.iot.show.core.R
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
+import kotlin.math.pow
 
 class StyledSwitch @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
@@ -44,11 +48,13 @@ class StyledSwitch @JvmOverloads constructor(
     private var animator: Animator? = null
     private var pressAnimator: Animator? = null
 
-    private val thumbColor = Color.WHITE
+    private val thumbColor = resources.getColor(R.color.tablet_grey_300)
     private val thumbEnableColor = resources.getColor(R.color.setup_primary)
-    private val trackColor = resources.getColor(R.color.tablet_grey_100)
-    private val trackEnableColor = Color.argb(50, Color.red(thumbEnableColor),
-        Color.green(thumbEnableColor), Color.blue(thumbEnableColor))
+    private val trackColor = resources.getColor(R.color.tablet_grey_500)
+    private val trackEnableColor = Color.argb(
+        50, Color.red(thumbEnableColor),
+        Color.green(thumbEnableColor), Color.blue(thumbEnableColor)
+    )
     private val shadowColor = Color.parseColor("#1C000000")
     private val shadowEnableColor = Color.parseColor("#500E65FF")
 
@@ -61,8 +67,10 @@ class StyledSwitch @JvmOverloads constructor(
             } else {
                 animatingTo(0f)
             }
-            onCheckedChangeListener?.onCheckedChange(this, value)
+            val changed = field != value
             field = value
+            if (changed)
+                onCheckedChangeListener?.onCheckedChange(this, value)
         }
 
     init {
@@ -120,8 +128,10 @@ class StyledSwitch @JvmOverloads constructor(
 
         trackSize = thumbSize - 2 * trackMargin
 
-        trackRectF = RectF(trackMargin + thumbMargin, height / 2 - trackSize / 2,
-            width - trackMargin - thumbMargin, height / 2 + trackSize / 2)
+        trackRectF = RectF(
+            trackMargin + thumbMargin, height / 2 - trackSize / 2,
+            width - trackMargin - thumbMargin, height / 2 + trackSize / 2
+        )
         updateProgress(progress, false)
     }
 
@@ -153,12 +163,12 @@ class StyledSwitch @JvmOverloads constructor(
                 }
                 MotionEvent.ACTION_MOVE -> {
                     if (isChecked) {
-                        val offset = Math.min(0f, event.x - touchX)
-                        val percent = Math.min(-offset / width, 1f)
+                        val offset = min(0f, event.x - touchX)
+                        val percent = min(-offset / width, 1f)
                         updateProgress(1 - percent)
                     } else {
-                        val offset = Math.max(0f, event.x - touchX)
-                        val percent = Math.min(offset / width, 1f)
+                        val offset = max(0f, event.x - touchX)
+                        val percent = min(offset / width, 1f)
                         updateProgress(percent)
                     }
                 }
@@ -166,8 +176,9 @@ class StyledSwitch @JvmOverloads constructor(
                     dismissPress()
 
                     if (System.currentTimeMillis() - touchDownTime < 200
-                        && Math.pow((event.x - touchX).toDouble(), 2.0)
-                        + Math.pow((event.y - touchY).toDouble(), 2.0) < 20 * 20) {
+                        && (event.x - touchX).toDouble().pow(2.0)
+                        + (event.y - touchY).toDouble().pow(2.0) < 20 * 20
+                    ) {
                         isChecked = !isChecked
 
                         performClick()
@@ -206,7 +217,8 @@ class StyledSwitch @JvmOverloads constructor(
         )
 
         thumbShadowPaint.alpha = ((0.1f * (1 - progress) + 0.5f * progress) * 255).toInt()
-        thumbShadowPaint.setShadowLayer(trackShadowRadius, 0f, trackShadowDy,
+        thumbShadowPaint.setShadowLayer(
+            trackShadowRadius, 0f, trackShadowDy,
             Color.rgb(
                 ((1 - progress) * Color.red(shadowColor)
                     + progress * Color.red(shadowEnableColor)).toInt(),
@@ -214,7 +226,8 @@ class StyledSwitch @JvmOverloads constructor(
                     + progress * Color.green(shadowEnableColor)).toInt(),
                 ((1 - progress) * Color.blue(shadowColor)
                     + progress * Color.blue(shadowEnableColor)).toInt()
-            ))
+            )
+        )
 
         thumbLeft = thumbMargin + thumbSize / 2 +
             (width - thumbSize - 2 * thumbMargin) * progress
@@ -256,18 +269,29 @@ class StyledSwitch @JvmOverloads constructor(
     }
 
     private fun animatingTo(target: Float) {
-        this.animator?.cancel()
+        post {
+            this.animator?.cancel()
 
-        val animator = ValueAnimator.ofFloat(progress, target)
+            val animator = ValueAnimator.ofFloat(progress, target)
 
-        animator.addUpdateListener {
-            val value = it.animatedValue as Float
-            updateProgress(value)
+            animator.addUpdateListener {
+                val value = it.animatedValue as Float
+                updateProgress(value)
+            }
+            animator.duration = (200 * abs(target - progress)).toLong()
+            animator.start()
+
+            this.animator = animator
         }
-        animator.duration = (200 * Math.abs(target - progress)).toLong()
-        animator.start()
+    }
 
-        this.animator = animator
+    fun setChecked(isChecked: Boolean, animated: Boolean) {
+        if (animated) {
+            this.isChecked = isChecked
+        } else {
+            updateProgress(if (isChecked) 1f else 0f)
+            this.isChecked = isChecked
+        }
     }
 
     fun setOnCheckedChangeListener(listener: OnCheckedChangeListener?) {

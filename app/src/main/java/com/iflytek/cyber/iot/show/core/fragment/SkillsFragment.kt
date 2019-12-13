@@ -20,7 +20,7 @@ import retrofit2.Callback
 import retrofit2.Response
 import java.net.UnknownHostException
 
-class SkillsFragment : BaseFragment() {
+class SkillsFragment : BaseFragment(), PageScrollable {
 
     private lateinit var tabLayout: TabLayout
     private lateinit var viewPager: ViewPager2
@@ -110,6 +110,28 @@ class SkillsFragment : BaseFragment() {
                 }
             }
         })
+    }
+
+    override fun scrollToNext(): Boolean {
+        val currentItem = viewPager.currentItem
+        if (currentItem < (adapter?.itemCount ?: 0) - 1 || currentItem < 0) {
+            viewPager.post {
+                viewPager.setCurrentItem(currentItem + 1, true)
+            }
+            return true
+        }
+        return false
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        val currentItem = viewPager.currentItem
+        if (currentItem > 0) {
+            viewPager.post {
+                viewPager.setCurrentItem(currentItem - 1, true)
+            }
+            return true
+        }
+        return false
     }
 
     private fun getSkillApi(): SkillApi? {

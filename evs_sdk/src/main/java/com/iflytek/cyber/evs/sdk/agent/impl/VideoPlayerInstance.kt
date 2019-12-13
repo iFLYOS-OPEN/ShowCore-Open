@@ -28,7 +28,11 @@ class VideoPlayerInstance {
         createPlayer(context)
         player.addListener(object : Player.EventListener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                listener?.onPlayerStateChanged(this@VideoPlayerInstance, playWhenReady, playbackState)
+                listener?.onPlayerStateChanged(
+                    this@VideoPlayerInstance,
+                    playWhenReady,
+                    playbackState
+                )
             }
 
             override fun onPlayerError(error: ExoPlaybackException?) {
@@ -43,7 +47,11 @@ class VideoPlayerInstance {
         createPlayer(context)
         player.addListener(object : Player.EventListener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
-                listener?.onPlayerStateChanged(this@VideoPlayerInstance, playWhenReady, playbackState)
+                listener?.onPlayerStateChanged(
+                    this@VideoPlayerInstance,
+                    playWhenReady,
+                    playbackState
+                )
             }
 
             override fun onPlayerError(error: ExoPlaybackException?) {
@@ -61,7 +69,8 @@ class VideoPlayerInstance {
             context,
             DefaultRenderersFactory(context),
             DefaultTrackSelector(),
-            DefaultLoadControl())
+            DefaultLoadControl()
+        )
     }
 
     private val positionUpdateRunnable = object : Runnable {
@@ -79,7 +88,12 @@ class VideoPlayerInstance {
     }
 
     interface Listener {
-        fun onPlayerStateChanged(player: VideoPlayerInstance, playWhenReady: Boolean, playbackState: Int)
+        fun onPlayerStateChanged(
+            player: VideoPlayerInstance,
+            playWhenReady: Boolean,
+            playbackState: Int
+        )
+
         fun onPlayerError(player: VideoPlayerInstance, error: ExoPlaybackException?)
         fun onPlayerPositionUpdated(player: VideoPlayerInstance, position: Long)
     }
@@ -117,13 +131,15 @@ class VideoPlayerInstance {
 
     fun resume() {
         if (Looper.myLooper() == Looper.getMainLooper()) {
-            if (player.playbackState == Player.STATE_READY) {
-                player.playWhenReady = true
-            }
+//            if (player.playbackState == Player.STATE_READY) {
+            player.playWhenReady = true
+//            }
         } else {
-            if (player.playbackState == Player.STATE_READY) {
+//            if (player.playbackState == Player.STATE_READY) {
+            handler.post {
                 player.playWhenReady = true
             }
+//            }
         }
 
         handler.post(positionUpdateRunnable)
@@ -133,7 +149,9 @@ class VideoPlayerInstance {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             player.playWhenReady = false
         } else {
-            player.playWhenReady = false
+            handler.post {
+                player.playWhenReady = false
+            }
         }
     }
 
@@ -142,8 +160,10 @@ class VideoPlayerInstance {
             player.playWhenReady = false
             player.stop(true)
         } else {
-            player.playWhenReady = false
-            player.stop(true)
+            handler.post {
+                player.playWhenReady = false
+                player.stop(true)
+            }
         }
     }
 

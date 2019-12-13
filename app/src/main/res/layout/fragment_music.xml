@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F5F7"
+    android:background="@color/tablet_grey_100"
     android:descendantFocusability="blocksDescendants">
 
     <androidx.recyclerview.widget.RecyclerView
@@ -12,6 +13,61 @@
         android:layout_height="match_parent"
         android:clipToPadding="false"
         android:paddingBottom="@dimen/dp_10"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_category" />
 
+    <LinearLayout
+        android:id="@+id/error_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/dp_64"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/dp_32"
+            android:layout_height="@dimen/dp_32"
+            android:src="@drawable/ic_error" />
+
+        <TextView
+            android:id="@+id/error_text"
+            style="@style/Body14.Grey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_21"
+            tools:text="加载失败，请重试" />
+
+        <TextView
+            android:id="@+id/refresh"
+            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_16"
+            android:text="@string/refresh"
+            android:textSize="@dimen/sp_16" />
+
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/placeholder"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="#F2F5F7"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/dp_10">
+
+            <include layout="@layout/item_category_fake" />
+
+            <include layout="@layout/item_category_fake" />
+
+            <include layout="@layout/item_category_fake" />
+
+        </LinearLayout>
+    </ScrollView>
 </FrameLayout>

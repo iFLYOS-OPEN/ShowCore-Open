@@ -42,6 +42,8 @@ object AuthDelegate {
     private const val KEY_GRANT_TYPE = "grant_type"
     private const val KEY_ERROR = "error"
 
+    const val SCOPE_DATA_DEFAULT = "user_ivs_all"
+
     const val ERROR_AUTHORIZATION_PENDING = "authorization_pending"
     const val ERROR_EXPIRED_TOKEN = "expired_token"
     const val ERROR_ACCESS_DENIED = "access_denied"
@@ -166,7 +168,7 @@ object AuthDelegate {
         deviceId: String,
         responseCallback: ResponseCallback<DeviceCodeResponse>,
         authResponseCallback: AuthResponseCallback? = null,
-        customScopeData: String = KEY_USER_IVS_ALL
+        customScopeData: String = SCOPE_DATA_DEFAULT
     ) {
         cancelPolling()
 
@@ -186,7 +188,7 @@ object AuthDelegate {
 
                     Log.d(TAG, requestBody)
 
-                    Log.e(TAG, "url: " + AUTH_URL_DEVICE_CODE)
+                    Log.e(TAG, "url: $AUTH_URL_DEVICE_CODE")
 
                     val request = Request.Builder()
                         .url(AUTH_URL_DEVICE_CODE)
@@ -287,9 +289,9 @@ object AuthDelegate {
                         val authResponse = JSON.parseObject(body, AuthResponse::class.java)
                         setAuthResponseToPref(context, authResponse)
 
-                        refreshCallback?.onRefreshSuccess(authResponse)
+                        refreshCallback.onRefreshSuccess(authResponse)
                     } else {
-                        refreshCallback?.onRefreshFailed(
+                        refreshCallback.onRefreshFailed(
                             httpCode,
                             null,
                             IllegalStateException("Server return $httpCode while requesting")
@@ -299,7 +301,7 @@ object AuthDelegate {
                     Log.d(TAG, "polling exception.")
 
                     e.printStackTrace()
-                    refreshCallback?.onRefreshFailed(-1, null, e)
+                    refreshCallback.onRefreshFailed(-1, null, e)
                 }
             }.start()
         }

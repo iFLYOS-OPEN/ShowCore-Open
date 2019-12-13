@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="horizontal">
+
+    <View
+        android:id="@+id/divider_start"
+        android:layout_width="@dimen/dp_32"
+        android:layout_height="@dimen/dp_1"
+        android:layout_marginEnd="@dimen/dp_16"
+        android:background="#CED2D6" />
+
+    <TextView
+        android:id="@+id/num"
+        android:layout_width="@dimen/dp_20"
+        android:layout_height="@dimen/dp_20"
+        android:background="@drawable/bg_step_num"
+        android:gravity="center"
+        android:paddingBottom="@dimen/dp_1"
+        android:textAlignment="center"
+        android:textColor="@color/color_step_num"
+        android:textSize="@dimen/sp_14"
+        tools:text="1" />
+
+    <TextView
+        android:id="@+id/title"
+        style="@style/Body16"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_4"
+        android:textColor="@color/color_step_indicator"
+        tools:text="语言" />
+
+    <View
+        android:id="@+id/divider_end"
+        android:layout_width="@dimen/dp_32"
+        android:layout_height="@dimen/dp_1"
+        android:layout_marginStart="@dimen/dp_16"
+        android:background="#CED2D6" />
+
+</LinearLayout>

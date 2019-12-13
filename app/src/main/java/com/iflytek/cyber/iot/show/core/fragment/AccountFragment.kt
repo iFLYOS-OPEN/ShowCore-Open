@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.google.gson.JsonParser
@@ -12,8 +13,10 @@ import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.model.UserInfo
 import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
 import com.iflytek.cyber.iot.show.core.utils.OnItemClickListener
+import kotlin.math.max
+import kotlin.math.min
 
-class AccountFragment : BaseFragment() {
+class AccountFragment : BaseFragment(), PageScrollable {
     private var recyclerView: RecyclerView? = null
     private val infoList = mutableListOf<Item>()
     private val adapter = ListAdapter()
@@ -75,6 +78,37 @@ class AccountFragment : BaseFragment() {
                 e.printStackTrace()
             }
         }
+    }
+
+    override fun scrollToNext(): Boolean {
+        (recyclerView?.layoutManager as? LinearLayoutManager)?.let { linearLayoutManager ->
+            val itemCount = adapter.itemCount
+            val firstItem = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
+            val lastItem = linearLayoutManager.findLastCompletelyVisibleItemPosition()
+            if (lastItem == itemCount - 1) {
+                return false
+            } else {
+                val pageCount = lastItem - firstItem
+                val target = min(itemCount - 1, lastItem + pageCount)
+                recyclerView?.smoothScrollToPosition(target)
+            }
+        }
+        return true
+    }
+
+    override fun scrollToPrevious(): Boolean {
+        (recyclerView?.layoutManager as? LinearLayoutManager)?.let { linearLayoutManager ->
+            val firstItem = linearLayoutManager.findFirstCompletelyVisibleItemPosition()
+            val lastItem = linearLayoutManager.findLastCompletelyVisibleItemPosition()
+            if (firstItem == 0) {
+                return false
+            } else {
+                val pageCount = lastItem - firstItem
+                val target = max(0, firstItem - pageCount)
+                recyclerView?.smoothScrollToPosition(target)
+            }
+        }
+        return true
     }
 
     private inner class ListAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {

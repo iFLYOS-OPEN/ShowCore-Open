@@ -5,7 +5,7 @@
     android:id="@+id/drawer"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#b3aaaaaa">
+    android:background="#444444">
 
     <ImageView
         android:id="@+id/iv_cover_blur"
@@ -88,7 +88,7 @@
                 app:layout_constraintStart_toEndOf="@id/iv_cover"
                 app:layout_constraintTop_toTopOf="parent"
                 app:lottie_loop="true"
-                app:lottie_rawRes="@raw/animation_loading_l" />
+                app:lottie_rawRes="@raw/animation_loading_l_white" />
 
             <TextView
                 android:id="@+id/tv_only_title"
@@ -123,19 +123,19 @@
                     android:id="@+id/tv_title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:layout_marginBottom="@dimen/dp_4"
                     android:ellipsize="end"
+                    android:lineSpacingMultiplier="0.8"
                     android:maxLines="2"
                     android:textColor="@android:color/white"
                     android:textSize="@dimen/sp_24"
-                    app:lineHeight="@dimen/dp_32"
                     tools:text="当你" />
 
-                <TextView
+                <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/tv_artist"
+                    style="@style/Body16.White"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:textColor="@android:color/white"
-                    android:textSize="@dimen/sp_16"
                     tools:text="林俊杰" />
 
                 <TextView
@@ -277,7 +277,8 @@
                 android:layout_marginEnd="@dimen/dp_22"
                 android:background="@drawable/selectable_item_background_borderless"
                 android:padding="@dimen/dp_6"
-                android:src="@drawable/ic_playing_list" />
+                android:src="@drawable/ic_playing_list"
+                android:visibility="gone" />
 
         </FrameLayout>
 
@@ -287,6 +288,7 @@
         android:id="@+id/lyric_content"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:alpha="0"
         android:visibility="gone">
 
         <com.iflytek.cyber.iot.show.core.widget.lrc.LrcView
@@ -319,12 +321,11 @@
         android:orientation="vertical">
 
         <TextView
+            style="@style/Body20"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_margin="@dimen/dp_16"
-            android:text="播放列表"
-            android:textColor="@color/semi_black"
-            android:textSize="@dimen/sp_20" />
+            android:text="@string/play_list" />
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/music_list"

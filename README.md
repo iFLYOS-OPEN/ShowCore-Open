@@ -103,6 +103,40 @@ App 通过悬浮窗接口实现了全局可显示的 **语音唤醒按钮**、**
 <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
 ```
 
+## 语音唤醒
+
+项目中使用了 70 版本的唤醒引擎实现，可使用 [自定义唤醒词工具](https://www.iflyos.cn/custom-awake-words) 生成你所要自定义的唤醒词文件，解压后替换到 `app/src/main/assets/wakeup/` 下，并在 `app/src/main/java/com/iflytek/cyber/iot/show/core/record/EvsIvwHandler.kt` 代码文件中对如下代码片段进行修改
+
+```kotlin 
+// others codes
+
+init {
+    val externalCache = context.externalCacheDir
+    val customWakeResFile = File("$externalCache/wake_up_res_custom.bin") // 自定义唤醒词
+    if (!customWakeResFile.exists()) {
+        val wakeUpResFile = File("$externalCache/wake_up_res.bin")
+        wakeUpResFile.createNewFile()
+
+        val inputStream = context.assets.open("wakeup/lan2-xiao3-fei1.bin")
+        val outputStream = FileOutputStream(wakeUpResFile)
+        val buffer = ByteArray(1024)
+        var byteCount = inputStream.read(buffer)
+    }
+}
+        
+// others codes
+```
+
+对其中引用 `assets` 目录的 `wakeup/lan2-xiao3-fei1.bin` 路径替换为你所命名的文件路径即可。
+
+## 应用保活
+
+项目中增加了 `keepalive` 模块，用于保证语音交互服务可以一直运行。语音服务在运行过程中会定制启动 `keepalive` 中的服务，服务在一段时间内未收到心跳包后，则会主动调用启动 ShowCore 的主界面。
+
+> **注意**
+> 
+> `keepalive` 应用并未声明开机自启动，保活功能生效必须至少被语音服务启动过一次。
+
 ## 其他
 
 为了拥有更好的体验，我们推荐使用 adb 对设备执行以下命令进入全屏模式。

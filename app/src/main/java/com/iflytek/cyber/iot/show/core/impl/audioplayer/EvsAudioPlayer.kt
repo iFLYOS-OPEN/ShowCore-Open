@@ -12,9 +12,21 @@ import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
 import java.lang.Exception
 import java.lang.Thread.sleep
 
-class EvsAudioPlayer(context: Context) : AudioPlayer() {
+class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
     companion object {
         private const val TAG = "EvsAudioPlayer"
+
+        private var instance: EvsAudioPlayer? = null
+
+        fun get(context: Context?): EvsAudioPlayer {
+            instance?.let {
+                return it
+            } ?: run {
+                val player = EvsAudioPlayer(context!!)
+                instance = player
+                return player
+            }
+        }
     }
 
     private var playbackPlayer: AudioPlayerInstance? = null
@@ -134,7 +146,7 @@ class EvsAudioPlayer(context: Context) : AudioPlayer() {
         initPlayers(context)
     }
 
-    fun getCurrentResourceMediaPlayer(): Int {
+    fun getCurrentResourceMediaPlayerType(): Int {
         return currentResourceMediaType
     }
 
@@ -152,12 +164,14 @@ class EvsAudioPlayer(context: Context) : AudioPlayer() {
         val player = getPlayer(type)
         if (type == TYPE_PLAYBACK) {
             val uri = Uri.parse(url)
-            currentResourceMediaType = Util.inferContentType(uri.lastPathSegment)
+            currentResourceMediaType = Util.inferContentType(uri.lastPathSegment ?: "")
         }
         player?.let {
             it.resourceId = resourceId
             it.play(url)
             it.isStarted = false
+            onStarted(type, resourceId)
+            onPositionUpdated(type, resourceId, 0)
             return true
         } ?: run {
             return false
@@ -174,7 +188,9 @@ class EvsAudioPlayer(context: Context) : AudioPlayer() {
 
     override fun pause(type: String): Boolean {
         val player = getPlayer(type)
-        player?.pause() ?: run {
+        player?.pause()?.let {
+            onPaused(type, player.resourceId ?: "")
+        } ?: run {
             return false
         }
         return true
@@ -182,13 +198,16 @@ class EvsAudioPlayer(context: Context) : AudioPlayer() {
 
     override fun stop(type: String): Boolean {
         val player = getPlayer(type)
-        player?.stop() ?: run {
+        player?.stop()?.let {
+            onStopped(type, player.resourceId ?: "")
+        } ?: run {
             return false
         }
         return true
     }
 
     override fun seekTo(type: String, offset: Long): Boolean {
+        super.seekTo(type, offset)
         val player = getPlayer(type)
         player?.let {
             it.seekTo(offset)
@@ -212,32 +231,11 @@ class EvsAudioPlayer(context: Context) : AudioPlayer() {
                 volGrowFlag = true
             }
 
-            val volume = getVolume()
-            val targetVolume = 1f
+            isBackground = false
 
-            Thread {
-                var nextVolume = volume
-                val step = 0.05f
-                while (volGrowFlag && nextVolume != targetVolume) {
-                    nextVolume =
-                        if (nextVolume + step > targetVolume) targetVolume else nextVolume + step
-                    try {
-                        sleep(30)
-                    } catch (_: Exception) {
-                        //ignore
-                    }
-
-                    synchronized(volGrowFlag) {
-                        if (volGrowFlag) {
-                            Handler(getLooper()).post {
-                                setVolume(nextVolume)
-                            }
-                        } else {
-                            return@Thread
-                        }
-                    }
-                }
-            }.start()
+            Handler(getLooper()).post {
+                setVolume(1f)
+            }
 
             return true
         } ?: run {
@@ -248,11 +246,12 @@ class EvsAudioPlayer(context: Context) : AudioPlayer() {
     override fun moveToBackground(type: String): Boolean {
         getPlayer(type)?.run {
             synchronized(volGrowFlag) {
+                isBackground = true
+
                 volGrowFlag = false
-                val targetVolume = .1f
 
                 Handler(getLooper()).post {
-                    setVolume(targetVolume)
+                    setVolume(AudioPlayerInstance.BACKGROUND_VOLUME)
                 }
             }
             return true

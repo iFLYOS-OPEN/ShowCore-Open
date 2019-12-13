@@ -27,15 +27,16 @@
         android:layout_marginStart="@dimen/dp_12"
         android:layout_marginEnd="@dimen/dp_12"
         android:layout_marginBottom="@dimen/dp_12"
+        android:background="?selectableItemBackground"
         android:scaleType="centerCrop"
         app:layout_constraintDimensionRatio="1:1"
-        android:background="?selectableItemBackground"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"/>
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.appcompat.widget.AppCompatTextView
         android:id="@+id/album_title"
+        style="@style/Body16"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/dp_12"
@@ -43,9 +44,6 @@
         android:layout_marginEnd="@dimen/dp_12"
         android:ellipsize="end"
         android:maxLines="2"
-        app:lineHeight="@dimen/dp_24"
-        android:textColor="@color/semi_black"
-        android:textSize="@dimen/sp_16"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@id/iv_album"

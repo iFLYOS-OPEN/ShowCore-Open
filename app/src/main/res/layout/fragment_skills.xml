@@ -4,18 +4,18 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E8EBEE"
+    android:background="@color/tablet_grey_100"
     android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_64"
+        android:layout_height="@dimen/dp_56"
         android:background="#01000000">
 
         <LinearLayout
             android:id="@+id/back"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/dp_64"
+            android:layout_height="@dimen/dp_56"
             android:background="?selectableItemBackgroundBorderless"
             android:orientation="horizontal"
             android:paddingStart="@dimen/dp_32"
@@ -53,8 +53,8 @@
             android:id="@+id/view_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:paddingTop="@dimen/dp_4"
-            android:clipToPadding="false" />
+            android:clipToPadding="false"
+            android:paddingTop="@dimen/dp_4" />
 
         <LinearLayout
             android:id="@+id/error_container"

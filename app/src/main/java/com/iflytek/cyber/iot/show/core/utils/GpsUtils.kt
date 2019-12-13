@@ -25,8 +25,6 @@ import android.provider.Settings
 import android.location.LocationManager.GPS_PROVIDER
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
-import com.rich.czlylibary.sdk.HttpClientManager
-import com.rich.czlylibary.sdk.MiguCzlySDK
 
 object GpsUtils {
 

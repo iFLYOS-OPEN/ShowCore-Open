@@ -7,6 +7,10 @@ import java.io.*
 
 
 object MessageRecorder : GlobalRecorder.Observer {
+    override fun onWakeUp(angle: Int, beam: Int, params: String?) {
+        // ignore
+    }
+
     private var isRecording = false
 
     private var byteArrayOutputStream: BufferedOutputStream? = null

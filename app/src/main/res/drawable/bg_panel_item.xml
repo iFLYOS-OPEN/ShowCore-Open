@@ -14,6 +14,12 @@
   ~ limitations under the License.
   -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
+        <shape>
+            <corners android:radius="@dimen/dp_12" />
+            <solid android:color="@color/panel_item_background_selected" />
+        </shape>
+    </item>
     <item android:state_pressed="true">
         <shape>
             <corners android:radius="@dimen/dp_12" />

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#E8EBEE"
+    android:background="@color/tablet_grey_100"
     android:orientation="vertical">
 
     <FrameLayout
@@ -15,7 +15,7 @@
         <LinearLayout
             android:id="@+id/back"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/dp_64"
+            android:layout_height="@dimen/dp_56"
             android:background="?selectableItemBackgroundBorderless"
             android:orientation="horizontal"
             android:paddingStart="@dimen/dp_32"
@@ -31,12 +31,15 @@
     </FrameLayout>
 
     <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
         <RelativeLayout
+            android:id="@+id/content_container"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
+            android:layout_height="match_parent"
+            android:paddingBottom="@dimen/dp_32">
 
             <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
                 android:id="@+id/icon"
@@ -119,8 +122,8 @@
                 android:layout_height="wrap_content"
                 android:layout_below="@id/tv_tips"
                 android:layout_marginStart="@dimen/dp_32"
-                android:layout_marginEnd="@dimen/dp_32"
                 android:layout_marginTop="@dimen/dp_8"
+                android:layout_marginEnd="@dimen/dp_32"
                 android:layout_toEndOf="@id/icon"
                 android:overScrollMode="never"
                 app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />

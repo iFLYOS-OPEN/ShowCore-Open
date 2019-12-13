@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:gravity="center_vertical"
+    android:minHeight="@dimen/dp_72"
+    android:orientation="horizontal"
+    android:paddingStart="@dimen/dp_40"
+    android:paddingEnd="@dimen/dp_40">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/H4"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="近场" />
+
+        <TextView
+            android:id="@+id/message"
+            style="@style/Body16.Grey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="0~10米" />
+    </LinearLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.CircleCheckBox
+        android:id="@+id/check_box"
+        android:layout_width="@dimen/dp_40"
+        android:layout_height="@dimen/dp_40"
+        android:visibility="gone"
+        app:isChecked="true" />
+
+</LinearLayout>

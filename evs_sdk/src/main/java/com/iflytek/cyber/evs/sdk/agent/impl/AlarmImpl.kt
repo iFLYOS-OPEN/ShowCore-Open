@@ -38,11 +38,20 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
                 "$packageName&$ACTION_ALARM_ARRIVED" -> {
                     val alarmId = intent.getStringExtra(KEY_ALARM_ID)
                     val url = intent.getStringExtra(KEY_URL)
+                    val timestamp = intent.getLongExtra(KEY_TIMESTAMP, -1L)
 
                     Log.d(TAG, "alarm arrived, {alarm_id=$alarmId, url=$url}.")
 
-                    activeAlarmId = alarmId
-                    alarmPlayer.play(url)
+                    val current = System.currentTimeMillis() / 1000
+                    if (current - timestamp > 5000) {
+                        Log.w(
+                            TAG,
+                            "alarm {alarm_id=$alarmId} expired. Now is $current, alarm time is $timestamp"
+                        )
+                    } else {
+                        activeAlarmId = alarmId
+                        alarmPlayer.play(url)
+                    }
 
                     dataHelper.deleteAlarm(alarmId)
 
@@ -84,7 +93,8 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
             }
         }
 
-        alarmPlayer.setOnAlarmStateChangeListener(object : AlarmPlayerInstance.OnAlarmStateChangeListener {
+        alarmPlayer.setOnAlarmStateChangeListener(object :
+            AlarmPlayerInstance.OnAlarmStateChangeListener {
             override fun onStarted() {
                 activeAlarmId?.let { alarmId ->
                     this@AlarmImpl.onAlarmStarted(alarmId)
@@ -125,8 +135,6 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
         alarmManager.set(AlarmManager.RTC_WAKEUP, alarm.timestamp * 1000, pendingIntent)
 
         dataHelper.addAlarm(alarm)
-
-        onAlarmUpdatedListener?.onAlarmUpdated()
     }
 
     private fun cancelAlarm(alarmId: String) {
@@ -163,8 +171,6 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
 
         Log.d(TAG, "delete alarm, {alarm_id=$alarmId}.")
         dataHelper.deleteAlarm(alarmId)
-
-        onAlarmUpdatedListener?.onAlarmUpdated()
     }
 
     override fun getLocalAlarms(): List<Item> {

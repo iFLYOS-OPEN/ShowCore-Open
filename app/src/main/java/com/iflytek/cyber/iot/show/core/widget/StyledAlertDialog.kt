@@ -7,7 +7,7 @@ import android.os.Bundle
 import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
-import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.FragmentManager
 import com.iflytek.cyber.iot.show.core.R
@@ -18,6 +18,7 @@ class StyledAlertDialog : DialogFragment() {
     private var dialogMessageView: TextView? = null
     private var dialogPositiveButton: TextView? = null
     private var dialogNegativeButton: TextView? = null
+    private var isWarningAction = false
 
     private var positiveButton: Pair<String, View.OnClickListener?>? = null
     private var negativeButton: Pair<String, View.OnClickListener?>? = null
@@ -36,7 +37,11 @@ class StyledAlertDialog : DialogFragment() {
             field = value
         }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         dialog?.requestWindowFeature(Window.FEATURE_NO_TITLE)
         return inflater.inflate(R.layout.layout_styled_dialog, container, false)
     }
@@ -48,7 +53,8 @@ class StyledAlertDialog : DialogFragment() {
             dialog.window?.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             dialog.window?.setLayout(
                 resources.getDimensionPixelSize(R.dimen.dp_380),
-                WindowManager.LayoutParams.WRAP_CONTENT)
+                WindowManager.LayoutParams.WRAP_CONTENT
+            )
         }
     }
 
@@ -73,25 +79,13 @@ class StyledAlertDialog : DialogFragment() {
         } ?: run {
             dialogMessageView?.visibility = View.GONE
         }
-        iconDrawable?.let {
-            (dialogIconView?.layoutParams as? ConstraintLayout.LayoutParams)
-                ?.let { layoutParams ->
-                    layoutParams.width = resources.getDimensionPixelSize(R.dimen.dp_40)
-                    layoutParams.constrainedWidth = false
-                    dialogIconView?.layoutParams = layoutParams
-                }
-        } ?: run {
-            (dialogIconView?.layoutParams as? ConstraintLayout.LayoutParams)
-                ?.let { layoutParams ->
-                    layoutParams.width = 0
-                    layoutParams.constrainedWidth = true
-                    layoutParams.matchConstraintPercentWidth = 0f
-                    dialogIconView?.layoutParams = layoutParams
-                }
-        }
+        dialogIconView?.isVisible = iconDrawable != null
         dialogIconView?.setImageDrawable(iconDrawable)
 
         dialogPositiveButton?.let { dialogPositiveButton ->
+            if (isWarningAction) {
+                dialogPositiveButton.setBackgroundResource(R.drawable.bg_round_warning_32dp)
+            }
             matchPairToButton(positiveButton, dialogPositiveButton)
         }
         dialogNegativeButton?.let { dialogNegativeButton ->
@@ -118,6 +112,7 @@ class StyledAlertDialog : DialogFragment() {
         private var iconDrawable: Drawable? = null
         private var positiveButton: Pair<String, View.OnClickListener?>? = null
         private var negativeButton: Pair<String, View.OnClickListener?>? = null
+        private var isWarningAction = false
 
         fun setTitle(title: String): Builder {
             this.title = title
@@ -144,6 +139,11 @@ class StyledAlertDialog : DialogFragment() {
             return this
         }
 
+        fun setWarningAction(isWarningAction: Boolean): Builder {
+            this.isWarningAction = isWarningAction
+            return this
+        }
+
         fun build(): StyledAlertDialog {
             val dialog = StyledAlertDialog()
             dialog.title = title
@@ -151,6 +151,7 @@ class StyledAlertDialog : DialogFragment() {
             dialog.iconDrawable = iconDrawable
             dialog.positiveButton = positiveButton
             dialog.negativeButton = negativeButton
+            dialog.isWarningAction = isWarningAction
             return dialog
         }
 

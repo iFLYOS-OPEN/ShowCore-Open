@@ -1,8 +1,11 @@
 package com.iflytek.cyber.iot.show.core.fragment
 
+import android.annotation.SuppressLint
+import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.os.Bundle
+import android.os.PowerManager
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -18,10 +21,7 @@ import com.google.zxing.qrcode.QRCodeWriter
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.evs.sdk.model.AuthResponse
 import com.iflytek.cyber.evs.sdk.model.DeviceCodeResponse
-import com.iflytek.cyber.iot.show.core.BaseActivity
-import com.iflytek.cyber.iot.show.core.BuildConfig
-import com.iflytek.cyber.iot.show.core.EngineService
-import com.iflytek.cyber.iot.show.core.R
+import com.iflytek.cyber.iot.show.core.*
 import com.iflytek.cyber.iot.show.core.model.ActionConstant
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
@@ -37,8 +37,11 @@ class PairFragment2 : BaseFragment() {
     private var ivQrCode: ImageView? = null
     private var qrCodeProgress: ProgressBar? = null
     private var tvErrorText: TextView? = null
+    private var pairWakeLock: PowerManager.WakeLock? = null
 
     private var retryCount = 0
+
+    private var currentRequestId: String? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -47,6 +50,8 @@ class PairFragment2 : BaseFragment() {
         enableWakeUp.action = EngineService.ACTION_SET_WAKE_UP_ENABLED
         enableWakeUp.putExtra(EngineService.EXTRA_ENABLED, false)
         context?.startService(enableWakeUp)
+
+        AuthDelegate.setAuthUrl("https://auth.iflyos.cn")
     }
 
     override fun onCreateView(
@@ -65,7 +70,7 @@ class PairFragment2 : BaseFragment() {
         tvErrorText = view.findViewById(R.id.tv_error)
 
         // 是否第一次打开
-        val fromSetup = findFragment(WelcomeFragment::class.java) != null
+        val fromSetup = findFragment(WifiSettingsFragment::class.java) != null
 
         // 是否从设置中进入，如果之前已经配置过，解除绑定后会直接进入二维码界面而不会经过其他界面
         val fromSettings = findFragment(AccountFragment::class.java) != null
@@ -120,11 +125,14 @@ class PairFragment2 : BaseFragment() {
 
     private fun requestQrCode() {
         val context = view?.context ?: return
+        val requestId = UUID.randomUUID().toString()
         AuthDelegate.requestDeviceCode(context,
             BuildConfig.CLIENT_ID,
             DeviceUtils.getDeviceId(context),
             object : AuthDelegate.ResponseCallback<DeviceCodeResponse> {
                 override fun onResponse(response: DeviceCodeResponse) {
+                    if (currentRequestId != requestId)
+                        return
                     retryCount = 0
                     val authUrl = "${response.verificationUri}?user_code=${response.userCode}"
                     ivQrCode?.let { imageView ->
@@ -139,6 +147,8 @@ class PairFragment2 : BaseFragment() {
                 }
 
                 override fun onError(httpCode: Int?, errorBody: String?, throwable: Throwable?) {
+                    if (currentRequestId != requestId)
+                        return
                     if (retryCount < 5) {
                         try {
                             Thread.sleep(1000)
@@ -166,16 +176,19 @@ class PairFragment2 : BaseFragment() {
             },
             object : AuthDelegate.AuthResponseCallback {
                 override fun onAuthSuccess(authResponse: AuthResponse) {
+                    if (currentRequestId != requestId)
+                        return
                     ConfigUtils.putBoolean(ConfigUtils.KEY_SETUP_COMPLETED, true)
-                    if (findFragment(WelcomeFragment::class.java) != null) {
-                        popTo(WelcomeFragment::class.java, true, Runnable {
+                    if (findFragment(WifiSettingsFragment::class.java) != null) {
+                        (activity as? EvsLauncherActivity)?.showWelcome()
+                        popTo(WifiSettingsFragment::class.java, true, Runnable {
                             (getSupportActivity() as? BaseActivity)?.loadRootFragment(
                                 R.id.fragment_container,
                                 MainFragment2()
                             )
                         })
                     } else {
-                        ContentStorage.get().playerInfo = null
+                        ContentStorage.get().savePlayInfo(null)
                         ContentStorage.get().isMusicPlaying = false
                         val stopAudioPlayer = Intent(context, EngineService::class.java)
                         stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
@@ -184,7 +197,8 @@ class PairFragment2 : BaseFragment() {
                         if (findFragment(MainFragment2::class.java) != null) {
                             popTo(MainFragment2::class.java, false)
                         } else {
-                            val activity = activity as? BaseActivity
+                            val activity = activity as? EvsLauncherActivity
+                            activity?.showWelcome()
                             popTo(PairFragment2::class.java, true, Runnable {
                                 activity?.loadRootFragment(
                                     R.id.fragment_container,
@@ -199,6 +213,8 @@ class PairFragment2 : BaseFragment() {
                 }
 
                 override fun onAuthFailed(errorBody: String?, throwable: Throwable?) {
+                    if (currentRequestId != requestId)
+                        return
                     throwable?.let {
                         if (it is UnknownHostException) {
                             showError(getString(R.string.qr_code_client_error_message))
@@ -223,6 +239,7 @@ class PairFragment2 : BaseFragment() {
                     }
                 }
             })
+        currentRequestId = requestId
     }
 
     private fun showError(errorText: String) {
@@ -271,6 +288,36 @@ class PairFragment2 : BaseFragment() {
         return null
     }
 
+    override fun onSupportVisible() {
+        super.onSupportVisible()
+
+        if (context?.let { AuthDelegate.getAuthResponseFromPref(it) == null } == true)
+            acquireWakeLock()
+    }
+
+    override fun onSupportInvisible() {
+        super.onSupportInvisible()
+
+        releaseWakeLock()
+    }
+
+    @SuppressLint("WakelockTimeout")
+    private fun acquireWakeLock() {
+        pairWakeLock?.acquire() ?: run {
+            val powerManager = context?.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val flag = PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+            val wakeLock = powerManager.newWakeLock(flag, "iflytek:pair")
+
+            wakeLock.acquire()
+            pairWakeLock = wakeLock
+        }
+    }
+
+    private fun releaseWakeLock() {
+        pairWakeLock?.release()
+        pairWakeLock = null
+    }
+
     override fun onDestroy() {
         super.onDestroy()
 
@@ -284,7 +331,7 @@ class PairFragment2 : BaseFragment() {
 
     override fun onBackPressedSupport(): Boolean {
         // 是否第一次打开
-        val fromSetup = findFragment(WelcomeFragment::class.java) != null
+        val fromSetup = findFragment(WifiSettingsFragment::class.java) != null
 
         // 是否从设置中进入，如果之前已经配置过，解除绑定后会直接进入二维码界面而不会经过其他界面
         val fromSettings = findFragment(AccountFragment::class.java) != null

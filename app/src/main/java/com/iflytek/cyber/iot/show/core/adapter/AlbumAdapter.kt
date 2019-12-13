@@ -39,10 +39,12 @@ class AlbumAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
         return if (itemViewType == TYPE_SQUARE) {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_album, parent, false)
+            val view =
+                LayoutInflater.from(parent.context).inflate(R.layout.item_album, parent, false)
             AlbumHolder(view)
         } else {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_album_video, parent, false)
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_album_video, parent, false)
             AlbumVideoHolder(view)
         }
     }
@@ -62,19 +64,24 @@ class AlbumAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             val resource = holder.itemView.resources
 
             val transformer = MultiTransformation(
-                    CenterCrop(),
-                    RoundedCornersTransformation(
-                            resource.getDimensionPixelSize(R.dimen.dp_6), 0)
+                CenterCrop(),
+                RoundedCornersTransformation(
+                    resource.getDimensionPixelSize(R.dimen.dp_6), 0
+                )
             )
 
             Glide.with(context)
-                    .load(groupItem.image)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .transition(DrawableTransitionOptions.with(
-                            DrawableCrossFadeFactory.Builder()
-                                    .setCrossFadeEnabled(true).build()))
-                    .transform(transformer)
-                    .into(holder.ivAlbum)
+                .load(groupItem.image)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .transition(
+                    DrawableTransitionOptions.with(
+                        DrawableCrossFadeFactory.Builder()
+                            .setCrossFadeEnabled(true).build()
+                    )
+                )
+                .placeholder(R.drawable.placeholder_music_album)
+                .transform(transformer)
+                .into(holder.ivAlbum)
             holder.albumTitle.text = groupItem.name
 
             holder.albumContent.setOnClickListener {
@@ -86,22 +93,27 @@ class AlbumAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
             val resource = holder.itemView.resources
 
             val transformer = MultiTransformation(
-                    CenterCrop(),
-                    RoundedCornersTransformation(
-                            resource.getDimensionPixelSize(R.dimen.dp_6), 0)
+                CenterCrop(),
+                RoundedCornersTransformation(
+                    resource.getDimensionPixelSize(R.dimen.dp_6), 0
+                )
             )
 
             holder.ivAlbum.setOriginalSize(1000, 574)
             holder.albumContent.setOriginalSize(1000, 574)
 
             Glide.with(context)
-                    .load(groupItem.image)
-                    .diskCacheStrategy(DiskCacheStrategy.ALL)
-                    .transition(DrawableTransitionOptions.with(
-                            DrawableCrossFadeFactory.Builder()
-                                    .setCrossFadeEnabled(true).build()))
-                    .transform(transformer)
-                    .into(holder.ivAlbum)
+                .load(groupItem.image)
+                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                .transition(
+                    DrawableTransitionOptions.with(
+                        DrawableCrossFadeFactory.Builder()
+                            .setCrossFadeEnabled(true).build()
+                    )
+                )
+                .placeholder(R.drawable.placeholder_music_album)
+                .transform(transformer)
+                .into(holder.ivAlbum)
             holder.albumTitle.text = groupItem.name
 
             holder.albumContent.setOnClickListener {

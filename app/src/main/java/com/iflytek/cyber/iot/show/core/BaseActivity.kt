@@ -280,7 +280,7 @@ abstract class BaseActivity : AppCompatActivity(), ISupportActivity {
     /**
      * 得到位于栈顶 Fragment
      */
-    fun getTopFragment(): ISupportFragment {
+    fun getTopFragment(): ISupportFragment? {
         return SupportHelper.getTopFragment(supportFragmentManager)
     }
 

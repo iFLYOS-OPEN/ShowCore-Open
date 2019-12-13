@@ -36,7 +36,7 @@ class DateUtils {
         fun getMinList(): ArrayList<String> {
             val minList = ArrayList<String>()
             for (min in 0..59) {
-                minList.add("${min}分")
+                minList.add(String.format("%02d分", min))
             }
             return minList
         }

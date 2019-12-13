@@ -38,10 +38,11 @@
     <color name="tablet_black">#262626</color>
     <color name="tablet_grey">#666666</color>
     <color name="tablet_red">#FF7676</color>
+    <color name="tablet_red_warning">#ff4d4d</color>
     <color name="tablet_index_bg">#232B32</color>
     <color name="tablet_grey_500">#9E9FA7</color>
     <color name="tablet_grey_300">#CED2D6</color>
-    <color name="tablet_grey_100">#EDF0F2</color>
+    <color name="tablet_grey_100">#E2E7EB</color>
 
     <color name="grey_500">#9E9FA7</color>
     <color name="divider_line">#1a000000</color>
@@ -52,6 +53,7 @@
     <color name="panel_background">#FFFFFF</color>
     <color name="panel_item_background">@color/tablet_grey_100</color>
     <color name="panel_item_background_pressed">@color/tablet_grey_300</color>
+    <color name="panel_item_background_selected">#DBDDE0</color>
 
     <color name="lrc_normal_text_color">#9E9E9E</color>
     <color name="lrc_current_text_color">#FF4081</color>
@@ -60,7 +62,7 @@
     <color name="lrc_time_text_color">#809E9E9E</color>
 
     <color name="settings_item_background">@android:color/white</color>
-    <color name="settings_item_background_pressed">@color/tablet_grey_100</color>
+    <color name="settings_item_background_pressed">@color/tablet_grey_300</color>
 
     <color name="message_item_border">@color/tablet_grey_100</color>
     <color name="message_item_background">@android:color/white</color>

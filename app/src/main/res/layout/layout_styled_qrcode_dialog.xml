@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="@dimen/dp_260"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_styled_dialog"
+    android:orientation="vertical"
+    tools:backgroundTint="@color/tablet_grey_500"
+    tools:layout_gravity="center">
+
+    <FrameLayout
+        android:layout_width="@dimen/dp_120"
+        android:layout_height="@dimen/dp_120"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/dp_32"
+        tools:background="@android:color/white">
+
+        <ImageView
+            android:id="@+id/qrcode"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <ProgressBar
+            android:id="@+id/progress_bar"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_gravity="center" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/dialog_title"
+        style="@style/H5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginStart="@dimen/dp_16"
+        android:layout_marginTop="@dimen/dp_16"
+        android:layout_marginEnd="@dimen/dp_16"
+        android:ellipsize="end"
+        android:gravity="center"
+        android:maxLines="2"
+        tools:text="未绑定酷狗音乐账号" />
+
+    <TextView
+        android:id="@+id/dialog_message"
+        style="@style/Body14.Grey"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/dp_4"
+        tools:text="请扫描二维码进行下一步操作" />
+
+    <TextView
+        android:id="@+id/dialog_button"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp_36"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginTop="@dimen/dp_23"
+        android:layout_marginBottom="@dimen/dp_24"
+        android:background="@drawable/bg_round_border_accent_36dp"
+        android:gravity="center"
+        android:paddingStart="@dimen/dp_20"
+        android:paddingEnd="@dimen/dp_20"
+        android:textColor="@color/text_color_accent"
+        android:textSize="@dimen/sp_14"
+        tools:text="button" />
+
+
+</LinearLayout>

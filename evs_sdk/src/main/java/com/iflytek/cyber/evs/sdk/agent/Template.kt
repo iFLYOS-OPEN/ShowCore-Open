@@ -1,6 +1,7 @@
 package com.iflytek.cyber.evs.sdk.agent
 
 import androidx.annotation.CallSuper
+import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
 import com.iflytek.cyber.evs.sdk.RequestManager
 import com.iflytek.cyber.evs.sdk.focus.VisualFocusManager
@@ -45,6 +46,7 @@ abstract class Template {
         const val KEY_ELEMENT_ID = "element_id"
         const val KEY_FOCUSED = "focused"
         const val KEY_TEMPLATE_TYPE = "template_type"
+        const val KEY_SHOULD_POPUP = "should_popup"
     }
 
     open fun isFocused(): Boolean {
@@ -100,16 +102,19 @@ abstract class Template {
      */
     @CallSuper
     open fun renderPlayerInfo(payload: String) {
-        VisualFocusManager.requestAbandon(
-            VisualFocusManager.CHANNEL_OVERLAY_TEMPLATE, VisualFocusManager.TYPE_PLAYING_TEMPLATE
-        )
+        val payloadJson = JSON.parseObject(payload)
+        if (payloadJson.getBoolean(KEY_SHOULD_POPUP) == true)
+            VisualFocusManager.requestActive(
+                VisualFocusManager.CHANNEL_OVERLAY_TEMPLATE,
+                VisualFocusManager.TYPE_PLAYING_TEMPLATE
+            )
     }
 
     fun sendElementSelected(templateId: String, elementId: String) {
         val payload = JSONObject()
         payload[KEY_TEMPLATE_ID] = templateId
         payload[KEY_ELEMENT_ID] = elementId
-        RequestManager.sendRequest(NAME_ELEMENT_SELECTED, payload)
+        RequestManager.sendRequest(NAME_ELEMENT_SELECTED, payload, null, true)
     }
 
     /**

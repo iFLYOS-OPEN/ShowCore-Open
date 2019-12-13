@@ -4,17 +4,17 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F2F5F7"
+    android:background="@color/tablet_grey_100"
     android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_64">
+        android:layout_height="@dimen/dp_56">
 
         <LinearLayout
             android:id="@+id/back"
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/dp_64"
+            android:layout_height="@dimen/dp_56"
             android:background="?selectableItemBackgroundBorderless"
             android:orientation="horizontal"
             android:paddingStart="@dimen/dp_32"
@@ -47,7 +47,7 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginTop="@dimen/dp_64">
+        android:layout_marginTop="@dimen/dp_56">
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/view_pager"
@@ -59,7 +59,7 @@
             android:id="@+id/error_container"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@android:color/white"
+            android:background="@color/tablet_grey_100"
             android:gravity="center"
             android:orientation="vertical"
             android:paddingBottom="@dimen/dp_64"
@@ -88,5 +88,26 @@
                 android:textSize="@dimen/sp_16" />
 
         </LinearLayout>
+
+        <ScrollView
+            android:id="@+id/placeholder"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/tablet_grey_100"
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/dp_10">
+
+                <include layout="@layout/item_category_fake" />
+
+                <include layout="@layout/item_category_fake" />
+
+                <include layout="@layout/item_category_fake" />
+
+            </LinearLayout>
+        </ScrollView>
     </FrameLayout>
 </FrameLayout>

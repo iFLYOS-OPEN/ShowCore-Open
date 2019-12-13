@@ -23,7 +23,7 @@ import android.os.Looper
 import android.text.TextUtils
 import android.util.Log
 import com.iflytek.cyber.iot.show.core.BuildConfig
-import com.iflytek.cyber.iot.show.core.ivw.IVWEngine
+import com.iflytek.ivw.IVWEngine
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.File
@@ -39,28 +39,20 @@ class EvsIvwHandler(context: Context, private val listener: IvwHandlerListener?)
     private val mObj = Any()
 
     private var mIvwEngine: IVWEngine? = null
-    private var mIvwListener = object : IVWEngine.IVWListener {
-        override fun onWakeup(result: String) {
-            try {
-                val ivw = JSONObject(result)
-                val rlt = ivw.optJSONArray("rlt")
-                if (null != rlt && rlt.length() > 0) {
-                    listener?.onWakeUp(result)
-                }
-            } catch (e: JSONException) {
-                Log.e(TAG, "Convert ivw result to json happen exception, $e")
-            }
+    private var mIvwListener =
+        IVWEngine.IVWListener { angle, channel, power, CMScore, beam, param1, param2 ->
+            Log.v(TAG, param1)
+            listener?.onWakeUp(angle.toInt(), beam.toInt(), param1)
         }
-    }
 
     init {
         val externalCache = context.externalCacheDir
-        val customWakeResFile = File("$externalCache/wake_up_res_custom.jet") // 自定义唤醒词
+        val customWakeResFile = File("$externalCache/wake_up_res_custom.bin") // 自定义唤醒词
         if (!customWakeResFile.exists()) {
-            val wakeUpResFile = File("$externalCache/wake_up_res.jet")
+            val wakeUpResFile = File("$externalCache/wake_up_res.bin")
             wakeUpResFile.createNewFile()
 
-            val inputStream = context.assets.open("wakeup/lan2-xiao3-fei1.jet")
+            val inputStream = context.assets.open("wakeup/lan2-xiao3-fei1.bin")
             val outputStream = FileOutputStream(wakeUpResFile)
             val buffer = ByteArray(1024)
             var byteCount = inputStream.read(buffer)
@@ -79,8 +71,9 @@ class EvsIvwHandler(context: Context, private val listener: IvwHandlerListener?)
 
         // if wakeup enable, then new some object
         if (isWakeUpEnable()) {
-            mIvwEngine = IVWEngine(mWakeResPath, mIvwListener, BuildConfig.DEBUG)
-            mIvwEngine?.start()
+            Thread {
+                mIvwEngine = IVWEngine.createInstance(mWakeResPath, mIvwListener)
+            }.start()
 
             mHandlerThread = HandlerThread("IVW_THREAD", Thread.MAX_PRIORITY)
             mHandlerThread?.let {
@@ -113,7 +106,7 @@ class EvsIvwHandler(context: Context, private val listener: IvwHandlerListener?)
     }
 
     private fun stopIvw() {
-        mIvwEngine?.stop()
+        mIvwEngine?.destroy()
     }
 
     fun release() {
@@ -124,7 +117,7 @@ class EvsIvwHandler(context: Context, private val listener: IvwHandlerListener?)
     inner class WakeUpHandler(lopper: Looper) : Handler(lopper)
 
     interface IvwHandlerListener {
-        fun onWakeUp(oriMsg: String)
+        fun onWakeUp(angle: Int, beam: Int, params: String?)
     }
 
     companion object {

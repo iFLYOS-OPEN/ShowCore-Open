@@ -15,13 +15,25 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
         const val TYPE_TTS = AudioPlayer.TYPE_TTS
         const val TYPE_PLAYBACK = AudioPlayer.TYPE_PLAYBACK
         const val TYPE_RING = AudioPlayer.TYPE_RING
+
+        const val BACKGROUND_VOLUME = 0.1f
     }
 
     private val player = ExoPlayerFactory.newSimpleInstance(
         context,
         DefaultRenderersFactory(context),
         DefaultTrackSelector(),
-        DefaultLoadControl()
+        if (type == TYPE_TTS)
+            DefaultLoadControl.Builder()
+                .setBufferDurationsMs(
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS,
+                    DefaultLoadControl.DEFAULT_MAX_BUFFER_MS,
+                    100,
+                    DefaultLoadControl.DEFAULT_BUFFER_FOR_PLAYBACK_AFTER_REBUFFER_MS
+                )
+                .createDefaultLoadControl()
+        else
+            DefaultLoadControl()
     )
     private val mMediaSourceFactory: MediaSourceFactory
 
@@ -58,10 +70,17 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
         .build()
     private val onVolumeChangedListener = object : EvsSpeaker.OnVolumeChangedListener {
         override fun onVolumeChanged(volume: Int, fromRemote: Boolean) {
-            player.volume = volume / 100f
+            if (isBackground) {
+                player.volume = volume / 100f * BACKGROUND_VOLUME
+            } else {
+                player.volume = volume / 100f
+            }
         }
     }
     private var listener: Listener? = null
+
+    var isBackground = false
+        internal set
 
     private val handler = Handler()
 
@@ -80,9 +99,9 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
                 listener?.onPlayerError(this@AudioPlayerInstance, type, error)
             }
         })
-        mMediaSourceFactory = MediaSourceFactory(context, type)
+        mMediaSourceFactory = MediaSourceFactory(context)
         player.audioAttributes = audioAttributes
-        player.playWhenReady = false
+//        player.playWhenReady = false
 
         player.volume = volumePercent()
 

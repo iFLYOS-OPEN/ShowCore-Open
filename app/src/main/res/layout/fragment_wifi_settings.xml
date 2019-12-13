@@ -74,11 +74,34 @@
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/wifi_list"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
         android:clipChildren="false"
         android:clipToPadding="false"
         android:paddingBottom="@dimen/dp_40"
         app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
         tools:listitem="@layout/item_access_point_2" />
+
+    <FrameLayout
+        android:id="@+id/next_step_container"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_56">
+
+        <TextView
+            android:id="@+id/next_step"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_36"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/dp_40"
+            android:background="@drawable/bg_round_accent_36dp"
+            android:gravity="center"
+            android:paddingStart="@dimen/dp_20"
+            android:paddingEnd="@dimen/dp_20"
+            android:text="@string/next_step"
+            android:textColor="@color/text_color_light"
+            android:textSize="@dimen/sp_14"
+            tools:enabled="false" />
+
+    </FrameLayout>
 
 </LinearLayout>

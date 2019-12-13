@@ -2,6 +2,7 @@ package com.iflytek.cyber.evs.sdk.agent
 
 import androidx.annotation.CallSuper
 import com.alibaba.fastjson.JSONObject
+import com.iflytek.cyber.evs.sdk.RequestManager
 import com.iflytek.cyber.evs.sdk.model.Constant
 import com.iflytek.cyber.evs.sdk.socket.RequestBuilder
 import com.iflytek.cyber.evs.sdk.socket.SocketManager
@@ -24,7 +25,7 @@ abstract class Launcher {
         const val PAYLOAD_PAGE = "page"
         const val PAYLOAD_RESULT = "result"
         const val PAYLOAD_FAILURE_CODE = "failure_code"
-        const val PAYLOAD_FEEDBACK_MESSAGE = "feedback_message"
+        const val PAYLOAD_FEEDBACK_TEXT = "feedback_text"
 
         const val PAGE_HOME = "home"
         const val PAGE_SETTINGS = "settings"
@@ -32,7 +33,8 @@ abstract class Launcher {
         const val PAGE_SKILLS = "skills"
         const val PAGE_ALARMS = "alarms"
         const val PAGE_MESSAGES = "messages"
-        const val PAGE_SCREEN_OFF = "screen_off"
+        const val PAGE_NEXT = "next"
+        const val PAGE_PREVIOUS = "previous"
 
         const val RESULT_SUCCEED = "SUCCEED"
         const val RESULT_FAILED = "FAILED"
@@ -50,22 +52,20 @@ abstract class Launcher {
     abstract fun back(callback: ExecuteCallback)
 
     @CallSuper
-    open fun sendStartActivitySucceed(page: String) {
-
+    open fun sendStartActivitySucceed(page: String, feedbackText: String? = null) {
         val payload = JSONObject()
         payload[PAYLOAD_RESULT] = RESULT_SUCCEED
         payload[PAYLOAD_PAGE] = page
-        SocketManager.send(
-            RequestBuilder.buildRequestBody(
-                NAME_START_ACTIVITY_RESULT, payload
-            ).toString()
-        )
+        feedbackText?.let {
+            payload[PAYLOAD_FEEDBACK_TEXT] = feedbackText
+        }
+        RequestManager.sendRequest(NAME_START_ACTIVITY_RESULT, payload)
     }
 
     @CallSuper
     open fun sendStartActivityFailed(
         page: String,
-        failureCode: String?, feedbackMessage: String?
+        failureCode: String?, feedbackText: String?
     ) {
 
         val payload = JSONObject()
@@ -74,47 +74,38 @@ abstract class Launcher {
         failureCode?.let {
             payload[PAYLOAD_FAILURE_CODE] = it
         }
-        feedbackMessage?.let {
-            payload[PAYLOAD_FEEDBACK_MESSAGE] = it
+        feedbackText?.let {
+            payload[PAYLOAD_FEEDBACK_TEXT] = it
         }
-        SocketManager.send(
-            RequestBuilder.buildRequestBody(
-                NAME_START_ACTIVITY_RESULT, payload
-            ).toString()
-        )
+        RequestManager.sendRequest(NAME_START_ACTIVITY_RESULT, payload)
     }
 
-    open fun sendBackSucceed() {
-
+    open fun sendBackSucceed(feedbackText: String? = null) {
         val payload = JSONObject()
         payload[PAYLOAD_RESULT] = RESULT_SUCCEED
-        SocketManager.send(
-            RequestBuilder.buildRequestBody(
-                NAME_BACK_RESULT, payload
-            ).toString()
-        )
+
+        feedbackText?.let {
+            payload[PAYLOAD_FEEDBACK_TEXT] = feedbackText
+        }
+        RequestManager.sendRequest(NAME_BACK_RESULT, payload)
     }
 
-    open fun sendBackFailed(feedbackMessage: String?) {
+    open fun sendBackFailed(feedbackText: String?) {
         val payload = JSONObject()
         payload[PAYLOAD_RESULT] = RESULT_FAILED
-        feedbackMessage?.let {
-            payload[PAYLOAD_FEEDBACK_MESSAGE] = it
+        feedbackText?.let {
+            payload[PAYLOAD_FEEDBACK_TEXT] = it
         }
-        SocketManager.send(
-            RequestBuilder.buildRequestBody(
-                NAME_BACK_RESULT, payload
-            ).toString()
-        )
+        RequestManager.sendRequest(NAME_BACK_RESULT, payload)
     }
 
     abstract class ExecuteCallback {
         var result = ""
         var page = ""
         var failureCode: String? = null
-        var feedbackMessage: String? = null
+        var feedbackText: String? = null
 
-        abstract fun onSuccess()
-        abstract fun onFailed(failureCode: String?, feedbackMessage: String?)
+        abstract fun onSuccess(feedbackText: String? = null)
+        abstract fun onFailed(failureCode: String?, feedbackText: String?)
     }
 }

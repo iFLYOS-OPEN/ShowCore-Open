@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/alarm_background">
+    android:background="@color/alarm_background"
+    android:theme="@style/AppTheme.Dark">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,6 +14,7 @@
         <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:background="#01000000"
             android:orientation="horizontal">
 
             <Button
@@ -33,16 +35,23 @@
                 app:bl_ripple_enable="true"
                 app:bl_unPressed_drawable="@color/setup_primary" />
 
-            <ImageView
+            <LinearLayout
                 android:id="@+id/iv_back"
-                android:layout_width="@dimen/dp_24"
-                android:layout_height="@dimen/dp_24"
-                android:layout_marginStart="@dimen/dp_32"
-                android:layout_marginTop="@dimen/dp_20"
-                android:layout_marginBottom="@dimen/dp_20"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_64"
                 android:background="?selectableItemBackgroundBorderless"
-                android:src="@drawable/ic_page_back_black_24dp"
-                android:tint="@android:color/white" />
+                android:orientation="horizontal"
+                android:paddingStart="@dimen/dp_32"
+                android:paddingEnd="@dimen/dp_16">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:layout_gravity="center_vertical"
+                    android:src="@drawable/ic_page_back_black_24dp"
+                    android:tint="@android:color/white" />
+
+            </LinearLayout>
 
             <TextView
                 android:layout_width="wrap_content"
@@ -83,8 +92,8 @@
                     android:layout_height="match_parent"
                     android:layout_marginTop="@dimen/dp_24"
                     android:clipToPadding="false"
-                    android:paddingStart="@dimen/dp_40"
                     android:overScrollMode="never"
+                    android:paddingStart="@dimen/dp_40"
                     android:paddingEnd="@dimen/dp_40"
                     app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 

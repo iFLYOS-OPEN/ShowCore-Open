@@ -11,15 +11,22 @@
         android:layout_height="wrap_content"
         android:background="@android:color/white">
 
-        <ImageView
+        <LinearLayout
             android:id="@+id/iv_back"
-            android:layout_width="@dimen/dp_24"
-            android:layout_height="@dimen/dp_24"
-            android:layout_marginStart="@dimen/dp_32"
-            android:layout_marginTop="@dimen/dp_16"
-            android:layout_marginBottom="@dimen/dp_16"
-            android:src="@drawable/ic_page_back_black_24dp"
-            android:tint="@android:color/black" />
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
 
         <TextView
             android:layout_width="wrap_content"

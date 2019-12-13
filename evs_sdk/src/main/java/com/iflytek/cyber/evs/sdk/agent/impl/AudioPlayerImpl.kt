@@ -26,17 +26,16 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
     private var currentResourceMediaType = C.TYPE_OTHER
 
     private inner class ImplListener : AudioPlayerInstance.Listener {
-        override fun onPlayerPositionUpdated(player: AudioPlayerInstance, type: String, position: Long) {
+        override fun onPlayerPositionUpdated(
+            player: AudioPlayerInstance,
+            type: String,
+            position: Long
+        ) {
             onPositionUpdated(type, player.resourceId ?: "", position)
         }
 
         private var playWhenReady = false
         private var lastPlayState = -1
-
-        override fun initState() {
-            playWhenReady = false
-            lastPlayState = -1
-        }
 
         override fun onPlayerStateChanged(
             player: AudioPlayerInstance,
@@ -90,7 +89,11 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
             lastPlayState = playbackState
         }
 
-        override fun onPlayerError(player: AudioPlayerInstance, type: String, error: ExoPlaybackException?) {
+        override fun onPlayerError(
+            player: AudioPlayerInstance,
+            type: String,
+            error: ExoPlaybackException?
+        ) {
             val errorCode: String = when (error?.type) {
                 ExoPlaybackException.TYPE_UNEXPECTED -> {
                     MEDIA_ERROR_UNKNOWN
@@ -155,8 +158,10 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
         }
         player?.let {
             it.resourceId = resourceId
-            it.isStarted = false
             it.play(url)
+            it.isStarted = false
+            onStarted(type, resourceId)
+            onPositionUpdated(type, resourceId, 0)
             return true
         } ?: run {
             return false
@@ -173,7 +178,9 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
 
     override fun pause(type: String): Boolean {
         val player = getPlayer(type)
-        player?.pause() ?: run {
+        player?.pause()?.let {
+            onPaused(type, player.resourceId ?: "")
+        } ?: run {
             return false
         }
         return true
@@ -181,13 +188,16 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
 
     override fun stop(type: String): Boolean {
         val player = getPlayer(type)
-        player?.stop() ?: run {
+        player?.stop()?.let {
+            onStopped(type, player.resourceId ?: "")
+        } ?: run {
             return false
         }
         return true
     }
 
     override fun seekTo(type: String, offset: Long): Boolean {
+        super.seekTo(type, offset)
         val player = getPlayer(type)
         player?.let {
             it.seekTo(offset)
@@ -207,36 +217,11 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
 
     override fun moveToForegroundIfAvailable(type: String): Boolean {
         getPlayer(type)?.run {
-            synchronized(volGrowFlag) {
-                volGrowFlag = true
-            }
-
-            val volume = getVolume()
             val targetVolume = 1f
 
-            Thread {
-                var nextVolume = volume
-                val step = 0.05f
-                while (volGrowFlag && nextVolume != targetVolume) {
-                    nextVolume =
-                        if (nextVolume + step > targetVolume) targetVolume else nextVolume + step
-                    try {
-                        sleep(30)
-                    } catch (_: Exception) {
-                        //ignore
-                    }
-
-                    synchronized(volGrowFlag) {
-                        if (volGrowFlag) {
-                            Handler(getLooper()).post {
-                                setVolume(nextVolume)
-                            }
-                        } else {
-                            return@Thread
-                        }
-                    }
-                }
-            }.start()
+            Handler(getLooper()).post {
+                setVolume(targetVolume)
+            }
 
             return true
         } ?: run {
@@ -246,34 +231,10 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
 
     override fun moveToBackground(type: String): Boolean {
         getPlayer(type)?.run {
-            synchronized(volGrowFlag) {
-                volGrowFlag = false
-                val targetVolume = .1f
-                val volume = getVolume()
+            val targetVolume = .1f
 
-//            Thread {
-//                var nextVolume = volume
-//                val step = 0.05f
-//                while (nextVolume != targetVolume && !volGrowFlag) {
-//                    nextVolume =
-//                        if (nextVolume - step < targetVolume) targetVolume else nextVolume - step
-//                    try {
-//                        sleep(25)
-//                    } catch (_: Exception) {
-//                        //ignore
-//                    }
-//
-//                    if (!volGrowFlag) {
-//                        Handler(getLooper()).post {
-//                            setVolume(nextVolume)
-//                        }
-//                    }
-//                }
-//            }.start()
-
-                Handler(getLooper()).post {
-                    setVolume(targetVolume)
-                }
+            Handler(getLooper()).post {
+                setVolume(targetVolume)
             }
             return true
         } ?: run {

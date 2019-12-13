@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <com.google.android.material.tabs.TabLayout
+            android:id="@+id/tab_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_40"
+            android:layout_gravity="center"
+            android:layout_marginStart="@dimen/dp_72"
+            android:layout_marginEnd="@dimen/dp_72"
+            app:tabGravity="fill"
+            app:tabIndicator="@drawable/indicator_shape"
+            app:tabMode="fixed"
+            app:tabSelectedTextColor="@color/semi_black"
+            app:tabTextAppearance="@style/MyTabLayoutTextAppearance"
+            app:tabTextColor="@color/grey" />
+
+    </FrameLayout>
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:background="@android:color/white"
+        android:clipToPadding="false" />
+
+    <FrameLayout
+        android:id="@+id/next_step_container"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_56">
+
+        <TextView
+            android:id="@+id/next_step"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_36"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/dp_40"
+            android:background="@drawable/bg_round_accent_36dp"
+            android:gravity="center"
+            android:paddingStart="@dimen/dp_20"
+            android:paddingEnd="@dimen/dp_20"
+            android:text="@string/next_step"
+            android:textColor="@color/text_color_light"
+            android:textSize="@dimen/sp_14" />
+
+    </FrameLayout>
+
+</LinearLayout>

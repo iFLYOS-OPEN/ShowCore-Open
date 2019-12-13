@@ -45,6 +45,8 @@ object RecordVolumeUtils {
     }
 
     private fun calculateRms(data: ByteArray, length: Int): Float {
+        if (data.isEmpty() || length == 0)
+            return 0f
         var l1: Long = 0
         var l2: Long = 0
         val k = length / 2

@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_styled_dialog"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/dp_24"
+    android:paddingTop="@dimen/dp_20"
+    android:paddingEnd="@dimen/dp_24"
+    android:paddingBottom="@dimen/dp_24">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <ProgressBar
+            android:id="@+id/dialog_icon"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/dialog_title"
+            style="@style/H4"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_24"
+            android:ellipsize="end"
+            android:maxLines="1"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/dialog_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="Dialog Title" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/dialog_message"
+            style="@style/Body16.Grey"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_6"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="@id/dialog_title"
+            app:layout_constraintTop_toBottomOf="@id/dialog_title"
+            app:lineHeight="@dimen/dp_26"
+            tools:text="Dialog Message. It could be morn than 1 line. It means multiline and it should be nice." />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</LinearLayout>

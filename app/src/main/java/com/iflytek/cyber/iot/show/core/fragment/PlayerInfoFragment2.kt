@@ -2,13 +2,13 @@ package com.iflytek.cyber.iot.show.core.fragment
 
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
-import android.animation.ValueAnimator
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.drawable.Drawable
+import android.net.Uri
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -35,17 +35,24 @@ import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.C
 import com.google.gson.Gson
+import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
 import com.iflytek.cyber.evs.sdk.agent.PlaybackController
-import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
+import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
+import com.iflytek.cyber.evs.sdk.focus.VisualFocusManager
+import com.iflytek.cyber.evs.sdk.socket.Result
 import com.iflytek.cyber.iot.show.core.CoreApplication
+import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.FloatingService
 import com.iflytek.cyber.iot.show.core.R
+import com.iflytek.cyber.iot.show.core.accessibility.TouchAccessibility
 import com.iflytek.cyber.iot.show.core.adapter.SongsAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
+import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
 import com.iflytek.cyber.iot.show.core.model.*
 import com.iflytek.cyber.iot.show.core.utils.RoundedCornersTransformation
+import com.iflytek.cyber.iot.show.core.widget.StyledQRCodeDialog
 import com.iflytek.cyber.iot.show.core.widget.lrc.LrcView
 import com.warkiz.widget.IndicatorSeekBar
 import com.warkiz.widget.OnSeekChangeListener
@@ -59,10 +66,15 @@ import retrofit2.Response
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
+import java.net.UnknownHostException
 import java.util.*
 
 class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
-    AudioPlayer.MediaStateChangedListener {
+    AudioPlayer.MediaStateChangedListener, PageScrollable {
+
+    companion object {
+        private const val MAX_RETRY_COUNT = 5
+    }
 
     private lateinit var drawer: DrawerLayout
     private lateinit var musicList: RecyclerView
@@ -90,6 +102,9 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     private var seekBarDragging = false
     private var currentPosition = 0L
     private var currentResourceId: String? = ""
+    private var isAnimatingScreenLrc = false
+
+    private var retryCount = 0
 
     private var songsAdapter: SongsAdapter? = null
 
@@ -148,10 +163,8 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         musicArtist = view.findViewById(R.id.tv_artist)
 
         if (launcher?.getService()?.getAudioPlayer()?.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
-            ContentStorage.get().isMusicPlaying = true
             playPause.setImageResource(R.drawable.ic_music_pause)
         } else {
-            ContentStorage.get().isMusicPlaying = false
             playPause.setImageResource(R.drawable.ic_music_play)
         }
 
@@ -185,7 +198,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
 
             override fun onContentClick() {
-                showMainContent()
+                lyricContent.performClick()
             }
         })
 
@@ -223,17 +236,40 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
         if (seekBar.isEnabled) {
             getLyric()
-            loadPlayList()
+            view.post {
+                loadPlayList()
+            }
         }
 
         setupMusic(playerInfo)
         setupRecyclerView()
     }
 
+    override fun scrollToPrevious(): Boolean {
+        if (EvsAudioPlayer.get(context).playbackResourceId != null) {
+            if (playPrevious.isEnabled) {
+                playPrevious.performClick()
+                return true
+            }
+        }
+        return false
+    }
+
+    override fun scrollToNext(): Boolean {
+        if (EvsAudioPlayer.get(context).playbackResourceId != null) {
+            if (playNext.isEnabled) {
+                playNext.performClick()
+                return true
+            }
+        }
+        return false
+    }
+
     private fun setupSeekBar() {
-        val audioPlayer = launcher?.getService()?.getAudioPlayer() as? EvsAudioPlayer
-        val mediaType = audioPlayer?.getCurrentResourceMediaPlayer()
-        seekBar.isVisible = mediaType == C.TYPE_OTHER
+        val audioPlayer = EvsAudioPlayer.get(context)
+        val mediaType = audioPlayer.getCurrentResourceMediaPlayerType()
+        if (audioPlayer.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING)
+            seekBar.isVisible = mediaType == C.TYPE_OTHER
     }
 
     private fun autoCloseDrawer() {
@@ -261,12 +297,14 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         val dp4 = musicCover.context.resources.getDimensionPixelSize(R.dimen.dp_4)
         if (playerInfo?.content?.imageUrl.isNullOrEmpty()) {
             ivBlurCover.let { imageView ->
-                Blurry.with(imageView.context)
-                    .sampling(4)
-                    .radius(75)
-                    .color(Color.parseColor("#66212121"))
-                    .from(getBitmapFromVectorDrawable(R.drawable.cover_default))
-                    .into(imageView)
+                imageView.post {
+                    Blurry.with(imageView.context)
+                        .sampling(4)
+                        .radius(75)
+                        .color(Color.parseColor("#66212121"))
+                        .from(getBitmapFromVectorDrawable(R.drawable.cover_default))
+                        .into(imageView)
+                }
             }
         }
         val transformer = MultiTransformation(
@@ -312,6 +350,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
     private fun setupRecyclerView() {
         songsAdapter = SongsAdapter {
+            drawer.closeDrawer(GravityCompat.END)
             playMusic(it)
         }
         musicList.adapter = songsAdapter
@@ -324,16 +363,14 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                 showMainContent()
             }
 
-            //不是同一首歌不更新当前的UI
-            if (!TextUtils.equals(currentResourceId, playerInfo?.resourceId)) {
-                loadPlayList()
-                setupMusic(playerInfo)
-                setupTitleVisible(playerInfo)
-                getLyric()
-                songsAdapter?.notifyDataSetChanged()
-                currentResourceId = playerInfo?.resourceId
-                currentPosition = 0L
-            }
+            seekBar.isEnabled = playerInfo != null
+            loadPlayList()
+            setupMusic(playerInfo)
+            setupTitleVisible(playerInfo)
+            getLyric()
+            songsAdapter?.notifyDataSetChanged()
+            currentResourceId = playerInfo?.resourceId
+            currentPosition = 0L
         }
 
         override fun exitPlayerInfo() {
@@ -348,14 +385,14 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     /**
      * 第一首、最后一首是否可以点击
      */
-    private fun updatePlayButton() {
+    private fun updatePlayButton(isListLoop: Boolean) {
         val playerInfo = ContentStorage.get().playerInfo
         var firstPlayingId: String? = ""
         var endPlayingId: String? = ""
-        if (!songsAdapter?.songList.isNullOrEmpty()) {
+        if (!songsAdapter?.songList.isNullOrEmpty() && !isListLoop) {
             firstPlayingId = songsAdapter?.songList?.get(0)?.stream?.token
         }
-        if (!songsAdapter?.songList.isNullOrEmpty()) {
+        if (!songsAdapter?.songList.isNullOrEmpty() && !isListLoop) {
             endPlayingId =
                 songsAdapter?.songList?.get(songsAdapter?.songList!!.size - 1)?.stream?.token
         }
@@ -396,19 +433,51 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
             R.id.iv_next -> {
                 val playback = launcher?.getService()?.getPlaybackController()
-                playback?.sendCommand(PlaybackController.Command.Next)
+                playback?.sendCommand(PlaybackController.Command.Next, object :
+                    RequestCallback {
+                    override fun onResult(result: Result) {
+                        if (!result.isSuccessful) {
+                            val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                            intent.putExtra(EngineService.EXTRA_RESULT, result)
+                            context?.sendBroadcast(intent)
+                        }
+                    }
+                })
             }
             R.id.iv_play_pause -> {
-                val audioPlayer = launcher?.getService()?.getAudioPlayer()
-                if (launcher?.getService()?.getAudioPlayer()?.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
-                    audioPlayer?.pause(AudioPlayer.TYPE_PLAYBACK)
+                val audioPlayer = EvsAudioPlayer.get(context)
+                if (audioPlayer.playbackResourceId.isNullOrEmpty()) {
+                    val playback = launcher?.getService()?.getPlaybackController()
+                    playback?.sendCommand(PlaybackController.Command.Resume, object :
+                        RequestCallback {
+                        override fun onResult(result: Result) {
+                            if (!result.isSuccessful) {
+                                val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                                intent.putExtra(EngineService.EXTRA_RESULT, result)
+                                context?.sendBroadcast(intent)
+                            }
+                        }
+                    })
                 } else {
-                    audioPlayer?.resume(AudioPlayer.TYPE_PLAYBACK)
+                    if (audioPlayer.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
+                        audioPlayer.pause(AudioPlayer.TYPE_PLAYBACK)
+                    } else {
+                        audioPlayer.resume(AudioPlayer.TYPE_PLAYBACK)
+                    }
                 }
             }
             R.id.iv_previous -> {
                 val playback = launcher?.getService()?.getPlaybackController()
-                playback?.sendCommand(PlaybackController.Command.Previous)
+                playback?.sendCommand(PlaybackController.Command.Previous, object :
+                    RequestCallback {
+                    override fun onResult(result: Result) {
+                        if (!result.isSuccessful) {
+                            val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                            intent.putExtra(EngineService.EXTRA_RESULT, result)
+                            context?.sendBroadcast(intent)
+                        }
+                    }
+                })
             }
             R.id.back -> {
                 launcher?.onBackPressed()
@@ -438,53 +507,34 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
     override fun onStarted(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
-            ContentStorage.get().isMusicPlaying = true
             playPause.setImageResource(R.drawable.ic_music_pause)
             seekBar.max = player.getDuration(type).toFloat()
+
+            setupSeekBar()
         }
     }
 
     override fun onResumed(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
-            ContentStorage.get().isMusicPlaying = true
             playPause.setImageResource(R.drawable.ic_music_pause)
-            val intent = Intent(playPause.context, FloatingService::class.java).apply {
-                action = FloatingService.ACTION_UPDATE_MUSIC
-            }
-            launcher?.startService(intent)
         }
     }
 
     override fun onPaused(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
-            ContentStorage.get().isMusicPlaying = false
             playPause.setImageResource(R.drawable.ic_music_play)
-            val intent = Intent(playPause.context, FloatingService::class.java).apply {
-                action = FloatingService.ACTION_UPDATE_MUSIC
-            }
-            launcher?.startService(intent)
         }
     }
 
     override fun onStopped(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
-            ContentStorage.get().isMusicPlaying = false
             playPause.setImageResource(R.drawable.ic_music_play)
-            val intent = Intent(playPause.context, FloatingService::class.java).apply {
-                action = FloatingService.ACTION_UPDATE_MUSIC
-            }
-            launcher?.startService(intent)
         }
     }
 
     override fun onCompleted(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
-            ContentStorage.get().isMusicPlaying = false
             playPause.setImageResource(R.drawable.ic_music_play)
-            val intent = Intent(playPause.context, FloatingService::class.java).apply {
-                action = FloatingService.ACTION_UPDATE_MUSIC
-            }
-            launcher?.startService(intent)
         }
     }
 
@@ -506,10 +556,10 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
             if (currentPosition <= position && position in 0L..999) {
                 setupSeekBar()
-                seekBar.showMusicPressState(true)
+                showMusicPress()
                 playPause.setImageResource(R.drawable.ic_music_pause)
             } else if (position >= 5000) {
-                seekBar.showMusicPressState(false)
+                hideMusicPress()
                 currentPosition = position
             }
         }
@@ -517,12 +567,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
     override fun onError(player: AudioPlayer, type: String, resourceId: String, errorCode: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
-            ContentStorage.get().isMusicPlaying = false
             playPause.setImageResource(R.drawable.ic_music_play)
-            val intent = Intent(playPause.context, FloatingService::class.java).apply {
-                action = FloatingService.ACTION_UPDATE_MUSIC
-            }
-            launcher?.startService(intent)
         }
     }
 
@@ -546,6 +591,22 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                     songList?.let {
                         songsAdapter?.songList?.clear()
                         if (it.playlist != null) {
+                            var hasCurrentResourceId = false
+                            it.playlist.map { song ->
+                                if (song.stream.token == currentResourceId) {
+                                    hasCurrentResourceId = true
+                                }
+                            }
+                            if (!hasCurrentResourceId) {
+                                if (retryCount < MAX_RETRY_COUNT) {
+                                    ivPlayList.postDelayed({
+                                        loadPlayList()
+                                    }, 1000)
+                                    retryCount++
+                                }
+                            } else {
+                                retryCount = 0
+                            }
                             songsAdapter?.songList?.addAll(it.playlist)
 
                             if (it.playlist.isEmpty()) {
@@ -558,15 +619,31 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                         }
 
                         songsAdapter?.notifyDataSetChanged()
-                        if (it.listLoop == false) {
-                            updatePlayButton()
-                        }
+
+                        updatePlayButton(it.listLoop == true)
+
+                        ivPlayList.isVisible = !songList.playlist.isNullOrEmpty()
+                    } ?: run {
+                        ivPlayList.isVisible = false
                     }
+                } else {
+                    ivPlayList.isVisible = false
                 }
             }
 
             override fun onFailure(call: Call<PlayList>, t: Throwable) {
                 t.printStackTrace()
+
+                ivPlayList.isVisible = false
+
+                if (t is UnknownHostException) {
+                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                    intent.putExtra(
+                        EngineService.EXTRA_RESULT,
+                        Result(Result.CODE_DISCONNECTED, null)
+                    )
+                    context?.sendBroadcast(intent)
+                }
             }
         })
     }
@@ -584,6 +661,15 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
             override fun onFailure(call: Call<String>, t: Throwable) {
                 t.printStackTrace()
+
+                if (t is UnknownHostException) {
+                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                    intent.putExtra(
+                        EngineService.EXTRA_RESULT,
+                        Result(Result.CODE_DISCONNECTED, null)
+                    )
+                    context?.sendBroadcast(intent)
+                }
             }
         })
     }
@@ -591,10 +677,37 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     private fun showError(body: String?) {
         try {
             val error = Gson().fromJson(body, Error::class.java)
-            Toast.makeText(lrcView.context, error?.message, Toast.LENGTH_SHORT).show()
+            if (error.redirectUrl.isNullOrEmpty()) {
+                Toast.makeText(lrcView.context, error?.message, Toast.LENGTH_SHORT).show()
+            } else {
+                val context = context ?: return
+                val uri = Uri.parse(error.redirectUrl)
+                val codeUrl = uri.buildUpon()
+                    .appendQueryParameter(
+                        "token",
+                        AuthDelegate.getAuthResponseFromPref(context)?.accessToken
+                    )
+                    .build()
+                    .toString()
+                StyledQRCodeDialog.Builder()
+                    .setTitle(error.message)
+                    .setMessage(getString(R.string.scan_qrcode_to_continue))
+                    .setCode(codeUrl)
+                    .setButton(getString(R.string.close), null)
+                    .show(fragmentManager)
+            }
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    private fun showMusicPress() {
+        if (isSupportVisible && mainContent.isVisible && !isAnimatingScreenLrc)
+            seekBar.showMusicPressState(true)
+    }
+
+    private fun hideMusicPress() {
+        seekBar.showMusicPressState(false)
     }
 
     private fun getLyric() {
@@ -623,7 +736,9 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         lyricFile.mkdirs()
 
         if (lyricPath.exists()) {
-            loadLyric(lyricPath)
+            lrcView.post {
+                loadLyric(lyricPath)
+            }
             return
         }
 
@@ -635,6 +750,15 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                     tvLyricError.isVisible = true
                     lrcLoading.pauseAnimation()
                     lrcLoading.isVisible = false
+                }
+
+                if (e is UnknownHostException) {
+                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                    intent.putExtra(
+                        EngineService.EXTRA_RESULT,
+                        Result(Result.CODE_DISCONNECTED, null)
+                    )
+                    context?.sendBroadcast(intent)
                 }
             }
 
@@ -687,30 +811,39 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     }
 
     private val autoRunnable = Runnable {
-        if (lrcView.hasLrc() && lrcView.lrcLength > 3 && ContentStorage.get().isMusicPlaying) {
+        if (lrcView.hasLrc() && lrcView.lrcLength > 3 &&
+            EvsAudioPlayer.get(context).playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING
+        ) {
             enterInScreenLyricMode = true
-            seekBar.showMusicPressState(false)
+            hideMusicPress()
             showScreenLyric()
         }
     }
 
     private fun showScreenLyric() {
-        val alpha = AlphaAnimation(1f, 0f)
-        alpha.setAnimationListener(object : Animation.AnimationListener {
-            override fun onAnimationRepeat(animation: Animation?) {
-            }
+        isAnimatingScreenLrc = true
 
-            override fun onAnimationEnd(animation: Animation?) {
-                mainContent.isVisible = false
-            }
+        hideMusicPress()
 
-            override fun onAnimationStart(animation: Animation?) {
-            }
-        })
-        alpha.duration = 300
-        mainContent.startAnimation(alpha)
+        if (mainContent.isVisible) {
+            val alpha = AlphaAnimation(1f, 0f)
+            alpha.setAnimationListener(object : Animation.AnimationListener {
+                override fun onAnimationRepeat(animation: Animation?) {
+                }
+
+                override fun onAnimationEnd(animation: Animation?) {
+                    isAnimatingScreenLrc = false
+
+                    mainContent.isVisible = false
+                }
+
+                override fun onAnimationStart(animation: Animation?) {
+                }
+            })
+            alpha.duration = 300
+            mainContent.startAnimation(alpha)
+        }
         lyricContent.isVisible = true
-        lyricContent.alpha = 0f
         lyricContent.animate()
             .alpha(1f)
             .setDuration(300)
@@ -747,19 +880,20 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
     override fun onSupportVisible() {
         super.onSupportVisible()
-
+        TouchAccessibility.isMainFragment = false
         EvsTemplate.get().isPlayerInfoFocused = true
     }
 
     override fun onSupportInvisible() {
         super.onSupportInvisible()
-        seekBar.showMusicPressState(false)
+        hideMusicPress()
 
         EvsTemplate.get().isPlayerInfoFocused = false
     }
 
     override fun onDestroy() {
         super.onDestroy()
+        EvsTemplate.get().requestClearFocus(VisualFocusManager.TYPE_PLAYING_TEMPLATE)
         launcher?.getService()?.getAudioPlayer()?.removeListener(this)
         launcher?.unregisterCallback(simpleRenderCallback)
     }

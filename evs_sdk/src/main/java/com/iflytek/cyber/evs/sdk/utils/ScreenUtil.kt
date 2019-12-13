@@ -1,5 +1,6 @@
 package com.iflytek.cyber.evs.sdk.utils
 
+import android.Manifest
 import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
@@ -8,6 +9,7 @@ import android.os.PowerManager
 import android.provider.Settings
 import android.view.Display
 import android.view.WindowManager
+import androidx.annotation.RequiresPermission
 import java.lang.Exception
 
 object ScreenUtil {
@@ -80,6 +82,7 @@ object ScreenUtil {
      * @param brightness 亮度值（0-100）
      * @return 是否成功
      */
+    @RequiresPermission(Manifest.permission.WRITE_SETTINGS)
     fun setBrightness(context: Context, brightness: Long): Boolean {
         val resolver = context.contentResolver
         val uri = Settings.System.getUriFor(Settings.System.SCREEN_BRIGHTNESS)

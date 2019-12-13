@@ -1,35 +1,46 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingBottom="@dimen/dp_16"
-    tools:background="@color/tablet_grey_500">
+    android:paddingBottom="@dimen/dp_64"
+    tools:background="@color/tablet_grey_500"
+    tools:layout_height="match_parent"
+    tools:layout_width="match_parent">
 
     <TextView
         android:id="@+id/background_iat"
         style="@style/Body16"
         android:layout_width="wrap_content"
-        android:layout_height="@dimen/dp_36"
+        android:layout_height="@dimen/dp_40"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginStart="@dimen/dp_32"
         android:layout_marginEnd="@dimen/dp_40"
         android:background="@drawable/bg_background_iat"
         android:ellipsize="end"
         android:gravity="center"
         android:maxLines="1"
-        android:paddingStart="@dimen/dp_28"
+        android:paddingStart="@dimen/dp_48"
         android:paddingEnd="@dimen/dp_16"
         android:visibility="gone"
-        tools:text="设置上午或者下午的闹钟" />
+        tools:text="设置上午或者下午的闹钟"
+        tools:visibility="visible" />
 
-    <com.cunoraz.gifview.library.GifView
-        android:id="@+id/background_animation"
+    <ImageView
+        android:id="@+id/background_recognize_img"
         android:layout_width="@dimen/dp_40"
         android:layout_height="@dimen/dp_40"
         android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/dp_20" />
+        android:layout_marginStart="@dimen/dp_32"
+        android:scaleType="centerCrop"
+        tools:src="@drawable/animation_voice_listening_400_089" />
+
+    <ImageView
+        android:layout_width="@dimen/dp_40"
+        android:layout_height="@dimen/dp_40"
+        android:layout_gravity="center_vertical"
+        android:layout_marginStart="@dimen/dp_32"
+        android:background="@drawable/fg_background_rec" />
 
 </FrameLayout>

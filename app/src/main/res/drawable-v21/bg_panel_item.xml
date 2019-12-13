@@ -1,19 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:state_selected="true">
         <shape>
             <corners android:radius="@dimen/dp_12" />
-            <solid android:color="@color/panel_item_background" />
+            <solid android:color="@color/panel_item_background_selected" />
         </shape>
     </item>
     <item>
-        <ripple android:color="?colorControlHighlight">
-            <item android:id="@android:id/mask">
+        <layer-list>
+            <item>
                 <shape>
                     <corners android:radius="@dimen/dp_12" />
-                    <solid android:color="?colorControlActivated" />
+                    <solid android:color="@color/panel_item_background" />
                 </shape>
             </item>
-        </ripple>
+            <item>
+                <ripple android:color="?colorControlHighlight">
+                    <item android:id="@android:id/mask">
+                        <shape>
+                            <corners android:radius="@dimen/dp_12" />
+                            <solid android:color="?colorControlActivated" />
+                        </shape>
+                    </item>
+                </ripple>
+            </item>
+        </layer-list>
     </item>
-</layer-list>
+</selector>

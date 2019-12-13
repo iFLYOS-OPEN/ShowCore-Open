@@ -13,7 +13,7 @@
         android:layout_marginTop="@dimen/dp_2"
         android:layout_marginEnd="@dimen/dp_4"
         android:layout_marginBottom="@dimen/dp_2"
-        android:text="2:00-4:00"
+        android:text="0:00-0:00"
         android:textColor="@android:color/white"
         android:textSize="@dimen/sp_10" />
 

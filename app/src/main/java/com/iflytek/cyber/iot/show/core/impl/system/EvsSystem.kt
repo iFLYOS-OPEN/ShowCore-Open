@@ -2,6 +2,7 @@ package com.iflytek.cyber.iot.show.core.impl.system
 
 import android.content.Context
 import android.content.Intent
+import android.os.PowerManager
 import com.alibaba.fastjson.JSONObject
 import com.iflytek.cyber.evs.sdk.EvsError
 import com.iflytek.cyber.evs.sdk.agent.System
@@ -9,12 +10,13 @@ import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.FloatingService
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.SelfBroadcastReceiver
+import com.iflytek.cyber.iot.show.core.utils.DeviceUtils
 import com.iflytek.cyber.product.ota.OtaService
 import com.iflytek.cyber.product.ota.PackageEntityNew
 import java.lang.ref.SoftReference
 
 class EvsSystem private constructor() : System() {
-    override fun onPing(payload: JSONObject) {
+    override fun onPing(timestamp: Long) {
     }
 
     companion object {
@@ -66,6 +68,10 @@ class EvsSystem private constructor() : System() {
     fun init(context: Context) {
         contextRef = SoftReference(context)
         receiver.register(context)
+
+        hasPowerController = true
+        hasDeviceModes = true
+        hasSoftwareUpdater = true
     }
 
     override fun checkSoftWareUpdate() {
@@ -81,7 +87,7 @@ class EvsSystem private constructor() : System() {
 
         val intent = Intent(context, OtaService::class.java)
         intent.action = OtaService.ACTION_REQUEST_CHECKING
-        intent.putExtra(OtaService.EXTRA_DOWNLOAD_DIRECTLY, true)
+        intent.putExtra(OtaService.EXTRA_DOWNLOAD_DIRECTLY, false)
         context?.startService(intent)
     }
 
@@ -117,11 +123,33 @@ class EvsSystem private constructor() : System() {
     }
 
     override fun onPowerOff(payload: JSONObject) {
-        // ignore
+        try {
+            val context = contextRef?.get() ?: return
+            val pm = context.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val clz = PowerManager::class.java
+            val method = clz.getDeclaredMethod(
+                "shutdown",
+                Boolean::class.java,
+                String::class.java,
+                Boolean::class.java
+            )
+            method.isAccessible = true
+            method.invoke(pm, false, "userrequested", false)
+        } catch (t: Throwable) {
+            t.printStackTrace()
+        }
     }
 
     override fun onUpdateDeviceModes(payload: JSONObject) {
         // ignore
+    }
+
+    override fun onFactoryReset() {
+        super.onFactoryReset()
+
+        val context = contextRef?.get() ?: return
+
+        DeviceUtils.doFactoryReset(context)
     }
 
     override fun revokeAuth(context: Context?) {

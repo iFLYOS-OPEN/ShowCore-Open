@@ -15,13 +15,22 @@ import android.view.View
 import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
 import androidx.core.content.PermissionChecker
+import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.FragmentManager
+import com.airbnb.lottie.LottieDrawable
 import com.google.gson.Gson
 import com.iflytek.cyber.evs.sdk.EvsError
 import com.iflytek.cyber.evs.sdk.agent.*
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.iot.show.core.fragment.*
+import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
+import com.iflytek.cyber.iot.show.core.impl.launcher.EvsLauncher
+import com.iflytek.cyber.iot.show.core.impl.playback.EvsPlaybackController
+import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager
 import com.iflytek.cyber.iot.show.core.impl.system.EvsSystem
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
+import com.iflytek.cyber.iot.show.core.impl.videoplayer.EvsVideoPlayer
 import com.iflytek.cyber.iot.show.core.message.MessageRecorder
 import com.iflytek.cyber.iot.show.core.model.ActionConstant
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
@@ -29,15 +38,13 @@ import com.iflytek.cyber.iot.show.core.model.PlayerInfoPayload
 import com.iflytek.cyber.iot.show.core.model.Video
 import com.iflytek.cyber.iot.show.core.record.GlobalRecorder
 import com.iflytek.cyber.iot.show.core.record.RecordVolumeUtils
-import com.iflytek.cyber.iot.show.core.task.SleepWorker
 import com.iflytek.cyber.iot.show.core.utils.*
 import com.iflytek.cyber.iot.show.core.widget.StyledAlertDialog
 import com.iflytek.cyber.product.ota.OtaService
 import com.iflytek.cyber.product.ota.PackageEntityNew
+import kotlinx.android.synthetic.main.activity_evs_launcher.*
 import me.yokeyword.fragmentation.Fragmentation
-import org.greenrobot.eventbus.EventBus
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
+import me.yokeyword.fragmentation.SupportHelper
 import java.lang.ref.SoftReference
 import kotlin.math.roundToInt
 
@@ -72,6 +79,8 @@ class EvsLauncherActivity : BaseActivity() {
 
                     if (connectivityManager.activeNetworkInfo?.isConnected == true) {
                         engineService?.connectEvs(DeviceUtils.getDeviceId(context))
+
+                        startService(Intent(context, TimeService::class.java))
                     }
                 }
             }
@@ -104,6 +113,8 @@ class EvsLauncherActivity : BaseActivity() {
                     it.setTemplateRenderCallback(templateRenderCallback)
                     (it.getSystem() as? EvsSystem)?.onDeviceModeChangeListener =
                         onDeviceModeChangeListener
+                    EvsLauncher.get().pageScrollCallback = pageScrollCallback
+                    it.getAudioPlayer().addListener(audioPlayerStateChangedListener)
 
                     reconnectHandler = ReconnectHandler(it)
 
@@ -119,6 +130,8 @@ class EvsLauncherActivity : BaseActivity() {
         }
 
         override fun onServiceDisconnected(name: ComponentName?) {
+            EvsLauncher.get().pageScrollCallback = null
+            engineService?.getAudioPlayer()?.removeListener(audioPlayerStateChangedListener)
             engineService?.setRecognizerCallback(null)
             engineService = null
         }
@@ -156,6 +169,10 @@ class EvsLauncherActivity : BaseActivity() {
             intent.action = FloatingService.ACTION_UPDATE_VOLUME
             intent.putExtra(FloatingService.EXTRA_VOLUME, volume)
             startService(intent)
+        }
+
+        override fun onWakeUp(angle: Int, beam: Int, params: String?) {
+            // ignore
         }
     }
 
@@ -235,12 +252,33 @@ class EvsLauncherActivity : BaseActivity() {
 
         override fun renderVideoPlayerInfo(payload: String) {
             val video = Gson().fromJson(payload, Video::class.java)
-            ContentStorage.get().saveVideo(video)
-            restartApp()
-            if (getTopFragment() !is VideoFragment) {
-                val main = findFragment(MainFragment2::class.java)
-                main?.startVideoPlayer()
+
+            if (getTopFragment() is VideoFragment) {
+                if (!isActivityVisible) {
+                    val intent = Intent(baseContext, EvsLauncherActivity::class.java)
+                    intent.action = ACTION_START_VIDEO_PLAYER
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    applicationContext.startActivity(intent)
+                }
+            } else {
+                if (video?.resourceId != ContentStorage.get().video?.resourceId) {
+                    if (isActivityVisible) {
+                        post {
+                            findFragment(MainFragment2::class.java)?.startVideoPlayer()
+                        }
+                    } else {
+                        val intent = Intent(baseContext, EvsLauncherActivity::class.java)
+                        intent.action = ACTION_START_VIDEO_PLAYER
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        applicationContext.startActivity(intent)
+                    }
+                }
             }
+
+            ContentStorage.get().saveVideo(video)
+
             callbacks.forEach {
                 it.renderVideoPlayerInfo(payload)
             }
@@ -256,13 +294,21 @@ class EvsLauncherActivity : BaseActivity() {
                         engineService?.getRecognizer()?.profile = Recognizer.Profile.FarField
                     }
                 }
+                ConfigUtils.KEY_VOICE_WAKEUP_ENABLED -> {
+                    if (value == false) {
+                        showErrorBar()
+                    } else {
+                        hideErrorBar()
+                    }
+                }
             }
         }
     }
     private val evsStatusReceiver = object : SelfBroadcastReceiver(
         EngineService.ACTION_EVS_CONNECTED,
         EngineService.ACTION_EVS_CONNECT_FAILED,
-        EngineService.ACTION_EVS_DISCONNECTED
+        EngineService.ACTION_EVS_DISCONNECTED,
+        EngineService.ACTION_REQUEST_CLOSE_VIDEO
     ) {
         override fun onReceiveAction(action: String, intent: Intent) {
             when (action) {
@@ -276,7 +322,7 @@ class EvsLauncherActivity : BaseActivity() {
                     reconnectHandler?.clearRetryCount()
 
                     val microphoneEnabled =
-                        ConfigUtils.getBoolean(ConfigUtils.KEY_MICROPHONE_ENABLED, true)
+                        ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)
 
                     val enableWakeUp = Intent(baseContext, EngineService::class.java)
                     enableWakeUp.action = EngineService.ACTION_SET_WAKE_UP_ENABLED
@@ -333,12 +379,44 @@ class EvsLauncherActivity : BaseActivity() {
                             )
                             disconnectNotification.putExtra(
                                 FloatingService.EXTRA_POSITIVE_BUTTON_ACTION,
-                                getString(R.string.re_auth)
+                                MainFragment2.ACTION_OPEN_AUTH
                             )
                             disconnectNotification.putExtra(
                                 FloatingService.EXTRA_KEEPING, true
                             )
                             startService(disconnectNotification)
+                        } else {
+                            if (code == EvsError.Code.ERROR_SERVER_DISCONNECTED ||
+                                code == EvsError.Code.ERROR_CLIENT_DISCONNECTED
+                            ) {
+                                val disconnectNotification =
+                                    Intent(baseContext, FloatingService::class.java)
+                                disconnectNotification.action =
+                                    FloatingService.ACTION_SHOW_NOTIFICATION
+                                disconnectNotification.putExtra(
+                                    FloatingService.EXTRA_MESSAGE,
+                                    getString(R.string.message_evs_disconnected)
+                                )
+                                disconnectNotification.putExtra(
+                                    FloatingService.EXTRA_TAG,
+                                    "network_error"
+                                )
+                                disconnectNotification.putExtra(
+                                    FloatingService.EXTRA_ICON_RES,
+                                    R.drawable.ic_default_error_white_40dp
+                                )
+                                disconnectNotification.putExtra(
+                                    FloatingService.EXTRA_POSITIVE_BUTTON_TEXT,
+                                    getString(R.string.i_got_it)
+                                )
+                                disconnectNotification.putExtra(
+                                    FloatingService.EXTRA_KEEPING, true
+                                )
+                                startService(disconnectNotification)
+                            }
+                            if (reconnectHandler?.isCounting() != true) {
+                                reconnectHandler?.postReconnectEvs()
+                            }
                         }
                     } else {
                         val handler = reconnectHandler
@@ -371,6 +449,16 @@ class EvsLauncherActivity : BaseActivity() {
                             handler?.postReconnectEvs()
                         }
                     }
+
+                    if (EvsAudioPlayer.get(baseContext).playbackState
+                        == AudioPlayer.PLAYBACK_STATE_PLAYING
+                    ) {
+                        PromptManager.play(PromptManager.NETWORK_LOST)
+                    } else if (EvsVideoPlayer.get(baseContext).state
+                        == VideoPlayer.STATE_RUNNING
+                    ) {
+                        PromptManager.play(PromptManager.NETWORK_LOST)
+                    }
                 }
                 EngineService.ACTION_EVS_CONNECT_FAILED -> {
                     val handler = reconnectHandler
@@ -378,17 +466,26 @@ class EvsLauncherActivity : BaseActivity() {
                         handler?.postReconnectEvs()
                     }
                 }
+                EngineService.ACTION_REQUEST_CLOSE_VIDEO -> {
+                    if (getTopFragment() is VideoFragment) {
+                        pop()
+                    }
+                }
             }
         }
 
     }
     private val otaReceiver = object : SelfBroadcastReceiver(
-        OtaService.ACTION_NEW_UPDATE_DOWNLOADED,
+        OtaService.ACTION_CHECK_UPDATE_RESULT,
         ACTION_OPEN_CHECK_UPDATE
     ) {
         override fun onReceiveAction(action: String, intent: Intent) {
             when (action) {
-                OtaService.ACTION_NEW_UPDATE_DOWNLOADED -> {
+                OtaService.ACTION_CHECK_UPDATE_RESULT -> {
+                    val packageEntity =
+                        intent.getParcelableExtra<PackageEntityNew>(OtaService.EXTRA_PACKAGE_ENTITY)
+                    if (packageEntity == null)
+                        return
                     if (!isResume) {
                         val showNotification =
                             Intent(this@EvsLauncherActivity, FloatingService::class.java)
@@ -398,15 +495,18 @@ class EvsLauncherActivity : BaseActivity() {
                             R.drawable.ic_update_black_40dp
                         )
                         showNotification.putExtra(FloatingService.EXTRA_TAG, "update")
-                        showNotification.putExtra(FloatingService.EXTRA_MESSAGE, "系统有新版本可用")
+                        showNotification.putExtra(
+                            FloatingService.EXTRA_MESSAGE,
+                            getString(R.string.new_version_of_system_firmware)
+                        )
                         showNotification.putExtra(
                             FloatingService.EXTRA_NEGATIVE_BUTTON_TEXT,
-                            "稍后再说"
+                            getString(R.string.do_it_later)
                         )
                         showNotification.putExtra(FloatingService.EXTRA_KEEPING, true)
                         showNotification.putExtra(
                             FloatingService.EXTRA_POSITIVE_BUTTON_TEXT,
-                            "立即升级"
+                            getString(R.string.check_detail)
                         )
                         showNotification.putExtra(
                             FloatingService.EXTRA_POSITIVE_BUTTON_ACTION,
@@ -424,15 +524,18 @@ class EvsLauncherActivity : BaseActivity() {
                                 R.drawable.ic_update_black_40dp
                             )
                             showNotification.putExtra(FloatingService.EXTRA_TAG, "update")
-                            showNotification.putExtra(FloatingService.EXTRA_MESSAGE, "系统有新版本可用")
+                            showNotification.putExtra(
+                                FloatingService.EXTRA_MESSAGE,
+                                getString(R.string.new_version_of_system_firmware)
+                            )
                             showNotification.putExtra(
                                 FloatingService.EXTRA_NEGATIVE_BUTTON_TEXT,
-                                "稍后再说"
+                                getString(R.string.do_it_later)
                             )
                             showNotification.putExtra(FloatingService.EXTRA_KEEPING, true)
                             showNotification.putExtra(
                                 FloatingService.EXTRA_POSITIVE_BUTTON_TEXT,
-                                "立即升级"
+                                getString(R.string.check_detail)
                             )
                             showNotification.putExtra(
                                 FloatingService.EXTRA_POSITIVE_BUTTON_ACTION,
@@ -452,27 +555,19 @@ class EvsLauncherActivity : BaseActivity() {
                             requestOtaDialog?.dismiss()
                             requestOtaDialog = StyledAlertDialog.Builder()
                                 .setIcon(resources.getDrawable(R.drawable.ic_update_black_40dp))
-                                .setTitle("发现新版本 v ${packageEntityNew.versionName}")
+                                .setTitle("发现新版本 ${packageEntityNew.versionName}")
                                 .setMessage(packageEntityNew.description.toString())
-                                .setPositiveButton("现在安装", View.OnClickListener {
-                                    PackageUtils.notifyInstallApk(it.context, path)
-
-                                    ConfigUtils.putBoolean(ConfigUtils.KEY_OTA_REQUEST, true)
-                                    ConfigUtils.putInt(
-                                        ConfigUtils.KEY_OTA_VERSION_ID,
-                                        packageEntityNew.versionId?.toInt()
-                                            ?: 0
-                                    )
-                                    ConfigUtils.putString(
-                                        ConfigUtils.KEY_OTA_VERSION_NAME,
-                                        packageEntityNew.versionName
-                                    )
-                                    ConfigUtils.putString(
-                                        ConfigUtils.KEY_OTA_VERSION_DESCRIPTION,
-                                        packageEntityNew.description
-                                    )
-                                })
-                                .setNegativeButton("稍后再说", null)
+                                .setPositiveButton(
+                                    getString(R.string.check_detail),
+                                    View.OnClickListener {
+                                        val startMain =
+                                            Intent(baseContext, EvsLauncherActivity::class.java)
+                                        startMain.action = ACTION_OPEN_CHECK_UPDATE
+                                        startMain.flags =
+                                            Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                                        startActivity(startMain)
+                                    })
+                                .setNegativeButton(getString(R.string.do_it_later), null)
                                 .show(supportFragmentManager)
                         }
                     }
@@ -509,6 +604,157 @@ class EvsLauncherActivity : BaseActivity() {
             }
         }
     }
+    private val fragmentLifecycleCallback = object : FragmentManager.FragmentLifecycleCallbacks() {
+        private var setBackgroundToWhite = false
+        override fun onFragmentResumed(fm: FragmentManager, f: Fragment) {
+            super.onFragmentResumed(fm, f)
+
+            if (!setBackgroundToWhite) {
+                window.setBackgroundDrawable(ColorDrawable(Color.WHITE))
+                setBackgroundToWhite = false
+            }
+
+            if (f is VideoFragment) {
+                hideErrorBar()
+            } else if (f is PairFragment2) {
+                VoiceButtonUtils.isPairing = true
+            }
+        }
+
+        override fun onFragmentPaused(fm: FragmentManager, f: Fragment) {
+            super.onFragmentPaused(fm, f)
+
+            if (f is VideoFragment) {
+                if (!ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)) {
+                    showErrorBar()
+                }
+            } else if (f is PairFragment2) {
+                VoiceButtonUtils.isPairing = false
+            }
+        }
+    }
+    private val pageScrollCallback = object : EvsLauncher.PageScrollCallback {
+        override fun onScrollToPrevious(): EvsLauncher.ScrollResult {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            val screenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                pm.isInteractive
+            } else {
+                pm.isScreenOn
+            }
+            if (isResume) {
+                getTopFragment()?.let {
+                    return if (it is PageScrollable) {
+                        if (it.scrollToPrevious()) {
+                            EvsLauncher.ScrollResult(true)
+                        } else {
+                            EvsLauncher.ScrollResult(false, "没有上一页了")
+                        }
+                    } else {
+                        EvsLauncher.ScrollResult(false, "该页面不支持此操作")
+                    }
+                } ?: run {
+                    return EvsLauncher.ScrollResult(false)
+                }
+            } else {
+                return when {
+                    EvsAudioPlayer.get(baseContext).playbackState
+                        == AudioPlayer.PLAYBACK_STATE_PLAYING -> {
+                        EvsPlaybackController.get().sendCommand(PlaybackController.Command.Previous)
+                        EvsLauncher.ScrollResult(true, "")
+                    }
+                    screenOn -> EvsLauncher.ScrollResult(false, "请先回到首页")
+                    else -> EvsLauncher.ScrollResult(true, "")
+                }
+            }
+        }
+
+        override fun onScrollToNext(): EvsLauncher.ScrollResult {
+            val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+            val screenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                pm.isInteractive
+            } else {
+                pm.isScreenOn
+            }
+            if (isResume) {
+                getTopFragment()?.let {
+                    return if (it is PageScrollable) {
+                        if (it.scrollToNext()) {
+                            EvsLauncher.ScrollResult(true)
+                        } else {
+                            EvsLauncher.ScrollResult(false, "没有下一页了")
+                        }
+                    } else {
+                        EvsLauncher.ScrollResult(false, "该页面不支持此操作")
+                    }
+                } ?: run {
+                    return EvsLauncher.ScrollResult(false)
+                }
+            } else {
+                return when {
+                    EvsAudioPlayer.get(baseContext).playbackState
+                        == AudioPlayer.PLAYBACK_STATE_PLAYING -> {
+                        EvsPlaybackController.get().sendCommand(PlaybackController.Command.Next)
+                        EvsLauncher.ScrollResult(true, "")
+                    }
+                    screenOn -> EvsLauncher.ScrollResult(false, "请先回到首页")
+                    else -> EvsLauncher.ScrollResult(true, "")
+                }
+            }
+        }
+    }
+    private val audioPlayerStateChangedListener = object : AudioPlayer.MediaStateChangedListener {
+        override fun onStarted(player: AudioPlayer, type: String, resourceId: String) {
+            if (type == AudioPlayer.TYPE_PLAYBACK) {
+                ContentStorage.get().isMusicPlaying = true
+                updatePlayingState()
+            }
+        }
+
+        override fun onResumed(player: AudioPlayer, type: String, resourceId: String) {
+            if (type == AudioPlayer.TYPE_PLAYBACK) {
+                ContentStorage.get().isMusicPlaying = true
+                updatePlayingState()
+            }
+        }
+
+        override fun onPaused(player: AudioPlayer, type: String, resourceId: String) {
+            if (type == AudioPlayer.TYPE_PLAYBACK) {
+                ContentStorage.get().isMusicPlaying = false
+                updatePlayingState()
+            }
+        }
+
+        override fun onStopped(player: AudioPlayer, type: String, resourceId: String) {
+            if (type == AudioPlayer.TYPE_PLAYBACK) {
+                ContentStorage.get().isMusicPlaying = false
+                updatePlayingState()
+            }
+        }
+
+        override fun onCompleted(player: AudioPlayer, type: String, resourceId: String) {
+            if (type == AudioPlayer.TYPE_PLAYBACK) {
+                ContentStorage.get().isMusicPlaying = false
+                updatePlayingState()
+            }
+        }
+
+        override fun onPositionUpdated(
+            player: AudioPlayer,
+            type: String,
+            resourceId: String,
+            position: Long
+        ) {
+        }
+
+        override fun onError(
+            player: AudioPlayer,
+            type: String,
+            resourceId: String,
+            errorCode: String
+        ) {
+        }
+
+    }
 
     companion object {
         private const val TAG = "EvsLauncherActivity"
@@ -525,6 +771,7 @@ class EvsLauncherActivity : BaseActivity() {
         const val ACTION_LAUNCHER_CONTROL = "$ACTION_PREFIX.LAUNCHER_CONTROL"
 
         const val ACTION_START_PLAYER = "$ACTION_PREFIX.START_PLAYER"
+        const val ACTION_START_VIDEO_PLAYER = "$ACTION_PREFIX.START_VIDEO_PLAYER"
         const val ACTION_PLAY = "$ACTION_PREFIX.PLAY"
         const val ACTION_PAUSE = "$ACTION_PREFIX.PAUSE"
         const val ACTION_NEXT = "$ACTION_PREFIX.NEXT"
@@ -544,6 +791,7 @@ class EvsLauncherActivity : BaseActivity() {
 //                    Fragmentation.BUBBLE else Fragmentation.NONE)
             .debug(BuildConfig.DEBUG)
             .install()
+        supportFragmentManager.registerFragmentLifecycleCallbacks(fragmentLifecycleCallback, true)
 
         val intent = Intent(this, EngineService::class.java)
         startService(intent)
@@ -605,82 +853,23 @@ class EvsLauncherActivity : BaseActivity() {
         otaService.putExtra(OtaService.EXTRA_VERSION_ID, BuildConfig.VERSION_CODE)
         otaService.putExtra(OtaService.EXTRA_OTA_SECRET, BuildConfig.OTA_SECRET)
         otaService.putExtra(OtaService.EXTRA_VERSION, BuildConfig.VERSION_CODE)
-        otaService.putExtra(OtaService.EXTRA_DOWNLOAD_PATH, externalCacheDir?.path.toString())
+        otaService.putExtra(OtaService.EXTRA_DOWNLOAD_PATH, "${externalCacheDir?.path}/ota")
         otaService.putExtra(OtaService.EXTRA_PACKAGE_NAME, packageName)
-        otaService.putExtra(OtaService.EXTRA_DOWNLOAD_DIRECTLY, true)
+//        otaService.putExtra(OtaService.EXTRA_DOWNLOAD_DIRECTLY, true)
         startService(otaService)
 
         otaReceiver.register(this)
-    }
 
-    override fun onStart() {
-        super.onStart()
-        EventBus.getDefault().register(this)
     }
 
     override fun onStop() {
         super.onStop()
         isActivityVisible = false
-        EventBus.getDefault().unregister(this)
     }
 
     private fun updatePlayingState() {
         val main = findFragment(MainFragment2::class.java)
         main?.setupCover()
-    }
-
-    @Suppress("unused")
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    fun updateMusicControlAction(action: String) {
-        when (action) {
-            ACTION_START_PLAYER -> {
-                if (getTopFragment() !is PlayerInfoFragment2) {
-                    val main = findFragment(MainFragment2::class.java)
-                    main?.startPlayerInfo()
-                }
-            }
-            ACTION_NEXT -> {
-                val playback = getService()?.getPlaybackController()
-                playback?.sendCommand(PlaybackController.Command.Next)
-            }
-            ACTION_PREVIOUS -> {
-                val playback = getService()?.getPlaybackController()
-                playback?.sendCommand(PlaybackController.Command.Previous)
-            }
-            ACTION_PLAY -> {
-                ContentStorage.get().isMusicPlaying = true
-                val player = getService()?.getAudioPlayer()
-                player?.resume(AudioPlayer.TYPE_PLAYBACK)
-                updatePlayingState()
-            }
-            ACTION_PAUSE -> {
-                ContentStorage.get().isMusicPlaying = false
-                val player = getService()?.getAudioPlayer()
-                player?.pause(AudioPlayer.TYPE_PLAYBACK)
-                updatePlayingState()
-            }
-            ACTION_QUIT -> {
-                val player = getService()?.getAudioPlayer()
-                player?.stop(AudioPlayer.TYPE_PLAYBACK)
-                val storage = ContentStorage.get()
-                storage.isMusicPlaying = false
-                storage.savePlayInfo(null)
-                updatePlayingState()
-                val intent = Intent(baseContext, FloatingService::class.java).apply {
-                    setAction(FloatingService.ACTION_UPDATE_MUSIC)
-                }
-                startService(intent)
-                val topFragment = getTopFragment()
-                if (topFragment is PlayerInfoFragment2) {
-                    handler.post {
-                        pop()
-                    }
-                }
-            }
-            ACTION_WAKE_UP -> {
-                SleepWorker.get(this).hideSleepView(this)
-            }
-        }
     }
 
     override fun onResume() {
@@ -692,7 +881,7 @@ class EvsLauncherActivity : BaseActivity() {
             requestPermission()
         } else {
             if (!GlobalRecorder.isRecording) {
-                GlobalRecorder.init()
+                GlobalRecorder.init(this)
                 GlobalRecorder.startRecording()
             }
 
@@ -747,7 +936,7 @@ class EvsLauncherActivity : BaseActivity() {
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                             val appOps = getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
                             val mode = appOps.checkOpNoThrow(
-                                "android:get_usage_stats", Process.myUid(),
+                                AppOpsManager.OPSTR_GET_USAGE_STATS, Process.myUid(),
                                 packageName
                             )
 
@@ -782,6 +971,9 @@ class EvsLauncherActivity : BaseActivity() {
                                     } else {
                                         requestNotifyPolicyDialog?.dismiss()
 
+                                        if (SupportHelper.getTopFragment(supportFragmentManager) == null)
+                                            initUi()
+
                                         initVolume()
                                     }
                                 }
@@ -797,17 +989,42 @@ class EvsLauncherActivity : BaseActivity() {
             }
         }
 
-        engineService?.requestLauncherVisualFocus()
+        if (ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)) {
+            hideErrorBar()
+        } else {
+            showErrorBar()
+        }
+
+        getTopFragment()?.let { fragment ->
+            if (fragment !is VideoFragment
+                && EvsVideoPlayer.get(baseContext).state != VideoPlayer.STATE_PLAYING
+            ) {
+                // * 顶部为视频时说明视觉焦点在视频上，不需要申请 launcher 的视觉焦点
+                // * 若顶部不是视频，但是 VideoPlayer 状态为播放，说明当前正在打开视
+                //   频界面，不需要申请 launcher 的视觉焦点
+                engineService?.requestLauncherVisualFocus()
+            }
+        } ?: run {
+            engineService?.requestLauncherVisualFocus()
+        }
     }
 
     override fun onPause() {
         super.onPause()
         isActivityVisible = false
+
+        getTopFragment().let {
+            if (it is VideoFragment) {
+                pop()
+            }
+        }
     }
 
     override fun onDestroy() {
         super.onDestroy()
         unbindService(serviceConnection)
+
+        supportFragmentManager.unregisterFragmentLifecycleCallbacks(fragmentLifecycleCallback)
 
         GlobalRecorder.unregisterObserver(recordObserver)
         GlobalRecorder.unregisterObserver(MessageRecorder)
@@ -880,7 +1097,7 @@ class EvsLauncherActivity : BaseActivity() {
                     Launcher.PAGE_ALARMS -> {
                         if (getTopFragment() !is AlarmFragment) {
                             popTo(MainFragment2::class.java, false)
-                            start(AlarmFragment())
+                            findFragment(MainFragment2::class.java)?.startAlarm()
                         }
                     }
                     Launcher.PAGE_CONTENTS -> {
@@ -921,6 +1138,21 @@ class EvsLauncherActivity : BaseActivity() {
                 }
                 engineService?.requestLauncherVisualFocus()
             }
+            ACTION_START_PLAYER -> {
+                if (getTopFragment() !is PlayerInfoFragment2) {
+                    val main = findFragment(MainFragment2::class.java)
+                    main?.startPlayerInfo()
+                }
+                engineService?.requestLauncherVisualFocus()
+            }
+            ACTION_START_VIDEO_PLAYER -> {
+                if (getTopFragment() !is VideoFragment) {
+                    val main = findFragment(MainFragment2::class.java)
+                    post {
+                        main?.startVideoPlayer()
+                    }
+                }
+            }
         }
     }
 
@@ -958,19 +1190,89 @@ class EvsLauncherActivity : BaseActivity() {
         }
     }
 
+    private fun showErrorBar() {
+        if (getTopFragment() is VideoFragment)
+            return
+        error_bar.let { view ->
+            view.isVisible = true
+            if (isActivityVisible) {
+                view.animate()
+                    .alpha(1f)
+                    .setDuration(500)
+                    .start()
+            } else {
+                view.alpha = 1f
+            }
+        }
+    }
+
+    private fun hideErrorBar() {
+        error_bar?.let { view ->
+            if (isActivityVisible) {
+                view.animate()
+                    .alpha(0f)
+                    .setDuration(350)
+                    .withEndAction {
+                        view.isVisible = false
+                    }
+                    .start()
+            } else {
+                view.isVisible = false
+            }
+        }
+    }
+
+    fun showWelcome() {
+        runOnUiThread {
+            VoiceButtonUtils.isWelcoming = true
+
+            welcome_container.isVisible = true
+            welcome_container.translationX = 0f
+            welcome_container.alpha = 1f
+            welcome_loading.playAnimation()
+            welcome_loading.repeatCount = LottieDrawable.INFINITE
+            welcome_container.postDelayed({
+                welcome_loading.playAnimation()
+                welcome_container.animate()
+                    .alpha(0f)
+                    .translationX(-welcome_container.width.toFloat())
+                    .setDuration(300)
+                    .withEndAction {
+                        welcome_container.isVisible = false
+
+                        VoiceButtonUtils.isWelcoming = false
+                    }
+                    .start()
+            }, 5000)
+        }
+    }
+
     private fun initUi() {
-        window.setBackgroundDrawable(ColorDrawable(Color.WHITE))
-        if (engineService?.getAuthResponse() == null) {
-            if (ConfigUtils.getBoolean(ConfigUtils.KEY_SETUP_COMPLETED, false)) {
+        val engineService = engineService ?: return
+        if (!isAllPermissionsReady())
+            return
+        if (engineService.getAuthResponse() == null) {
+            if (ConfigUtils.getBoolean(ConfigUtils.KEY_SETUP_COMPLETED, false)
+                && !WifiUtils.getConnectedSsid(this).isNullOrEmpty()
+            ) {
                 if (findFragment(PairFragment2::class.java) == null) {
                     loadRootFragment(R.id.fragment_container, PairFragment2())
                 }
             } else {
                 // 这里有可能是 null 取了默认值 false，存一下 false 保证其他地方读到的值是一样的
                 ConfigUtils.putBoolean(ConfigUtils.KEY_SETUP_COMPLETED, false)
-                if (findFragment(WelcomeFragment::class.java) == null) {
-                    loadRootFragment(R.id.fragment_container, WelcomeFragment())
+                if (findFragment(WifiSettingsFragment::class.java) == null) {
+                    loadRootFragment(
+                        R.id.fragment_container,
+                        WifiSettingsFragment.newInstance(true)
+                    )
                 }
+
+                // 引导配置时应先禁用唤醒
+                val enableWakeUp = Intent(this, EngineService::class.java)
+                enableWakeUp.action = EngineService.ACTION_SET_WAKE_UP_ENABLED
+                enableWakeUp.putExtra(EngineService.EXTRA_ENABLED, false)
+                startService(enableWakeUp)
             }
         } else {
             ConfigUtils.putBoolean(ConfigUtils.KEY_SETUP_COMPLETED, true)
@@ -995,6 +1297,9 @@ class EvsLauncherActivity : BaseActivity() {
             == PermissionChecker.PERMISSION_GRANTED && PermissionChecker.checkSelfPermission(
             this, Manifest.permission.ACCESS_COARSE_LOCATION
         )
+            == PermissionChecker.PERMISSION_GRANTED && PermissionChecker.checkSelfPermission(
+            this, Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
             == PermissionChecker.PERMISSION_GRANTED)
 
     private fun requestPermission() {
@@ -1002,7 +1307,7 @@ class EvsLauncherActivity : BaseActivity() {
             this,
             arrayOf(
                 Manifest.permission.RECORD_AUDIO, Manifest.permission.ACCESS_FINE_LOCATION,
-                Manifest.permission.READ_PHONE_STATE
+                Manifest.permission.READ_PHONE_STATE, Manifest.permission.WRITE_EXTERNAL_STORAGE
             ),
             REQUEST_PERMISSION_CODE
         )

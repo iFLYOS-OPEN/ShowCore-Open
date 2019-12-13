@@ -10,7 +10,7 @@ object ConfigUtils {
     const val KEY_RECOGNIZER_PROFILE = "recognizer_profile"
     const val KEY_SCREEN_AUTO_LOCK = "screen_auto_lock"
     const val KEY_CACHE_USER_INFO = "cache_user_info"
-    const val KEY_MICROPHONE_ENABLED = "microphone_enabled"
+    const val KEY_VOICE_WAKEUP_ENABLED = "voice_wakeup_enabled"
     const val KEY_VOICE_BUTTON_ENABLED = "voice_button_enabled"
     const val KEY_SETUP_COMPLETED = "setup_completed"
     const val KEY_VERSION_CODE = "version_code"
@@ -19,6 +19,14 @@ object ConfigUtils {
     const val KEY_OTA_VERSION_NAME = "ota_version_name"
     const val KEY_OTA_VERSION_DESCRIPTION = "ota_version_description"
     const val KEY_BANNERS = "banners"
+    const val KEY_BACKGROUND_RECOGNIZE = "background_recognize"
+    const val KEY_DEVELOPER_OPTIONS = "developer_options"
+    const val KEY_CLIENT_ID = "client_id"
+    const val KEY_OTA_DISABLED = "ota_enabled"
+    const val KEY_CACHE_WAKE_WORD = "cache_wake_word"
+    const val KEY_WAKE_WORD_SUCCEED = "wake_word_succeed"
+    const val KEY_SLEEP_TIME = "sleep_time"
+    const val KEY_RESPONSE_SOUND = "response_sound"
 
     private var pref: SharedPreferences? = null
 
@@ -145,6 +153,15 @@ object ConfigUtils {
         pref?.edit()?.remove(key)?.apply()
     }
 
+    fun removeAll() {
+        pref?.let { pref ->
+            val editor = pref.edit()
+            pref.all.map {
+                editor.remove(it.key)
+            }
+            editor.apply()
+        }
+    }
 
     /**
      * Retrieve all values from the preferences.

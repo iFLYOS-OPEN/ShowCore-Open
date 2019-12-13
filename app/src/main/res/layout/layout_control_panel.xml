@@ -85,17 +85,21 @@
                     android:orientation="vertical">
 
                     <ImageView
-                        android:layout_width="@dimen/dp_32"
-                        android:layout_height="@dimen/dp_32"
-                        android:alpha="0.6"
-                        android:src="@drawable/ic_home_white_32dp"
-                        android:tint="@color/tablet_black" />
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
+                        android:alpha="0.7"
+                        android:src="@drawable/ic_home_control_panel" />
 
                     <TextView
-                        style="@style/Body14.Grey500"
+                        style="@style/Body14.Grey"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/dp_10"
+                        android:layout_marginTop="@dimen/dp_12"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_4"
+                        android:paddingEnd="@dimen/dp_4"
                         android:text="@string/home_page" />
 
                 </LinearLayout>
@@ -116,19 +120,63 @@
                     android:orientation="vertical">
 
                     <ImageView
-                        android:layout_width="@dimen/dp_32"
-                        android:layout_height="@dimen/dp_32"
-                        android:alpha="0.6"
-                        android:src="@drawable/ic_wifi_white_32dp"
-                        android:tint="@color/tablet_black" />
+                        android:id="@+id/iv_wlan"
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
+                        android:alpha="0.7"
+                        android:src="@drawable/ic_wifi_control_panel" />
 
                     <TextView
                         android:id="@+id/tv_ssid"
-                        style="@style/Body14.Grey500"
+                        style="@style/Body14.Grey"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/dp_10"
+                        android:layout_marginTop="@dimen/dp_12"
+                        android:ellipsize="marquee"
+                        android:focusable="true"
+                        android:focusableInTouchMode="true"
+                        android:gravity="center"
+                        android:marqueeRepeatLimit="marquee_forever"
+                        android:paddingStart="@dimen/dp_4"
+                        android:paddingEnd="@dimen/dp_4"
+                        android:singleLine="true"
                         android:text="@string/wlan" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="@dimen/dp_12"
+                    android:layout_height="0dp" />
+
+                <LinearLayout
+                    android:id="@+id/panel_microphone"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/dp_108"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_panel_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:id="@+id/microphone_animation"
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
+                        android:alpha="0.7"
+                        android:src="@drawable/ic_microphone_enabled_black_40dp" />
+
+                    <TextView
+                        style="@style/Body14.Grey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/dp_12"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_4"
+                        android:paddingEnd="@dimen/dp_4"
+                        android:text="@string/voice_wakeup" />
 
                 </LinearLayout>
 
@@ -149,17 +197,22 @@
                     android:visibility="gone">
 
                     <ImageView
-                        android:layout_width="@dimen/dp_32"
-                        android:layout_height="@dimen/dp_32"
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
                         android:alpha="0.6"
                         android:src="@drawable/ic_message_32dp"
                         android:tint="@color/tablet_black" />
 
                     <TextView
-                        style="@style/Body14.Grey500"
+                        style="@style/Body14.Grey"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/dp_10"
+                        android:layout_marginTop="@dimen/dp_12"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_4"
+                        android:paddingEnd="@dimen/dp_4"
                         android:text="@string/message_board" />
 
                 </LinearLayout>
@@ -181,17 +234,21 @@
                     android:orientation="vertical">
 
                     <ImageView
-                        android:layout_width="@dimen/dp_32"
-                        android:layout_height="@dimen/dp_32"
-                        android:alpha="0.6"
-                        android:src="@drawable/ic_setting_white_32dp"
-                        android:tint="@color/tablet_black" />
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
+                        android:alpha="0.7"
+                        android:src="@drawable/ic_settings_control_panel" />
 
                     <TextView
-                        style="@style/Body14.Grey500"
+                        style="@style/Body14.Grey"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/dp_10"
+                        android:layout_marginTop="@dimen/dp_12"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_4"
+                        android:paddingEnd="@dimen/dp_4"
                         android:text="@string/settings" />
 
                 </LinearLayout>
@@ -323,10 +380,10 @@
                     android:layout_width="@dimen/dp_48"
                     android:layout_height="@dimen/dp_48"
                     android:layout_alignParentEnd="true"
-                    android:gravity="center"
                     android:layout_centerVertical="true"
                     android:layout_marginEnd="@dimen/dp_16"
                     android:background="@drawable/selectable_item_background_borderless"
+                    android:gravity="center"
                     android:text="@string/quit"
                     android:textColor="@color/grey"
                     android:textSize="@dimen/sp_16" />

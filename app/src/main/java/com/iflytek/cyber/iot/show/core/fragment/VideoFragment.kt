@@ -3,18 +3,16 @@ package com.iflytek.cyber.iot.show.core.fragment
 import android.animation.Animator
 import android.animation.ValueAnimator
 import android.annotation.SuppressLint
-import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
+import android.content.Context
+import android.content.Intent
+import android.os.*
 import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
-import android.view.SurfaceView
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
-import androidx.core.content.ContextCompat
 import androidx.core.os.postDelayed
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
@@ -22,9 +20,12 @@ import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
 import com.google.gson.Gson
+import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.agent.PlaybackController
 import com.iflytek.cyber.evs.sdk.agent.VideoPlayer
+import com.iflytek.cyber.evs.sdk.socket.Result
 import com.iflytek.cyber.iot.show.core.CoreApplication
+import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.adapter.VideoListAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
@@ -35,18 +36,19 @@ import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.model.MusicBody
 import com.iflytek.cyber.iot.show.core.model.PlayList
 import com.iflytek.cyber.iot.show.core.model.Song
-import com.iflytek.cyber.iot.show.core.task.SleepWorker
 import com.iflytek.cyber.iot.show.core.utils.BrightnessUtils
-import com.iflytek.cyber.iot.show.core.utils.InsetDividerDecoration
-import com.iflytek.cyber.iot.show.core.utils.dp2Px
+import com.iflytek.cyber.iot.show.core.utils.VoiceButtonUtils
 import com.iflytek.cyber.iot.show.core.widget.BoxedVertical
 import com.iflytek.cyber.iot.show.core.widget.ProgressFrameLayout
+import com.kk.taurus.playerbase.widget.SuperContainer
 import com.warkiz.widget.IndicatorSeekBar
 import com.warkiz.widget.OnSeekChangeListener
 import com.warkiz.widget.SeekParams
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
+import java.lang.ref.SoftReference
+import java.net.UnknownHostException
 import kotlin.math.abs
 
 class VideoFragment : BaseFragment(), View.OnClickListener {
@@ -59,7 +61,6 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
     }
 
     private lateinit var drawerLayout: DrawerLayout
-    private lateinit var surfaceView: SurfaceView
     private lateinit var videoList: RecyclerView
     private lateinit var progressBar: ProgressBar
     private lateinit var seekBar: IndicatorSeekBar
@@ -77,6 +78,10 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
     private lateinit var volumeIcon: LottieAnimationView
     private lateinit var volumeProgress: ProgressFrameLayout
     private lateinit var ivPlayList: ImageView
+    private var previousView: View? = null
+    private var nextView: View? = null
+    private val countFullScreenHandler = CountFullScreenHandler(this)
+    private var videoWakeLock: PowerManager.WakeLock? = null
 
     private var videoListAdapter: VideoListAdapter? = null
 
@@ -92,7 +97,11 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         launcher?.getService()?.getVideoPlayer()?.addListener(videoStateChangeListener)
     }
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return LayoutInflater.from(context).inflate(R.layout.fragment_video, container, false)
     }
 
@@ -120,19 +129,37 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         ivPlayList.setOnClickListener(this)
         playPause = view.findViewById(R.id.iv_play_pause)
         playPause.setOnClickListener(this)
-        val previous = view.findViewById<ImageView>(R.id.iv_previous)
-        previous.setOnClickListener(this)
-        val next = view.findViewById<ImageView>(R.id.iv_next)
-        next.setOnClickListener(this)
+        previousView = view.findViewById<ImageView>(R.id.iv_previous)
+        previousView?.setOnClickListener(this)
+        nextView = view.findViewById<ImageView>(R.id.iv_next)
+        nextView?.setOnClickListener(this)
         val back = view.findViewById<View>(R.id.back)
 
-        surfaceView = view.findViewById(R.id.surface_view)
-        surfaceView.setOnClickListener(this)
+        val renderContainer = view.findViewById<FrameLayout>(R.id.super_container)
+        renderContainer.setOnClickListener(this)
+        val superContainer = SuperContainer(renderContainer.context)
+        renderContainer.addView(
+            superContainer, ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+            )
+        )
+        superContainer.setGestureEnable(false)
+        superContainer.setGestureScrollEnable(false)
+        superContainer.setOnClickListener {
+            updateControlUI()
+        }
 
-        val videoPlayerImpl = launcher?.getService()?.getVideoPlayer() as? EvsVideoPlayer
-        videoPlayerImpl?.setVideoSurfaceView(surfaceView)
+        val videoPlayerImpl = EvsVideoPlayer.get(context)
+        videoPlayerImpl.exitCallback = object : EvsVideoPlayer.ExitCallback {
+            override fun onRequestExit() {
+                if (!isDetached) {
+                    pop()
+                }
+            }
+        }
+        videoPlayerImpl.setSuperContainer(superContainer)
 
-        seekBar.setProgress(videoPlayerImpl?.getOffset()?.toFloat() ?: 0f)
+        seekBar.setProgress(videoPlayerImpl.getOffset().toFloat())
 
         back.setOnClickListener {
             pop()
@@ -181,17 +208,20 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
         val contentResolver = launcher?.contentResolver
         val currentBrightness = Settings.System.getInt(
-                contentResolver,
-                Settings.System.SCREEN_BRIGHTNESS
+            contentResolver,
+            Settings.System.SCREEN_BRIGHTNESS
         )
         brightnessProgress.setProgress(currentBrightness * 100 / 255f)
         val mode = Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE)
-        brightnessProgress.setOnTouchProgressChangeListener(object : ProgressFrameLayout.OnTouchProgressChangeListener {
+        brightnessProgress.setOnTouchProgressChangeListener(object :
+            ProgressFrameLayout.OnTouchProgressChangeListener {
             override fun onTouchProgressChanged(progress: Int) {
+                VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
                 if (!slideBar.isVisible) {
                     slideBar.isVisible = true
                 }
-                indicatorSlideBar.isEnable = mode != Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
+                indicatorSlideBar.isEnable =
+                    mode != Settings.System.SCREEN_BRIGHTNESS_MODE_AUTOMATIC
                 indicatorSlideBar.setValue(progress)
                 indicatorIcon.progress = progress / 100f
 
@@ -199,17 +229,19 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             }
 
             override fun onStopTouch() {
+                VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
                 slideBar.isVisible = false
             }
 
             override fun onClick() {
-                updateControlUI()
+                superContainer.performClick()
             }
         })
 
         val currentVolume = EvsSpeaker.get(context).getCurrentVolume()
         volumeProgress.setProgress(currentVolume.toFloat())
-        volumeProgress.setOnTouchProgressChangeListener(object : ProgressFrameLayout.OnTouchProgressChangeListener {
+        volumeProgress.setOnTouchProgressChangeListener(object :
+            ProgressFrameLayout.OnTouchProgressChangeListener {
             override fun onTouchProgressChanged(progress: Int) {
                 if (!volumeBar.isVisible) {
                     volumeBar.isVisible = true
@@ -239,13 +271,36 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             }
 
             override fun onClick() {
-                updateControlUI()
+                superContainer.performClick()
             }
         })
 
         loadPlayList()
 
         launcher?.registerCallback(simpleRenderCallback)
+    }
+
+    override fun onSupportVisible() {
+        super.onSupportVisible()
+
+        acquireVideoWakeLock()
+
+        launcher?.getService()?.requestVideoVisualFocus()
+
+        launcher?.getService()?.getVideoPlayer()?.isVisible = true
+    }
+
+    override fun onSupportInvisible() {
+        super.onSupportInvisible()
+
+        releaseVideoWakeLock()
+
+        launcher?.getService()?.getVideoPlayer()?.let { player ->
+            if (player.state == VideoPlayer.STATE_PLAYING) {
+                player.pause()
+            }
+            player.isVisible = false
+        }
     }
 
     private val simpleRenderCallback = object : EvsTemplate.SimpleRenderCallback() {
@@ -310,7 +365,8 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
                 progressBar.isVisible = false
                 rootCover.isVisible = false
                 playPause.setImageResource(R.drawable.ic_music_pause)
-                SleepWorker.get(seekBar.context).doTouchWork(seekBar.context) //video playing, do not show sleep view
+//                SleepWorker.get(seekBar.context)
+//                    .doTouchWork(seekBar.context) //video playing, do not show sleep view
             }
             if (!seekDragging) {
                 seekBar.max = player.getDuration().toFloat()
@@ -325,19 +381,32 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         }
 
         override fun onError(player: VideoPlayer, resourceId: String, errorCode: String) {
-            Log.e("VideoFragment", "play video error:" + resourceId + " errorCode: " + errorCode)
+            Log.e("VideoFragment", "play video error:$resourceId errorCode: $errorCode")
         }
+    }
+
+    @SuppressLint("WakelockTimeout")
+    private fun acquireVideoWakeLock() {
+        videoWakeLock?.acquire() ?: run {
+            val powerManager = context?.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val flag = PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+            val wakeLock = powerManager.newWakeLock(flag, "iflytek:evs_video")
+
+            wakeLock.acquire()
+            videoWakeLock = wakeLock
+        }
+    }
+
+    private fun releaseVideoWakeLock() {
+            videoWakeLock?.release()
+            videoWakeLock = null
     }
 
     private fun setupRecyclerView(items: ArrayList<Song>) {
         videoListAdapter = VideoListAdapter(items) {
+            drawerLayout.closeDrawer(GravityCompat.END)
             playVideo(it)
         }
-        val decoration = InsetDividerDecoration(
-                1.dp2Px(),
-                ContextCompat.getColor(videoList.context, R.color.divider_line),
-                0)
-        videoList.addItemDecoration(decoration)
         videoList.adapter = videoListAdapter
 
         val playingResource = ContentStorage.get().video?.resourceId
@@ -352,6 +421,17 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         getMediaApi()?.getPlayList("video")?.enqueue(object : Callback<PlayList> {
             override fun onFailure(call: Call<PlayList>, t: Throwable) {
                 t.printStackTrace()
+
+                ivPlayList.isVisible = false
+
+                if (t is UnknownHostException) {
+                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                    intent.putExtra(
+                        EngineService.EXTRA_RESULT,
+                        Result(Result.CODE_DISCONNECTED, null)
+                    )
+                    context?.sendBroadcast(intent)
+                }
             }
 
             override fun onResponse(call: Call<PlayList>, response: Response<PlayList>) {
@@ -363,13 +443,30 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
                                 ivPlayList.isVisible = false
                                 drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_LOCKED_CLOSED)
                             } else {
+                                val isFirst =
+                                    it.playlist[0].stream.token == EvsVideoPlayer.get(context).resourceId
+                                val isEnd =
+                                    it.playlist[it.playlist.size - 1].stream.token == EvsVideoPlayer.get(
+                                        context
+                                    ).resourceId
+                                previousView?.isEnabled = !isFirst
+                                previousView?.alpha = if (isFirst) .5f else 1f
+                                nextView?.isEnabled = !isEnd
+                                nextView?.alpha = if (isEnd) .5f else 1f
+
                                 drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                                 ivPlayList.isVisible = true
                             }
 
                             setupRecyclerView(it.playlist)
                         }
+
+                        ivPlayList.isVisible = !it.playlist.isNullOrEmpty()
+                    } ?: run {
+                        ivPlayList.isVisible = false
                     }
+                } else {
+                    ivPlayList.isVisible = false
                 }
             }
         })
@@ -388,6 +485,15 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
             override fun onFailure(call: Call<String>, t: Throwable) {
                 t.printStackTrace()
+
+                if (t is UnknownHostException) {
+                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                    intent.putExtra(
+                        EngineService.EXTRA_RESULT,
+                        Result(Result.CODE_DISCONNECTED, null)
+                    )
+                    context?.sendBroadcast(intent)
+                }
             }
         })
     }
@@ -412,21 +518,53 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             }
             R.id.iv_next -> {
                 val playback = launcher?.getService()?.getPlaybackController()
-                playback?.sendCommand(PlaybackController.Command.Next)
+                playback?.sendCommand(PlaybackController.Command.Next, object :
+                    RequestCallback {
+                    override fun onResult(result: Result) {
+                        if (!result.isSuccessful) {
+                            val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                            intent.putExtra(EngineService.EXTRA_RESULT, result)
+                            context?.sendBroadcast(intent)
+                        }
+                    }
+                })
             }
             R.id.iv_play_pause -> {
-                val player = launcher?.getService()?.getVideoPlayer()
-                if (player?.state == VideoPlayer.STATE_RUNNING) {
-                    player.pause()
+                val player = EvsVideoPlayer.get(context)
+                if (player.resourceId.isNullOrEmpty()) {
+                    val playback = launcher?.getService()?.getPlaybackController()
+                    playback?.sendCommand(PlaybackController.Command.Resume, object :
+                        RequestCallback {
+                        override fun onResult(result: Result) {
+                            if (!result.isSuccessful) {
+                                val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                                intent.putExtra(EngineService.EXTRA_RESULT, result)
+                                context?.sendBroadcast(intent)
+                            }
+                        }
+                    })
                 } else {
-                    player?.resume()
+                    if (player.state == VideoPlayer.STATE_RUNNING) {
+                        player.pause()
+                    } else {
+                        player.resume()
+                    }
                 }
             }
             R.id.iv_previous -> {
                 val playback = launcher?.getService()?.getPlaybackController()
-                playback?.sendCommand(PlaybackController.Command.Previous)
+                playback?.sendCommand(PlaybackController.Command.Previous, object :
+                    RequestCallback {
+                    override fun onResult(result: Result) {
+                        if (!result.isSuccessful) {
+                            val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                            intent.putExtra(EngineService.EXTRA_RESULT, result)
+                            context?.sendBroadcast(intent)
+                        }
+                    }
+                })
             }
-            R.id.surface_view -> {
+            R.id.super_container -> {
                 updateControlUI()
             }
         }
@@ -434,9 +572,11 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
     private fun updateControlUI() {
         if (mainContent.isVisible) {
+            countFullScreenHandler.clearCount()
             mainContent.isVisible = false
             alphaCover.isVisible = false
         } else {
+            countFullScreenHandler.postNextClick()
             mainContent.isVisible = true
             alphaCover.isVisible = true
         }
@@ -452,9 +592,40 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
     override fun onDestroy() {
         super.onDestroy()
-        val videoPlayerImpl = launcher?.getService()?.getVideoPlayer() as? EvsVideoPlayer
-        videoPlayerImpl?.realStop()
-        launcher?.getService()?.getVideoPlayer()?.removeListener(videoStateChangeListener)
+        val videoPlayer = EvsVideoPlayer.get(context)
+        videoPlayer.exitCallback = null
+        videoPlayer.realStop()
+        videoPlayer.removeListener(videoStateChangeListener)
+        ContentStorage.get().saveVideo(null)
         launcher?.unregisterCallback(simpleRenderCallback)
+    }
+
+    private class CountFullScreenHandler(fragment: VideoFragment) : Handler() {
+        private val fragmentRef = SoftReference(fragment)
+        private var current = -1L
+
+        fun postNextClick() {
+            val newTime = System.currentTimeMillis()
+            val msg = Message.obtain()
+            msg.obj = newTime
+            msg.what = 1
+            current = newTime
+
+            sendMessageDelayed(msg, 10 * 1000)
+        }
+
+        fun clearCount() {
+            current = -1L
+        }
+
+        override fun handleMessage(msg: Message?) {
+            super.handleMessage(msg)
+            if (msg?.what == 1) {
+                val fragment = fragmentRef.get() ?: return
+                if (msg.obj == current) {
+                    fragment.updateControlUI()
+                }
+            }
+        }
     }
 }

@@ -1,6 +1,7 @@
 package com.iflytek.cyber.evs.sdk.model
 
 import android.os.Parcelable
+import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.annotation.JSONField
 import kotlinx.android.parcel.Parcelize
 
@@ -11,4 +12,8 @@ data class AuthResponse(
     @JSONField(name = "expires_in") val expiresIn: Long,
     @JSONField(name = "refresh_token") val refreshToken: String,
     @JSONField(name = "token_type") val tokenType: String
-) : Parcelable
+) : Parcelable {
+    fun toJSONString(): String {
+        return JSON.toJSONString(this)
+    }
+}

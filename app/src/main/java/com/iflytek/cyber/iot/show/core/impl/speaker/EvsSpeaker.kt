@@ -64,7 +64,7 @@ class EvsSpeaker private constructor(context: Context) : Speaker() {
 
     private fun setMusicVolume(context: Context?, volume: Int) {
         if (isFocusGain) {
-            cacheVolume = -1
+            cacheVolume = volume
         } else {
             val am = context?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
 
@@ -99,7 +99,7 @@ class EvsSpeaker private constructor(context: Context) : Speaker() {
             } else {
                 while (muteCount > 0) {
                     Log.v(TAG, "setUnmute")
-                    muteCount --
+                    muteCount--
                     am.setStreamMute(AudioManager.STREAM_MUSIC, false)
                 }
             }
@@ -147,7 +147,7 @@ class EvsSpeaker private constructor(context: Context) : Speaker() {
         return currentVolume
     }
 
-    fun raiseVolumeLocally(): Boolean {
+    fun raiseVolumeLocally(fakeRemote: Boolean = false): Boolean {
         (contextRef.get()?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager)
             ?.let { audioManager ->
                 audioManager.adjustStreamVolume(
@@ -156,14 +156,30 @@ class EvsSpeaker private constructor(context: Context) : Speaker() {
                     0
                 )
 
-                updateCurrentVolume()
+                val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                val min =
+                    if (Build.VERSION.SDK_INT > 29)
+                        audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
+                    else
+                        0
+                val volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+                currentVolume = ((volume - min) * 100f / (max - min)).roundToInt()
+
+                listeners.map {
+                    try {
+                        it.onVolumeChanged(currentVolume, fakeRemote)
+                    } catch (t: Throwable) {
+                        t.printStackTrace()
+                    }
+                }
 
                 return true
             }
         return false
     }
 
-    fun lowerVolumeLocally(): Boolean {
+    fun lowerVolumeLocally(fakeRemote: Boolean = false): Boolean {
         (contextRef.get()?.getSystemService(Context.AUDIO_SERVICE) as? AudioManager)
             ?.let { audioManager ->
                 audioManager.adjustStreamVolume(
@@ -172,7 +188,23 @@ class EvsSpeaker private constructor(context: Context) : Speaker() {
                     0
                 )
 
-                updateCurrentVolume()
+                val max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC)
+                val min =
+                    if (Build.VERSION.SDK_INT > 29)
+                        audioManager.getStreamMinVolume(AudioManager.STREAM_MUSIC)
+                    else
+                        0
+                val volume = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC)
+
+                currentVolume = ((volume - min) * 100f / (max - min)).roundToInt()
+
+                listeners.map {
+                    try {
+                        it.onVolumeChanged(currentVolume, fakeRemote)
+                    } catch (t: Throwable) {
+                        t.printStackTrace()
+                    }
+                }
 
                 return true
             }

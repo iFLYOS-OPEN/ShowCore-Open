@@ -62,6 +62,7 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
     private lateinit var repeatList: RecyclerView
     private var repeatTypeAdapter: RepeatTypeAdapter? = null
     private var repeatTypeList = ArrayList<RepeatType>()
+    private var currentDesc: String? = null
 
     private var dateList = ArrayList<DateEntity>()
 
@@ -71,7 +72,11 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
 
     private var handler = Handler(Looper.getMainLooper())
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return LayoutInflater.from(context).inflate(R.layout.fragment_edit_alarm, container, false)
     }
 
@@ -98,6 +103,8 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
         view.findViewById<View>(R.id.alarm_desc_content).setOnClickListener(this)
 
         alert = arguments?.getParcelable("alert")
+
+        currentDesc = alert?.content
 
         hourWheel.data = getHourList()
         minuteWheel.data = getMinList()
@@ -216,7 +223,10 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
             Alert.TYPE_NONE -> {
                 dailyWheel.isVisible = false
                 noneWheel.isVisible = true
-                val start = "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(Calendar.DAY_OF_MONTH)}"
+                val start =
+                    "${calendar.get(Calendar.YEAR)}-${calendar.get(Calendar.MONTH) + 1}-${calendar.get(
+                        Calendar.DAY_OF_MONTH
+                    )}"
                 val end = "${calendar.get(Calendar.YEAR)}-12-31"
                 val data = getDateList(start, end, Alert.TYPE_NONE)
                 noneWheel.data = data
@@ -275,12 +285,12 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
 
     override fun onFragmentResult(requestCode: Int, resultCode: Int, data: Bundle) {
         if (requestCode == REQUEST_EDIT_CODE) {
-            val isEdited= data.getBoolean("isEdited")
+            val isEdited = data.getBoolean("isEdited")
             if (isEdited) {
-                tvAlarmDesc.text = data.getString("desc")
-                if (alert != null) {
-                    alert?.content = tvAlarmDesc.text.toString()
-                }
+                val desc = data.getString("desc")
+                tvAlarmDesc.text = desc
+                alert?.content = desc
+                currentDesc = desc
             }
         }
     }
@@ -292,13 +302,10 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
 
         val body = AlertBody()
         body.id = alert!!.id
-        if (alert?.content.isNullOrEmpty()) {
-            body.content = null
-        } else {
-            body.content = tvAlarmDesc.text.toString()
-        }
+        body.content = currentDesc
         var hour = hourWheel.selectedItemData.substring(0, hourWheel.selectedItemData.length - 1)
-        var minute = minuteWheel.selectedItemData.substring(0, minuteWheel.selectedItemData.length - 1)
+        var minute =
+            minuteWheel.selectedItemData.substring(0, minuteWheel.selectedItemData.length - 1)
         if (hour.toInt() < 10) {
             hour = "0$hour"
         }
@@ -322,7 +329,9 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
                 body.repeatWeekdays = customAdapter?.selects?.toList()?.sorted()
             }
             if (TextUtils.equals(currentRepeatType, Alert.TYPE_MONTHLY)) {
-                body.repeatDateNumber = dailyWheel.selectedItemData.substring(0, dailyWheel.selectedItemData.length - 1).toInt()
+                body.repeatDateNumber =
+                    dailyWheel.selectedItemData.substring(0, dailyWheel.selectedItemData.length - 1)
+                        .toInt()
             }
             if (TextUtils.equals(currentRepeatType, Alert.TYPE_YEARLY)) {
                 body.repeatDate = dateToStr("MM-dd", noneWheel.selectedItemData.date)
@@ -356,13 +365,10 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
 
     private fun addNewAlarm() {
         val body = AlertBody()
-        if (alert?.content.isNullOrEmpty()) {
-            body.content = null
-        } else {
-            body.content = tvAlarmDesc.text.toString()
-        }
+        body.content = currentDesc
         var hour = hourWheel.selectedItemData.substring(0, hourWheel.selectedItemData.length - 1)
-        var minute = minuteWheel.selectedItemData.substring(0, minuteWheel.selectedItemData.length - 1)
+        var minute =
+            minuteWheel.selectedItemData.substring(0, minuteWheel.selectedItemData.length - 1)
         if (hour.toInt() < 10) {
             hour = "0$hour"
         }
@@ -386,7 +392,9 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
                 body.repeatWeekdays = customAdapter?.selects?.toList()?.sorted()
             }
             if (TextUtils.equals(currentRepeatType, Alert.TYPE_MONTHLY)) {
-                body.repeatDateNumber = dailyWheel.selectedItemData.substring(0, dailyWheel.selectedItemData.length - 1).toInt()
+                body.repeatDateNumber =
+                    dailyWheel.selectedItemData.substring(0, dailyWheel.selectedItemData.length - 1)
+                        .toInt()
             }
             if (TextUtils.equals(currentRepeatType, Alert.TYPE_YEARLY)) {
                 body.repeatDate = dateToStr("MM-dd", noneWheel.selectedItemData.date)
@@ -428,8 +436,9 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
                     tvAlarmDesc.text.toString()
                 }
                 startForResult(
-                        EditAlarmDescFragment.instance(desc),
-                        REQUEST_EDIT_CODE)
+                    EditAlarmDescFragment.instance(desc),
+                    REQUEST_EDIT_CODE
+                )
             }
             R.id.done -> {
                 if (alert != null) {
@@ -488,12 +497,14 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
         customList.adapter = customAdapter
     }
 
-    inner class RepeatTypeAdapter(private val repeatList: ArrayList<RepeatType>,
-                                  private val onItemClickListener: (RepeatType) -> Unit)
-        : RecyclerView.Adapter<RepeatTypeAdapter.RepeatTypeHolder>() {
+    inner class RepeatTypeAdapter(
+        private val repeatList: ArrayList<RepeatType>,
+        private val onItemClickListener: (RepeatType) -> Unit
+    ) : RecyclerView.Adapter<RepeatTypeAdapter.RepeatTypeHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RepeatTypeHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_repeat_type, parent, false)
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_repeat_type, parent, false)
             return RepeatTypeHolder(view)
         }
 
@@ -514,8 +525,8 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
         }
     }
 
-    inner class CustomAdapter(private val items: ArrayList<String>)
-        : RecyclerView.Adapter<CustomAdapter.CustomHolder>() {
+    inner class CustomAdapter(private val items: ArrayList<String>) :
+        RecyclerView.Adapter<CustomAdapter.CustomHolder>() {
 
         val selects = hashSetOf(1, 2, 3, 4, 5, 6, 7)
         var customText: String = ""
@@ -544,7 +555,8 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
         }
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): CustomHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_custom_weekday, parent, false)
+            val view = LayoutInflater.from(parent.context)
+                .inflate(R.layout.item_custom_weekday, parent, false)
             return CustomHolder(view)
         }
 

@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
@@ -21,12 +22,13 @@
         android:text="网络连接失败" />
 
     <TextView
+        android:id="@+id/error_text"
         style="@style/Body16.Grey"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="@dimen/dp_40"
         android:layout_marginTop="@dimen/dp_8"
-        android:text="请确认密码后重试" />
+        tools:text="您的网络异常，请稍后重试" />
 
     <View
         android:layout_width="0dp"

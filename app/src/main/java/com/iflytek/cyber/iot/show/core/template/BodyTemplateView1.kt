@@ -2,41 +2,40 @@ package com.iflytek.cyber.iot.show.core.template
 
 import android.content.Context
 import android.graphics.Bitmap
-import android.graphics.Color
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.view.View.OnClickListener
 import android.view.ViewTreeObserver
 import android.widget.*
 import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
-import com.bumptech.glide.load.DataSource
-import com.bumptech.glide.load.engine.GlideException
+import com.bumptech.glide.load.MultiTransformation
+import com.bumptech.glide.load.resource.bitmap.CenterCrop
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
-import com.bumptech.glide.request.RequestListener
 import com.bumptech.glide.request.RequestOptions
-import com.bumptech.glide.request.target.Target
+import com.bumptech.glide.request.target.SimpleTarget
+import com.bumptech.glide.request.transition.Transition
 import com.google.gson.JsonParser
-
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.utils.RoundedCornersTransformation
 import com.iflytek.cyber.iot.show.core.widget.HighlightTextView
-import jp.wasabeef.blurry.Blurry
 
 class BodyTemplateView1 @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null, defStyleAttr: Int = 0
 ) : FrameLayout(context, attrs, defStyleAttr) {
     private val bodyText: HighlightTextView
     private val bodyImage: ImageView
-    private val bodyImageContainer: View
-    private val bodyImageBackground: ImageView
     private val skillIconImage: ImageView
     private val backgroundImage: ImageView
     private val bodyContainer: LinearLayout
+    private val bodyHorizontalContainer: LinearLayout
     private val bodyScrollView: ScrollView
     private val mainTitle: TextView
     private val subTitle: TextView
-
+    private val bodyHorizontalImage: ImageView
+    private val horizontalBodyText: HighlightTextView
+    private val horizontalScrollView: ScrollView
     private val imageMaxHeight =
         resources.getDimensionPixelSize(R.dimen.body_template_image_max_height)
 
@@ -51,20 +50,27 @@ class BodyTemplateView1 @JvmOverloads constructor(
         val childView = LayoutInflater.from(context)
             .inflate(R.layout.layout_body_template_1, null)
 
-        bodyContainer = childView.findViewById(R.id.body_container)
+        bodyContainer = childView.findViewById(R.id.body_vertical_container)
+        bodyHorizontalContainer = childView.findViewById(R.id.body_horizontal_container)
         bodyScrollView = childView.findViewById(R.id.body_scroll_view)
         bodyText = childView.findViewById(R.id.body_text)
         bodyImage = childView.findViewById(R.id.body_image)
+        bodyHorizontalImage = childView.findViewById(R.id.body_horizontal_image)
         skillIconImage = childView.findViewById(R.id.skill_icon)
         backgroundImage = childView.findViewById(R.id.background_image)
         mainTitle = childView.findViewById(R.id.main_title)
         subTitle = childView.findViewById(R.id.sub_title)
-        bodyImageBackground = childView.findViewById(R.id.body_background)
-        bodyImageContainer = childView.findViewById(R.id.body_image_container)
+        horizontalBodyText = childView.findViewById(R.id.horizontal_body_text)
+        horizontalScrollView = childView.findViewById(R.id.horizontal_scroll_view)
 
         bodyText.onHighlightChangeListener = object : HighlightTextView.OnHighlightChangeListener {
             override fun onHighlightChange(view: HighlightTextView, line: Int, offset: Int) {
                 bodyScrollView.smoothScrollTo(0, offset)
+            }
+        }
+        horizontalBodyText.onHighlightChangeListener = object : HighlightTextView.OnHighlightChangeListener {
+            override fun onHighlightChange(view: HighlightTextView, line: Int, offset: Int) {
+                horizontalScrollView.smoothScrollTo(0, offset)
             }
         }
         childView.findViewById<View>(R.id.back)?.setOnClickListener(innerOnClickBackListener)
@@ -101,42 +107,35 @@ class BodyTemplateView1 @JvmOverloads constructor(
         }
 
         bodyText.text = json.get(Constant.PAYLOAD_BODY_TEXT)?.asString
+        horizontalBodyText.text = bodyText.text
 
-        json.get(Constant.PAYLOAD_BODY_IMAGE_URL)?.asString?.let { imageUrl ->
-            bodyImageContainer.isVisible = true
-            Glide.with(bodyImage)
+        val imageUrl = json.get(Constant.PAYLOAD_BODY_IMAGE_URL)?.asString
+        if (!imageUrl.isNullOrEmpty()) {
+            Glide.with(context)
                 .asBitmap()
                 .load(imageUrl)
-                .listener(object : RequestListener<Bitmap> {
-                    override fun onLoadFailed(
-                        e: GlideException?, model: Any?,
-                        target: Target<Bitmap>?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        return false
-                    }
-
+                .into(object : SimpleTarget<Bitmap>() {
                     override fun onResourceReady(
-                        resource: Bitmap?,
-                        model: Any?,
-                        target: Target<Bitmap>?,
-                        dataSource: DataSource?,
-                        isFirstResource: Boolean
-                    ): Boolean {
-                        resource?.let {
-                            Blurry.with(bodyImageBackground.context)
-                                .radius(20)
-                                .color(Color.parseColor("#80F2F5F7"))
-                                .from(it)
-                                .into(bodyImageBackground)
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
+                        val width = resource.width
+                        val height = resource.height
+                        if (width.toFloat() / height.toFloat() < 1) {
+                            bodyScrollView.isVisible = false
+                            bodyHorizontalContainer.isVisible = true
+                            showHorizontalTemplate(imageUrl, resource)
+                        } else {
+                            bodyScrollView.isVisible = true
+                            bodyHorizontalContainer.isVisible = false
+                            showVerticalTemplate(imageUrl, resource)
                         }
-                        return false
                     }
-
                 })
-                .into(bodyImage)
-        } ?: run {
-            bodyImageContainer.isVisible = false
+        } else {
+            bodyContainer.isVisible = false
+            bodyScrollView.isVisible = true
+            bodyHorizontalContainer.isVisible = false
         }
 
         json.get(Constant.PAYLOAD_SKILL_ICON_URL)?.asString?.let { skillIconUrl ->
@@ -179,12 +178,43 @@ class BodyTemplateView1 @JvmOverloads constructor(
         currentPayload = payload
     }
 
+    private fun showVerticalTemplate(url: String, bitmap: Bitmap) {
+        val transformer = MultiTransformation(
+            CenterCrop(),
+            RoundedCornersTransformation(
+                context.resources.getDimensionPixelSize(R.dimen.dp_12), 0
+            )
+        )
+        //bodyImage.setOriginalSize(bitmap.width, bitmap.height)
+        Glide.with(context)
+            .load(url)
+            .transform(transformer)
+            .override(bitmap.width, bitmap.height)
+            .into(bodyImage)
+    }
+
+    private fun showHorizontalTemplate(url: String, bitmap: Bitmap) {
+        val transformer = MultiTransformation(
+            CenterCrop(),
+            RoundedCornersTransformation(
+                context.resources.getDimensionPixelSize(R.dimen.dp_12), 0
+            )
+        )
+        Glide.with(context)
+            .load(url)
+            .transform(transformer)
+            .override(bitmap.width, bitmap.height)
+            .into(bodyHorizontalImage)
+    }
+
     fun updateBodyPosition(position: Long) {
         bodyText.updatePosition(position)
+        horizontalBodyText.updatePosition(position)
     }
 
     fun startBodyAnimation() {
         bodyText.startAnimation()
+        horizontalBodyText.startAnimation()
         if (!(bodyText.text.isNullOrEmpty()) && bodyText.lineCount > 0) {
             bodyText.startAnimation()
         } else {
@@ -198,10 +228,26 @@ class BodyTemplateView1 @JvmOverloads constructor(
                 }
             })
         }
+        if (!(horizontalBodyText.text.isNullOrEmpty()) && horizontalBodyText.lineCount > 0) {
+            horizontalBodyText.startAnimation()
+        } else {
+            horizontalBodyText.viewTreeObserver.addOnGlobalLayoutListener(object :
+                ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    if (!(horizontalBodyText.text.isNullOrEmpty()) && horizontalBodyText.lineCount > 0) {
+                        horizontalBodyText.startAnimation()
+                        horizontalBodyText.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    }
+                }
+            })
+        }
     }
+
+    fun isBodyAnimating() = bodyText.isAnimationStarted() || horizontalBodyText.isAnimationStarted()
 
     fun stopBodyAnimation() {
         bodyText.stopAnimation()
+        horizontalBodyText.stopAnimation()
     }
 
     fun setOnClickBackListener(onClickListener: OnClickListener?) {
