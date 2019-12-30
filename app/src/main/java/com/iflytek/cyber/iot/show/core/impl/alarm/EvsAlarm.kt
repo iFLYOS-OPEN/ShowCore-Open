@@ -121,11 +121,11 @@ class EvsAlarm private constructor(context: Context) : Alarm() {
                     activeAlarmId = null
                 }
             }
-
         })
     }
 
     override fun stop() {
+        super.stop()
         alarmPlayer.stop()
     }
 

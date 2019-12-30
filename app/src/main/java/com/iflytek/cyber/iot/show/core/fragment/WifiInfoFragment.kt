@@ -10,9 +10,12 @@ import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.utils.WifiUtils
 
 class WifiInfoFragment(private val scanResult: ScanResult? = null) : BaseFragment() {
+    private var backCount = 0
 
-    override fun onCreateView(inflater: LayoutInflater,
-                              container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?, savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_wifi_info, container, false)
     }
 
@@ -24,10 +27,17 @@ class WifiInfoFragment(private val scanResult: ScanResult? = null) : BaseFragmen
         val tvMac: TextView = view.findViewById(R.id.wifi_mac)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 
         view.findViewById<View>(R.id.forget).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
+
             WifiUtils.forget(it.context, scanResult?.SSID)
 
             pop()

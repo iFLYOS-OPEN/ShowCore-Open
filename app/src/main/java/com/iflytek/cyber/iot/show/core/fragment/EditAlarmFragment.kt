@@ -72,6 +72,8 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
 
     private var handler = Handler(Looper.getMainLooper())
 
+    private var backCount = 0
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -84,7 +86,12 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<View>(R.id.iv_back).setOnClickListener { pop() }
+        view.findViewById<View>(R.id.iv_back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
+            pop()
+        }
         view.findViewById<View>(R.id.done).setOnClickListener(this)
 
         drawer = view.findViewById(R.id.drawer)

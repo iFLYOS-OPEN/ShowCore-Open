@@ -38,6 +38,8 @@ class MessageBoardFragment : BaseFragment() {
     private var recyclerView: RecyclerView? = null
     private var messagesData: MessagesData? = null
 
+    private var backCount = 0
+
     init {
         val logger = HttpLoggingInterceptor()
         logger.level = HttpLoggingInterceptor.Level.BODY
@@ -54,6 +56,9 @@ class MessageBoardFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.back)?.setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 

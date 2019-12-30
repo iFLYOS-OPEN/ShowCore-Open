@@ -110,7 +110,10 @@ abstract class Alarm {
     /**
      * 停止闹钟。
      */
-    abstract fun stop()
+    @CallSuper
+    open fun stop() {
+        onAlarmUpdated()
+    }
 
     open fun isDisabled(): Boolean {
         return false

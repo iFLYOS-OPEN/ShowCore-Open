@@ -9,8 +9,6 @@ import com.google.android.exoplayer2.ExoPlaybackException
 import com.google.android.exoplayer2.Player
 import com.google.android.exoplayer2.util.Util
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
-import java.lang.Exception
-import java.lang.Thread.sleep
 
 class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
     companion object {
@@ -70,9 +68,9 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
                 }
                 Player.STATE_IDLE -> {
                     player.isStarted = false
-                    if (!playWhenReady) {
-                        onStopped(type, player.resourceId ?: "")
-                    }
+//                    if (!playWhenReady) {
+                    onStopped(type, player.resourceId ?: "")
+//                    }
                 }
                 Player.STATE_READY -> {
                     if (lastPlayState == Player.STATE_BUFFERING) {
@@ -260,4 +258,7 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
         }
     }
 
+    fun getPlayerPlaybackState(type: String): Int? {
+        return getPlayer(type)?.getPlaybackState()
+    }
 }

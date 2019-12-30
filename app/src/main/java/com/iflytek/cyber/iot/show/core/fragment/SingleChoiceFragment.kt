@@ -24,6 +24,8 @@ class SingleChoiceFragment : BaseFragment() {
 
     private val adapter = ListAdapter()
 
+    private var backCount = 0
+
     companion object {
         fun newInstance(
             title: String,
@@ -58,6 +60,9 @@ class SingleChoiceFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             setResult()
             pop()
         }

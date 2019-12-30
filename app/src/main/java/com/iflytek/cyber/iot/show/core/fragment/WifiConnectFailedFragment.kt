@@ -18,6 +18,8 @@ class WifiConnectFailedFragment : BaseFragment() {
         }
     }
 
+    private var backCount = 0
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -30,6 +32,9 @@ class WifiConnectFailedFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.retry).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
         view.findViewById<View>(R.id.cancel).setOnClickListener {

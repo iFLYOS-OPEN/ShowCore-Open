@@ -45,6 +45,8 @@ class CheckUpdateFragment : BaseFragment() {
     private var downloadedPath: String? = null
     private var otaService: OtaService? = null
 
+    private var backCount = 0
+
     private val otaReceiver = object : SelfBroadcastReceiver(
         OtaService.ACTION_CHECK_UPDATE_RESULT,
         OtaService.ACTION_CHECK_UPDATE_FAILED,
@@ -194,6 +196,9 @@ class CheckUpdateFragment : BaseFragment() {
         progressBarCompleted = view.findViewById(R.id.progress_bar_completed)
 
         view.findViewById<View>(R.id.back)?.setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
         view.findViewById<View>(R.id.retry)?.setOnClickListener {

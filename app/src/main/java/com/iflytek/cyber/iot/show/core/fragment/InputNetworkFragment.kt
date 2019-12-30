@@ -14,7 +14,12 @@ import com.iflytek.cyber.iot.show.core.utils.KeyboardUtils
 import com.iflytek.cyber.iot.show.core.utils.WifiUtils
 
 class InputNetworkFragment(private val scanResult: ScanResult? = null) : BaseFragment() {
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    private var backCount = 0
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_input_network, container, false)
     }
 
@@ -42,6 +47,9 @@ class InputNetworkFragment(private val scanResult: ScanResult? = null) : BaseFra
         })
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 

@@ -10,6 +10,7 @@ import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.SoundPool
 import android.os.*
+import android.text.TextUtils
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import com.google.gson.JsonParser
@@ -42,6 +43,7 @@ import com.iflytek.cyber.iot.show.core.utils.*
 import org.json.JSONObject
 import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
+import kotlin.math.roundToInt
 
 
 class EngineService : EvsService() {
@@ -66,6 +68,7 @@ class EngineService : EvsService() {
         const val ACTION_SEND_AUDIO_IN = "$ACTION_PREFIX.SEND_AUDIO_IN"
         const val ACTION_AUTH_REVOKED = "$ACTION_PREFIX.AUTH_REVOKED"
         const val ACTION_CLEAR_TEMPLATE_FOCUS = "$ACTION_PREFIX.CLEAR_TEMPLATE_FOCUS"
+        const val ACTION_INIT_VOLUME = "$ACTION_PREFIX.INIT_VOLUME"
 
         const val ACTION_DISCONNECT_EVS = "$ACTION_PREFIX.DISCONNECT_EVS"
 
@@ -108,6 +111,8 @@ class EngineService : EvsService() {
     private var isShowingDaydream = false
     private var latestRecognizeTime = 0L
 
+    private var hadInitVolume = false
+
     private val handler = Handler()
 
     private val audioFocusListener =
@@ -133,7 +138,7 @@ class EngineService : EvsService() {
             val intent = Intent(baseContext, FloatingService::class.java)
             intent.action = FloatingService.ACTION_SET_BACKGROUND_RECOGNIZE
             intent.putExtra(FloatingService.EXTRA_ENABLED, isBackgroundRecognize)
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
         }
 
         override fun onRecognizeStarted(isExpectReply: Boolean) {
@@ -151,7 +156,7 @@ class EngineService : EvsService() {
             val intent = Intent(baseContext, FloatingService::class.java)
             intent.action = FloatingService.ACTION_SHOW_RECOGNIZE
             intent.putExtra(FloatingService.EXTRA_EXPECT_REPLY, isExpectReply)
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
 
             acquireRecordWakeLock()
         }
@@ -172,7 +177,7 @@ class EngineService : EvsService() {
                     return@postDelayed
                 val intent = Intent(baseContext, FloatingService::class.java)
                 intent.action = FloatingService.ACTION_DISMISS_RECOGNIZE
-                startService(intent)
+                ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
             }, 1000)
         }
 
@@ -186,7 +191,7 @@ class EngineService : EvsService() {
             val intent = Intent(baseContext, FloatingService::class.java)
             intent.action = FloatingService.ACTION_INTERMEDIATE_TEXT
             intent.putExtra(FloatingService.EXTRA_TEXT, text)
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
         }
     }
     private val configChangedListener = object : ConfigUtils.OnConfigChangedListener {
@@ -371,6 +376,10 @@ class EngineService : EvsService() {
                 EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
 
                 releaseTtsWakeLock(resourceId)
+
+                val intent = Intent(baseContext, FloatingService::class.java)
+                intent.action = FloatingService.ACTION_DISMISS_TTS_VIEW
+                ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
             }
         }
 
@@ -381,6 +390,10 @@ class EngineService : EvsService() {
                 EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
 
                 releaseTtsWakeLock(resourceId)
+
+                val intent = Intent(baseContext, FloatingService::class.java)
+                intent.action = FloatingService.ACTION_DISMISS_TTS_VIEW
+                ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
             }
         }
 
@@ -615,6 +628,12 @@ class EngineService : EvsService() {
             ACTION_DISCONNECT_EVS -> {
                 disconnect()
             }
+            ACTION_INIT_VOLUME -> {
+                if (!hadInitVolume) {
+                    hadInitVolume = true
+                    initVolume()
+                }
+            }
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -731,6 +750,38 @@ class EngineService : EvsService() {
         }
     }
 
+    private fun initVolume() {
+        try {
+            val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
+
+            val alarmMax = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
+            am.setStreamVolume(AudioManager.STREAM_ALARM, (alarmMax * .8).roundToInt(), 0)
+
+            if (am.ringerMode != AudioManager.RINGER_MODE_NORMAL)
+                am.ringerMode = AudioManager.RINGER_MODE_NORMAL
+
+            val notificationMax = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION)
+            am.setStreamVolume(
+                AudioManager.STREAM_NOTIFICATION,
+                (notificationMax * .6).roundToInt(),
+                0
+            )
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                val mediaVol = am.getStreamVolume(AudioManager.STREAM_MUSIC)
+                if (mediaVol == 0 || am.isStreamMute(AudioManager.STREAM_MUSIC)) {
+                    am.setStreamVolume(
+                        AudioManager.STREAM_MUSIC,
+                        (am.getStreamMaxVolume(AudioManager.STREAM_MUSIC) * .3).toInt(),
+                        0
+                    )
+                }
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
     private fun abandonAudioFocus() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -837,9 +888,9 @@ class EngineService : EvsService() {
                 "com.iflytek.cyber.iot.keepalive.KeepAliveService"
             )
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
-                startForegroundService(intent)
+                ContextWrapper.startForegroundServiceAsUser(baseContext, intent, "CURRENT")
             else
-                startService(intent)
+                ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
         } catch (t: Throwable) {
             t.printStackTrace()
         }
@@ -871,6 +922,10 @@ class EngineService : EvsService() {
         super.onResponsesRaw(json)
 
         Thread {
+            var ttsText = ""
+            var hasTemplate = false
+            var hasTts = false
+
             val jsonObject = JsonParser().parse(json).asJsonObject
             val meta = jsonObject.getAsJsonObject("iflyos_meta")
             val requestId = meta.get("request_id")?.asString ?: return@Thread
@@ -879,22 +934,38 @@ class EngineService : EvsService() {
                 val item = responses[i].asJsonObject
                 val header = item.getAsJsonObject("header")
                 val headerName = header.get("name")?.asString
+                val payload = item.getAsJsonObject("payload")
+                if (TextUtils.equals("template.static_template", headerName)) {
+                    hasTemplate = true
+                }
                 if (headerName?.startsWith("template.") == true) {
-                    val payload = item.getAsJsonObject("payload")
-
                     // 如果是 playing_template，不存在 template_id 则直接忽略
 
-                    val templateId = payload.get("template_id")?.asString ?: return@Thread
-
-                    RequestIdMap.putRequestTemplate(requestId, templateId)
+                    val templateId = payload.get("template_id")?.asString
+                    if (!templateId.isNullOrEmpty()) {
+                        RequestIdMap.putRequestTemplate(requestId, templateId)
+                    }
                 } else if (headerName?.startsWith("audio_player") == true) {
-                    val payload = item.getAsJsonObject("payload")
                     val type = payload.get("type")?.asString
                     if (type == AudioPlayer.TYPE_TTS) {
-                        val resourceId = payload.get("resource_id")?.asString ?: return@Thread
+                        hasTts = true
 
-                        RequestIdMap.putRequestTts(requestId, resourceId)
+                        val resourceId = payload.get("resource_id")?.asString
+                        if (!resourceId.isNullOrEmpty()) {
+                            RequestIdMap.putRequestTts(requestId, resourceId)
+                        }
+
+                        ttsText = payload.getAsJsonObject("metadata").get("text").asString
                     }
+                }
+            }
+
+            if (!hasTemplate && hasTts) { //有 template 不显示 tts，没有则显示 tts
+                handler.post {
+                    val intent = Intent(baseContext, FloatingService::class.java)
+                    intent.action = FloatingService.ACTION_SHOW_TTS
+                    intent.putExtra(FloatingService.EXTRA_TEXT, ttsText)
+                    ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
                 }
             }
         }.start()
@@ -1103,7 +1174,7 @@ class EngineService : EvsService() {
     }
 
     override fun getResponseSoundVolume(): Float {
-        return .2f
+        return EvsSpeaker.get(baseContext).getCurrentVolume() / 100f
     }
 
     override fun getResponseSoundPool(): SoundPool? {

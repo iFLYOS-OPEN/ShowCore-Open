@@ -59,6 +59,7 @@ class HighlightTextView
     }
 
     fun startAnimation() {
+        animationStopped = false
         timestampArray.clear()
         textArray.clear()
         currentHighlightLine = 0

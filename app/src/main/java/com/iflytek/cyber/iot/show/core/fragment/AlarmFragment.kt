@@ -33,6 +33,7 @@ class AlarmFragment : BaseFragment(), PageScrollable {
     private lateinit var alarmAdapter: AlarmAdapter
 
     private var shouldUpdateAlarm = false
+    private var backCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,6 +57,9 @@ class AlarmFragment : BaseFragment(), PageScrollable {
         alarmList = view.findViewById(R.id.alarm_list)
 
         view.findViewById<View>(R.id.iv_back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             setFragmentResult(0, bundleOf(Pair("shouldUpdateAlarm", shouldUpdateAlarm)))
             pop()
         }

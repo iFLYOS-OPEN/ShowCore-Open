@@ -24,6 +24,7 @@ import com.iflytek.cyber.iot.show.core.api.DeviceApi
 import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager
 import com.iflytek.cyber.iot.show.core.model.ChatConfigData
 import com.iflytek.cyber.iot.show.core.model.InteractionMode
+import com.iflytek.cyber.iot.show.core.widget.StyledProgressDialog
 import okhttp3.MediaType
 import okhttp3.RequestBody
 import okhttp3.ResponseBody
@@ -45,10 +46,13 @@ class LanguageAndSpeakerFragment : BaseFragment() {
     private var viewPager: ViewPager2? = null
     private var tabLayout: TabLayout? = null
     private var tvNextStep: TextView? = null
+    private var progressDialog: StyledProgressDialog? = null
 
     private var adapter: StepPageAdapter? = null
 
     private var chatConfigData: ChatConfigData? = null
+
+    private var backCount = 0
 
     private val onPageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
         override fun onPageSelected(position: Int) {
@@ -219,7 +223,13 @@ class LanguageAndSpeakerFragment : BaseFragment() {
             if (viewPager.currentItem < getPageCount() - 1) {
                 viewPager.currentItem = viewPager.currentItem + 1
             } else {
-                nextStep.isClickable = false
+                tvNextStep?.isEnabled = false
+
+                progressDialog = StyledProgressDialog.Builder()
+                    .setTitle(getString(R.string.saving))
+                    .setMessage(getString(R.string.saving_language_and_speaker))
+                    .setCancelable(false)
+                    .show(fragmentManager)
 
                 var interactionModeId: Int? = null
                 var propertyId: String? = null
@@ -284,6 +294,10 @@ class LanguageAndSpeakerFragment : BaseFragment() {
                         } else {
                             Toast.makeText(activity, "请求出现错误，请检查网络后重试", Toast.LENGTH_SHORT).show()
                         }
+                        progressDialog?.dismiss()
+                        progressDialog = null
+
+                        tvNextStep?.isEnabled = true
                     }
 
                     override fun onResponse(
@@ -308,6 +322,10 @@ class LanguageAndSpeakerFragment : BaseFragment() {
                             }
                             errorBody?.close()
                         }
+                        progressDialog?.dismiss()
+                        progressDialog = null
+
+                        tvNextStep?.isEnabled = true
                     }
 
                 })
@@ -315,6 +333,9 @@ class LanguageAndSpeakerFragment : BaseFragment() {
         }
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
     }

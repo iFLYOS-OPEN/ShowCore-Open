@@ -39,6 +39,7 @@ import com.iflytek.cyber.iot.show.core.model.Video
 import com.iflytek.cyber.iot.show.core.record.GlobalRecorder
 import com.iflytek.cyber.iot.show.core.record.RecordVolumeUtils
 import com.iflytek.cyber.iot.show.core.utils.*
+import com.iflytek.cyber.iot.show.core.utils.ContextWrapper
 import com.iflytek.cyber.iot.show.core.widget.StyledAlertDialog
 import com.iflytek.cyber.product.ota.OtaService
 import com.iflytek.cyber.product.ota.PackageEntityNew
@@ -46,6 +47,8 @@ import kotlinx.android.synthetic.main.activity_evs_launcher.*
 import me.yokeyword.fragmentation.Fragmentation
 import me.yokeyword.fragmentation.SupportHelper
 import java.lang.ref.SoftReference
+import java.util.*
+import kotlin.collections.ArrayList
 import kotlin.math.roundToInt
 
 
@@ -68,6 +71,8 @@ class EvsLauncherActivity : BaseActivity() {
 
     private var handler = Handler(Looper.getMainLooper())
 
+    private var hadInitVolume = false
+
     private val connectStateReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
             @Suppress("DEPRECATION")
@@ -80,7 +85,11 @@ class EvsLauncherActivity : BaseActivity() {
                     if (connectivityManager.activeNetworkInfo?.isConnected == true) {
                         engineService?.connectEvs(DeviceUtils.getDeviceId(context))
 
-                        startService(Intent(context, TimeService::class.java))
+                        ContextWrapper.startServiceAsUser(
+                            baseContext,
+                            Intent(baseContext, TimeService::class.java),
+                            "CURRENT"
+                        )
                     }
                 }
             }
@@ -168,7 +177,7 @@ class EvsLauncherActivity : BaseActivity() {
             val intent = Intent(baseContext, FloatingService::class.java)
             intent.action = FloatingService.ACTION_UPDATE_VOLUME
             intent.putExtra(FloatingService.EXTRA_VOLUME, volume)
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
         }
 
         override fun onWakeUp(angle: Int, beam: Int, params: String?) {
@@ -181,7 +190,8 @@ class EvsLauncherActivity : BaseActivity() {
             val intent = Intent(applicationContext, EvsLauncherActivity::class.java)
             intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            applicationContext.startActivity(intent)
+//            applicationContext.startActivity(intent)
+            ContextWrapper.startActivityAsUser(this, intent, "CURRENT")
         }
     }
 
@@ -193,7 +203,7 @@ class EvsLauncherActivity : BaseActivity() {
             val intent = Intent(this@EvsLauncherActivity, FloatingService::class.java)
             intent.action = FloatingService.ACTION_RENDER_TEMPLATE
             intent.putExtra(FloatingService.EXTRA_PAYLOAD, payload)
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
         }
 
         override fun notifyPlayerInfoUpdated(resourceId: String, payload: String) {
@@ -217,7 +227,7 @@ class EvsLauncherActivity : BaseActivity() {
             val intent = Intent(baseContext, FloatingService::class.java).apply {
                 action = FloatingService.ACTION_UPDATE_MUSIC
             }
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
             callbacks.forEach {
                 it.renderPlayerInfo(payload)
             }
@@ -226,7 +236,7 @@ class EvsLauncherActivity : BaseActivity() {
         override fun exitCustomTemplate() {
             val intent = Intent(baseContext, FloatingService::class.java)
             intent.action = FloatingService.ACTION_CLEAR_TEMPLATE
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
 
             callbacks.forEach {
                 it.exitCustomTemplate()
@@ -237,7 +247,7 @@ class EvsLauncherActivity : BaseActivity() {
             val intent = Intent(baseContext, FloatingService::class.java)
             intent.action = FloatingService.ACTION_CLEAR_TEMPLATE
             intent.putExtra(FloatingService.EXTRA_TYPE, type)
-            startService(intent)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
 
             callbacks.forEach {
                 it.exitStaticTemplate(type)
@@ -317,7 +327,7 @@ class EvsLauncherActivity : BaseActivity() {
                         Intent(baseContext, FloatingService::class.java)
                     dismissNotification.action = FloatingService.ACTION_DISMISS_NOTIFICATION
                     dismissNotification.putExtra(FloatingService.EXTRA_TAG, "network_error")
-                    startService(dismissNotification)
+                    ContextWrapper.startServiceAsUser(baseContext, dismissNotification, "CURRENT")
 
                     reconnectHandler?.clearRetryCount()
 
@@ -327,7 +337,7 @@ class EvsLauncherActivity : BaseActivity() {
                     val enableWakeUp = Intent(baseContext, EngineService::class.java)
                     enableWakeUp.action = EngineService.ACTION_SET_WAKE_UP_ENABLED
                     enableWakeUp.putExtra(EngineService.EXTRA_ENABLED, microphoneEnabled)
-                    startService(enableWakeUp)
+                    ContextWrapper.startServiceAsUser(baseContext, enableWakeUp, "CURRENT")
 
                     ConfigUtils.getBoolean(ConfigUtils.KEY_OTA_REQUEST, false).let { otaRequest ->
                         if (otaRequest) {
@@ -384,7 +394,11 @@ class EvsLauncherActivity : BaseActivity() {
                             disconnectNotification.putExtra(
                                 FloatingService.EXTRA_KEEPING, true
                             )
-                            startService(disconnectNotification)
+                            ContextWrapper.startServiceAsUser(
+                                baseContext,
+                                disconnectNotification,
+                                "CURRENT"
+                            )
                         } else {
                             if (code == EvsError.Code.ERROR_SERVER_DISCONNECTED ||
                                 code == EvsError.Code.ERROR_CLIENT_DISCONNECTED
@@ -412,7 +426,11 @@ class EvsLauncherActivity : BaseActivity() {
                                 disconnectNotification.putExtra(
                                     FloatingService.EXTRA_KEEPING, true
                                 )
-                                startService(disconnectNotification)
+                                ContextWrapper.startServiceAsUser(
+                                    baseContext,
+                                    disconnectNotification,
+                                    "CURRENT"
+                                )
                             }
                             if (reconnectHandler?.isCounting() != true) {
                                 reconnectHandler?.postReconnectEvs()
@@ -443,7 +461,11 @@ class EvsLauncherActivity : BaseActivity() {
                             disconnectNotification.putExtra(
                                 FloatingService.EXTRA_KEEPING, true
                             )
-                            startService(disconnectNotification)
+                            ContextWrapper.startServiceAsUser(
+                                baseContext,
+                                disconnectNotification,
+                                "CURRENT"
+                            )
                         }
                         if (handler?.isCounting() != true) {
                             handler?.postReconnectEvs()
@@ -480,6 +502,8 @@ class EvsLauncherActivity : BaseActivity() {
         ACTION_OPEN_CHECK_UPDATE
     ) {
         override fun onReceiveAction(action: String, intent: Intent) {
+            if (ConfigUtils.getBoolean(ConfigUtils.KEY_OTA_DISABLED, false))
+                return
             when (action) {
                 OtaService.ACTION_CHECK_UPDATE_RESULT -> {
                     val packageEntity =
@@ -512,7 +536,11 @@ class EvsLauncherActivity : BaseActivity() {
                             FloatingService.EXTRA_POSITIVE_BUTTON_ACTION,
                             ACTION_OPEN_CHECK_UPDATE
                         )
-                        startService(showNotification)
+                        ContextWrapper.startServiceAsUser(
+                            baseContext,
+                            showNotification,
+                            "CURRENT"
+                        )
                     } else if (findFragment(CheckUpdateFragment::class.java) == null) {
                         val fragment = getTopFragment()
                         if (fragment is VideoFragment || fragment is PlayerInfoFragment2) {
@@ -541,13 +569,21 @@ class EvsLauncherActivity : BaseActivity() {
                                 FloatingService.EXTRA_POSITIVE_BUTTON_ACTION,
                                 ACTION_OPEN_CHECK_UPDATE
                             )
-                            startService(showNotification)
+                            ContextWrapper.startServiceAsUser(
+                                baseContext,
+                                showNotification,
+                                "CURRENT"
+                            )
                         } else {
                             val dismissNotification =
                                 Intent(baseContext, FloatingService::class.java)
                             dismissNotification.action = FloatingService.ACTION_DISMISS_NOTIFICATION
                             dismissNotification.putExtra(FloatingService.EXTRA_TAG, "update")
-                            startService(dismissNotification)
+                            ContextWrapper.startServiceAsUser(
+                                baseContext,
+                                dismissNotification,
+                                "CURRENT"
+                            )
 
                             val packageEntityNew =
                                 intent.getParcelableExtra<PackageEntityNew>(OtaService.EXTRA_PACKAGE_ENTITY)
@@ -592,7 +628,7 @@ class EvsLauncherActivity : BaseActivity() {
                 val intent = Intent(baseContext, FloatingService::class.java).apply {
                     action = FloatingService.ACTION_UPDATE_MUSIC
                 }
-                startService(intent)
+                ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
                 getService()?.getAudioPlayer()?.stop(AudioPlayer.TYPE_PLAYBACK)
                 getService()?.getVideoPlayer()?.stop()
                 val topFragment = getTopFragment()
@@ -766,6 +802,9 @@ class EvsLauncherActivity : BaseActivity() {
         const val ACTION_OPEN_SETTINGS = "$ACTION_PREFIX.OPEN_SETTINGS"
         const val ACTION_OPEN_WLAN = "$ACTION_PREFIX.OPEN_WLAN"
         const val ACTION_OPEN_AUTH = "$ACTION_PREFIX.OPEN_AUTH"
+        const val ACTION_OPEN_SKILLS = "$ACTION_PREFIX.OPEN_SKILLS"
+        const val ACTION_OPEN_CONTENT = "$ACTION_PREFIX.OPEN_CONTENT"
+        const val ACTION_OPEN_ALARM = "$ACTION_PREFIX.OPEN_ALARM"
         const val ACTION_OPEN_CHECK_UPDATE = "$ACTION_PREFIX.OPEN_CHECK_UPDATE"
         const val ACTION_OPEN_MESSAGE_BOARD = "$ACTION_PREFIX.OPEN_MESSAGE_BOARD"
         const val ACTION_LAUNCHER_CONTROL = "$ACTION_PREFIX.LAUNCHER_CONTROL"
@@ -794,7 +833,7 @@ class EvsLauncherActivity : BaseActivity() {
         supportFragmentManager.registerFragmentLifecycleCallbacks(fragmentLifecycleCallback, true)
 
         val intent = Intent(this, EngineService::class.java)
-        startService(intent)
+        ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
         bindService(
             Intent(this, EngineService::class.java),
             serviceConnection, Context.BIND_AUTO_CREATE
@@ -856,7 +895,7 @@ class EvsLauncherActivity : BaseActivity() {
         otaService.putExtra(OtaService.EXTRA_DOWNLOAD_PATH, "${externalCacheDir?.path}/ota")
         otaService.putExtra(OtaService.EXTRA_PACKAGE_NAME, packageName)
 //        otaService.putExtra(OtaService.EXTRA_DOWNLOAD_DIRECTLY, true)
-        startService(otaService)
+        ContextWrapper.startServiceAsUser(baseContext, otaService, "CURRENT")
 
         otaReceiver.register(this)
 
@@ -912,7 +951,7 @@ class EvsLauncherActivity : BaseActivity() {
                     // init overlay
                     val overlay = Intent(this, FloatingService::class.java)
                     overlay.action = FloatingService.ACTION_INIT_OVERLAY
-                    startService(overlay)
+                    ContextWrapper.startServiceAsUser(baseContext, overlay, "CURRENT")
 
                     requestFloatPermissionAlert?.dismiss()
 
@@ -973,10 +1012,18 @@ class EvsLauncherActivity : BaseActivity() {
 
                                         if (SupportHelper.getTopFragment(supportFragmentManager) == null)
                                             initUi()
-
-                                        initVolume()
                                     }
                                 }
+
+                                if (!hadInitVolume) {
+                                    hadInitVolume = true
+
+                                    val initVolume = Intent(this, EngineService::class.java)
+                                    initVolume.action = EngineService.ACTION_INIT_VOLUME
+                                    startService(initVolume)
+                                }
+//                                    }
+//                            }
                             }
                         }
                     }
@@ -1093,42 +1140,9 @@ class EvsLauncherActivity : BaseActivity() {
                 engineService?.requestLauncherVisualFocus()
             }
             ACTION_LAUNCHER_CONTROL -> {
-                when (intent.getStringExtra(EXTRA_PAGE)) {
-                    Launcher.PAGE_ALARMS -> {
-                        if (getTopFragment() !is AlarmFragment) {
-                            popTo(MainFragment2::class.java, false)
-                            findFragment(MainFragment2::class.java)?.startAlarm()
-                        }
-                    }
-                    Launcher.PAGE_CONTENTS -> {
-                        if (getTopFragment() !is MediaFragment) {
-                            popTo(MainFragment2::class.java, false)
-                            start(MediaFragment())
-                        }
-                    }
-                    Launcher.PAGE_HOME -> {
-                        if (getTopFragment() !is MainFragment2)
-                            popTo(MainFragment2::class.java, false)
-                    }
-                    Launcher.PAGE_MESSAGES -> {
-                        if (getTopFragment() !is MessageBoardFragment) {
-                            popTo(MainFragment2::class.java, false)
-                            start(MessageBoardFragment())
-                        }
-                    }
-                    Launcher.PAGE_SETTINGS -> {
-                        if (getTopFragment() !is SettingsFragment2) {
-                            popTo(MainFragment2::class.java, false)
-                            start(SettingsFragment2())
-                        }
-                    }
-                    Launcher.PAGE_SKILLS -> {
-                        if (getTopFragment() !is SkillsFragment) {
-                            popTo(MainFragment2::class.java, false)
-                            start(SkillsFragment())
-                        }
-                    }
-                }
+                val page = intent.getStringExtra(EXTRA_PAGE)
+                openLauncherPage(page)
+
                 engineService?.requestLauncherVisualFocus()
             }
             ACTION_OPEN_CHECK_UPDATE -> {
@@ -1145,12 +1159,72 @@ class EvsLauncherActivity : BaseActivity() {
                 }
                 engineService?.requestLauncherVisualFocus()
             }
+            ACTION_OPEN_SKILLS -> {
+                if (getTopFragment() !is SkillsFragment) {
+                    popTo(MainFragment2::class.java, false)
+                    start(SkillsFragment())
+                }
+                engineService?.requestLauncherVisualFocus()
+            }
+            ACTION_OPEN_CONTENT -> {
+                if (getTopFragment() !is MediaFragment) {
+                    popTo(MainFragment2::class.java, false)
+                    start(MediaFragment())
+                }
+                engineService?.requestLauncherVisualFocus()
+            }
+            ACTION_OPEN_ALARM -> {
+                if (getTopFragment() !is AlarmFragment) {
+                    popTo(MainFragment2::class.java, false)
+                    findFragment(MainFragment2::class.java)?.startAlarm()
+                }
+                engineService?.requestLauncherVisualFocus()
+            }
             ACTION_START_VIDEO_PLAYER -> {
                 if (getTopFragment() !is VideoFragment) {
                     val main = findFragment(MainFragment2::class.java)
                     post {
                         main?.startVideoPlayer()
                     }
+                }
+            }
+        }
+    }
+
+    fun openLauncherPage(page: String) {
+        when (page) {
+            Launcher.PAGE_ALARMS -> {
+                if (getTopFragment() !is AlarmFragment) {
+                    popTo(MainFragment2::class.java, false)
+                    findFragment(MainFragment2::class.java)?.startAlarm()
+                }
+            }
+            Launcher.PAGE_CONTENTS -> {
+                if (getTopFragment() !is MediaFragment) {
+                    popTo(MainFragment2::class.java, false)
+                    start(MediaFragment())
+                }
+            }
+            Launcher.PAGE_HOME -> {
+                if (getTopFragment() !is MainFragment2)
+                    popTo(MainFragment2::class.java, false)
+            }
+            Launcher.PAGE_MESSAGES -> {
+                if (getTopFragment() !is MessageBoardFragment) {
+                    popTo(MainFragment2::class.java, false)
+                    start(MessageBoardFragment())
+                }
+            }
+            Launcher.PAGE_SETTINGS -> {
+                if (getTopFragment() !is SettingsFragment2) {
+                    popTo(MainFragment2::class.java, false)
+                    start(SettingsFragment2())
+                }
+            }
+            Launcher.PAGE_SKILLS -> {
+                if (getTopFragment() !is SkillsFragment) {
+                    popTo(MainFragment2::class.java, false)
+                    start(SkillsFragment())
                 }
             }
         }
@@ -1171,23 +1245,6 @@ class EvsLauncherActivity : BaseActivity() {
 
     private fun handleNetworkLost() {
 
-    }
-
-    private fun initVolume() {
-        try {
-            val am = getSystemService(Context.AUDIO_SERVICE) as? AudioManager ?: return
-
-            val alarmMax = am.getStreamMaxVolume(AudioManager.STREAM_ALARM)
-            am.setStreamVolume(AudioManager.STREAM_ALARM, (alarmMax * .8).roundToInt(), 0)
-
-            if (am.ringerMode != AudioManager.RINGER_MODE_NORMAL)
-                am.ringerMode = AudioManager.RINGER_MODE_NORMAL
-
-            val notificationMax = am.getStreamMaxVolume(AudioManager.STREAM_NOTIFICATION)
-            am.setStreamVolume(AudioManager.STREAM_NOTIFICATION, notificationMax, 0)
-        } catch (e: Exception) {
-            e.printStackTrace()
-        }
     }
 
     private fun showErrorBar() {
@@ -1272,7 +1329,7 @@ class EvsLauncherActivity : BaseActivity() {
                 val enableWakeUp = Intent(this, EngineService::class.java)
                 enableWakeUp.action = EngineService.ACTION_SET_WAKE_UP_ENABLED
                 enableWakeUp.putExtra(EngineService.EXTRA_ENABLED, false)
-                startService(enableWakeUp)
+                ContextWrapper.startServiceAsUser(baseContext, enableWakeUp, "CURRENT")
             }
         } else {
             ConfigUtils.putBoolean(ConfigUtils.KEY_SETUP_COMPLETED, true)

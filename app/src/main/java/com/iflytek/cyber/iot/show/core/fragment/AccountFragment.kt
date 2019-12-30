@@ -21,6 +21,8 @@ class AccountFragment : BaseFragment(), PageScrollable {
     private val infoList = mutableListOf<Item>()
     private val adapter = ListAdapter()
 
+    private var backCount = 0
+
     private val onItemClickListener = object : OnItemClickListener {
         override fun onItemClick(parent: ViewGroup, itemView: View, position: Int) {
             if (position == adapter.itemCount - 1) {
@@ -37,6 +39,9 @@ class AccountFragment : BaseFragment(), PageScrollable {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 

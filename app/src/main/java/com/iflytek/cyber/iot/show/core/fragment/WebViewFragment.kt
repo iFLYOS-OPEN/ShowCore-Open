@@ -12,6 +12,7 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import com.airbnb.lottie.LottieAnimationView
 import com.iflytek.cyber.iot.show.core.R
 
@@ -23,7 +24,13 @@ class WebViewFragment : BaseFragment() {
 
     private var isLoading = false
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    private var backCount = 0
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         return inflater.inflate(R.layout.fragment_webview, container, false)
     }
 
@@ -81,11 +88,17 @@ class WebViewFragment : BaseFragment() {
         }
 
         view.findViewById<View>(R.id.back)?.setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 
         arguments?.getString("url")?.let { url ->
             webView?.loadUrl(url)
+        }
+        arguments?.getBoolean("hide_title")?.let { hideTitle ->
+            tvTitle?.isVisible = !hideTitle
         }
     }
 }

@@ -26,6 +26,7 @@ class SkillsFragment : BaseFragment(), PageScrollable {
     private lateinit var viewPager: ViewPager2
 
     private var adapter: SkillPagerAdapter? = null
+    private var backCount = 0
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,6 +43,9 @@ class SkillsFragment : BaseFragment(), PageScrollable {
         viewPager = view.findViewById(R.id.view_pager)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 

@@ -87,6 +87,9 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
     init {
         player.addListener(object : Player.EventListener {
             override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+                if (playWhenReady && playbackState == Player.STATE_READY) {
+                    handler.post(positionUpdateRunnable)
+                }
                 listener?.onPlayerStateChanged(
                     this@AudioPlayerInstance,
                     type,
@@ -150,8 +153,6 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
             player.prepare(mediaSource, true, false)
             player.playWhenReady = true
         }
-
-        handler.post(positionUpdateRunnable)
     }
 
     var volGrowFlag = false
@@ -183,16 +184,26 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
         if (Looper.myLooper() == Looper.getMainLooper()) {
             if (player.playbackState == Player.STATE_READY) {
                 player.playWhenReady = true
+            } else if (player.playbackState == Player.STATE_ENDED) {
+                player.seekTo(0)
+                player.playWhenReady = true
+            } else if (player.playbackState == Player.STATE_IDLE) {
+                player.seekTo(player.contentPosition)
+                player.playWhenReady = true
             }
         } else {
             handler.post {
                 if (player.playbackState == Player.STATE_READY) {
                     player.playWhenReady = true
+                } else if (player.playbackState == Player.STATE_ENDED) {
+                    player.seekTo(0)
+                    player.playWhenReady = true
+                } else if (player.playbackState == Player.STATE_IDLE) {
+                    player.seekTo(player.contentPosition)
+                    player.playWhenReady = true
                 }
             }
         }
-
-        handler.post(positionUpdateRunnable)
     }
 
     fun pause() {
@@ -244,6 +255,8 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
     }
 
     fun getLooper(): Looper = player.applicationLooper
+
+    fun getPlaybackState() = player.playbackState
 
     fun destroy() {
         player.stop(true)

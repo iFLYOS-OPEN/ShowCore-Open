@@ -29,6 +29,8 @@ class MediaFragment : BaseFragment(), PageScrollable {
 
     private var adapter: MediaPagerAdapter? = null
 
+    private var backCount = 0
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -40,7 +42,12 @@ class MediaFragment : BaseFragment(), PageScrollable {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<View>(R.id.back).setOnClickListener { pop() }
+        view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
+            pop()
+        }
 
         tabLayout = view.findViewById(R.id.tab_layout)
         viewPager = view.findViewById(R.id.view_pager)
@@ -90,6 +97,7 @@ class MediaFragment : BaseFragment(), PageScrollable {
 
                 if (isDetached || isRemoving)
                     return
+                context ?: return
                 hidePlaceholder()
                 if (t is UnknownHostException) {
                     view?.findViewById<View>(R.id.error_container)?.let { errorContainer ->
@@ -114,6 +122,7 @@ class MediaFragment : BaseFragment(), PageScrollable {
             ) {
                 if (isDetached || isRemoving)
                     return
+                context ?: return
                 hidePlaceholder()
                 if (response.isSuccessful) {
                     val groups = response.body()

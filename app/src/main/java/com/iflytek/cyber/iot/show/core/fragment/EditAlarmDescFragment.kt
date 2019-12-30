@@ -24,8 +24,15 @@ class EditAlarmDescFragment : BaseFragment() {
 
     private var desc: String? = null
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return LayoutInflater.from(context).inflate(R.layout.fragment_edit_alarm_desc, container, false)
+    private var backCount = 0
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
+        return LayoutInflater.from(context)
+            .inflate(R.layout.fragment_edit_alarm_desc, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -34,6 +41,9 @@ class EditAlarmDescFragment : BaseFragment() {
         desc = arguments?.getString("desc")
 
         view.findViewById<View>(R.id.iv_back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             KeyboardUtils.closeKeyboard(editText)
             val bundle = bundleOf(Pair("desc", desc), Pair("isEdited", false))
             setFragmentResult(0, bundle)

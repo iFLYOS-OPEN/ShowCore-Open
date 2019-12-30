@@ -44,6 +44,7 @@ import com.iflytek.cyber.iot.show.core.model.Banner
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
 import com.iflytek.cyber.iot.show.core.utils.ConnectivityUtils
+import com.iflytek.cyber.iot.show.core.utils.ContextWrapper
 import com.iflytek.cyber.iot.show.core.utils.VoiceButtonUtils
 import com.iflytek.cyber.iot.show.core.widget.BatteryView
 import com.iflytek.cyber.iot.show.core.widget.FadeInPageTransformer
@@ -464,12 +465,11 @@ class MainFragment2 : BaseFragment(), PageScrollable {
         ivCover = view.findViewById(R.id.iv_cover)
         view.findViewById<View>(R.id.cover_container)?.setOnClickListener {
             val playerInfo = ContentStorage.get().playerInfo
+            startPlayerInfo()
             if (playerInfo == null) {
 //                launcher?.getService()?.getPlaybackController()
 //                    ?.sendCommand(PlaybackController.Command.Resume)
-                launcher?.getService()?.sendTextIn("我要听歌")
-            } else {
-                startPlayerInfo()
+                Thread { launcher?.getService()?.sendTextIn("我要听歌") }.start()
             }
         }
 
@@ -520,6 +520,14 @@ class MainFragment2 : BaseFragment(), PageScrollable {
                 )
                 context?.startService(intent)
             }
+        }
+        view.findViewById<View>(R.id.launcher).setOnClickListener {
+            it.isEnabled = false
+            it.postDelayed({
+                it.isEnabled = true
+            }, 1000)
+            val launcherFragment = LauncherFragment2()
+            extraTransaction().startDontHideSelf(launcherFragment, ISupportFragment.SINGLETOP)
         }
 
         view.findViewById<View>(R.id.microphone).setOnClickListener {
@@ -654,9 +662,13 @@ class MainFragment2 : BaseFragment(), PageScrollable {
             }
         })
 
+        if (viewPager?.isFakeDragging == true)
+            viewPager?.endFakeDrag()
         viewPager?.post {
-            val current = viewPager?.currentItem ?: 0
-            viewPager?.currentItem = current
+            if (viewPager?.isFakeDragging != true) {
+                val current = viewPager?.currentItem ?: 0
+                viewPager?.currentItem = current
+            }
         }
 
         if (needRequestNewBanners) {
@@ -675,6 +687,7 @@ class MainFragment2 : BaseFragment(), PageScrollable {
             val pendingIntent = PendingIntent.getBroadcast(
                 context, REQUEST_SCROLL_CODE, scrollIntent, PendingIntent.FLAG_CANCEL_CURRENT
             )
+
             (context?.applicationContext?.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)
                 ?.set(
                     AlarmManager.RTC_WAKEUP,
@@ -837,8 +850,9 @@ class MainFragment2 : BaseFragment(), PageScrollable {
         val context = context
         if (context != null && isSupportVisible) {
             val intent = Intent(ACTION_REQUEST_BANNERS)
-            val pendingIntent = PendingIntent.getBroadcast(
-                context, REQUEST_BANNERS_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT
+            val pendingIntent = ContextWrapper.getBroadcastAsUser(
+                context, REQUEST_SCROLL_CODE, intent, PendingIntent.FLAG_CANCEL_CURRENT,
+                "CURRENT"
             )
             (context.applicationContext?.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)
                 ?.set(
@@ -854,8 +868,9 @@ class MainFragment2 : BaseFragment(), PageScrollable {
         val context = context
         if (context != null && isSupportVisible) {
             val scrollIntent = Intent(ACTION_REQUEST_SCROLL)
-            val pendingIntent = PendingIntent.getBroadcast(
-                context, REQUEST_SCROLL_CODE, scrollIntent, PendingIntent.FLAG_CANCEL_CURRENT
+            val pendingIntent = ContextWrapper.getBroadcastAsUser(
+                context, REQUEST_SCROLL_CODE, scrollIntent, PendingIntent.FLAG_CANCEL_CURRENT,
+                "CURRENT"
             )
             (context.applicationContext?.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)
                 ?.set(

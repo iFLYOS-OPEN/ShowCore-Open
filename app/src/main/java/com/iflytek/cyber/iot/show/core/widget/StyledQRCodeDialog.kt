@@ -4,6 +4,7 @@ import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
+import android.util.Log
 import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
@@ -82,7 +83,7 @@ class StyledQRCodeDialog : DialogFragment() {
             val hints = Hashtable<EncodeHintType, String>()
             hints[EncodeHintType.CHARACTER_SET] = "UTF-8" // 字符转码格式设置
             hints[EncodeHintType.ERROR_CORRECTION] = "H" // 容错级别设置
-            hints[EncodeHintType.MARGIN] = "4" // 空白边距设置
+            hints[EncodeHintType.MARGIN] = "2" // 空白边距设置
 
             val bitMatrix =
                 QRCodeWriter().encode(content, BarcodeFormat.QR_CODE, width, height, hints)

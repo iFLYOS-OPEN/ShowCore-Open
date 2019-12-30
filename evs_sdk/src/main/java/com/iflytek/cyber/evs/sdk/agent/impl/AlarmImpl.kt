@@ -112,6 +112,7 @@ internal class AlarmImpl(private val context: Context) : Alarm() {
     }
 
     override fun stop() {
+        super.stop()
         alarmPlayer.stop()
     }
 

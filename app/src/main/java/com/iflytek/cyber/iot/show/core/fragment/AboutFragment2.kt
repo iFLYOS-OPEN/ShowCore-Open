@@ -1,6 +1,7 @@
 package com.iflytek.cyber.iot.show.core.fragment
 
 import android.app.ProgressDialog
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -17,6 +18,7 @@ import com.google.gson.JsonParser
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.iot.show.core.BuildConfig
 import com.iflytek.cyber.iot.show.core.CoreApplication
+import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.api.DeviceApi
 import com.iflytek.cyber.iot.show.core.utils.*
@@ -35,6 +37,8 @@ class AboutFragment2 : BaseFragment(), PageScrollable {
 
     private var deviceName: String? = null
 
+    private var backCount = 0
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -47,6 +51,9 @@ class AboutFragment2 : BaseFragment(), PageScrollable {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 
@@ -167,7 +174,8 @@ class AboutFragment2 : BaseFragment(), PageScrollable {
             aboutList.add(macAddressItem)
         }
 
-        val versionItem = Item(getString(R.string.system_version), DeviceUtils.getSystemVersionName())
+        val versionItem =
+            Item(getString(R.string.system_version), "${DeviceUtils.getSystemVersionName()}(${DeviceUtils.getSystemVersion()})")
         aboutList.add(versionItem)
 
         aboutList.add(Item(getString(R.string.factory_reset), ""))
@@ -206,6 +214,10 @@ class AboutFragment2 : BaseFragment(), PageScrollable {
                                 getString(R.string.ensure),
                                 View.OnClickListener { view ->
                                     val context = view.context
+
+                                    val stopPlayers= Intent(context, EngineService::class.java)
+                                    stopPlayers.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
+                                    context.startService(stopPlayers)
 
                                     val progressDialog = ProgressDialog(context)
                                     progressDialog.setMessage("正在恢复")

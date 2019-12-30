@@ -57,6 +57,10 @@
         <item name="android:textColor">#262626</item>
     </style>
 
+    <style name="H3.White">
+        <item name="android:textColor">@android:color/white</item>
+    </style>
+
     <style name="H4" parent="TextAppearance.AppCompat.Body1">
         <item name="android:textSize">@dimen/sp_20</item>
         <item name="android:textColor">@color/tablet_black</item>
@@ -195,6 +199,15 @@
     <style name="SettingsAnimation">
         <item name="android:windowEnterAnimation">@anim/slide_in_bottom</item>
         <item name="android:windowExitAnimation">@anim/slide_out_top</item>
+    </style>
+
+    <style name="LauncherDialog" parent="Theme.Design.Light.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/LauncherBottomSheetStyle</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <style name="LauncherBottomSheetStyle" parent="Widget.Design.BottomSheet.Modal">
+        <item name="android:background">@android:color/transparent</item>
     </style>
 
     <style name="AboutAnimation">

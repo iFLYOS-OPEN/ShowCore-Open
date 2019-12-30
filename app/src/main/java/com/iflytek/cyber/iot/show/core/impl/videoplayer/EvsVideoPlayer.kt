@@ -205,6 +205,10 @@ class EvsVideoPlayer private constructor(context: Context) : VideoPlayer() {
         }
     }
 
+    fun getPlaybackState() : Int? {
+        return player?.getPlaybackState()
+    }
+
     interface ExitCallback {
         fun onRequestExit()
     }

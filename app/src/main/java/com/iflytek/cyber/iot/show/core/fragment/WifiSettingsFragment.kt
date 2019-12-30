@@ -10,6 +10,7 @@ import android.net.wifi.ScanResult
 import android.net.wifi.WifiConfiguration
 import android.net.wifi.WifiManager
 import android.os.*
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -28,6 +29,7 @@ import com.airbnb.lottie.LottieAnimationView
 import com.iflytek.cyber.evs.sdk.auth.AuthDelegate
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.SelfBroadcastReceiver
+import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
 import com.iflytek.cyber.iot.show.core.utils.WifiUtils
 import com.iflytek.cyber.iot.show.core.widget.DividerItemDecoration
 import com.iflytek.cyber.iot.show.core.widget.StyledSwitch
@@ -64,6 +66,7 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
 
     private var fromSetup = false
 
+    private var backCount = 0
 
     @Suppress("DEPRECATION")
     private val connectionReceiver = object : SelfBroadcastReceiver(
@@ -137,6 +140,9 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
         recyclerView = list
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 
@@ -157,11 +163,13 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
             start(PairFragment2())
         }
 
-        Handler().postDelayed({
-            if (!isDetached) {
-                startScan()
+        if (wm?.isWifiEnabled == false) {
+            if (!ConfigUtils.getBoolean(ConfigUtils.KEY_SETUP_COMPLETED, false)) {
+                post {
+                    wm?.isWifiEnabled = true
+                }
             }
-        }, 30 * 1000)
+        }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -289,18 +297,16 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
 
         isScanning = true
 
-        ivRefresh?.post {
-            ivRefresh?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
-                loadingView?.let { animationView ->
-                    animationView.repeatCount = Animation.INFINITE
-                    animationView.playAnimation()
-                    animationView.animate()
-                        .alpha(1f)
-                        .setDuration(200)
-                        .start()
-                }
-            }?.start()
-        }
+        ivRefresh?.animate()?.alpha(0f)?.setDuration(150)?.withEndAction {
+            loadingView?.let { animationView ->
+                animationView.repeatCount = Animation.INFINITE
+                animationView.playAnimation()
+                animationView.animate()
+                    .alpha(1f)
+                    .setDuration(200)
+                    .start()
+            }
+        }?.start()
     }
 
     override fun onSupportInvisible() {
@@ -354,6 +360,14 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
     }
 
     private fun handleScanResult() {
+        Log.d(TAG, "handleScanResult")
+        if (!isDetached) {
+            ivRefresh?.postDelayed({
+                if (!isDetached) {
+                    startScan()
+                }
+            }, 30 * 1000)
+        }
         configs.clear()
         wm?.let {
             val configuredNetworks = it.configuredNetworks
@@ -366,8 +380,9 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
 
             connected = WifiUtils.getConnectedSsid(context)
 
+            val scanResults = it.scanResults
             val map = HashMap<String, ScanResult>()
-            for (o1 in it.scanResults) {
+            for (o1 in scanResults) {
                 if (!o1.SSID.isNullOrEmpty() && o1.SSID.trim().isNotEmpty()) {
                     val o2 = map[o1.SSID]
                     if ((o2 == null || o2.level < o1.level) && o1.level != 0) {
@@ -396,6 +411,15 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
             })
             scans = list
             adapter?.notifyDataSetChanged()
+
+            if (!isDetached && scans.isNullOrEmpty()) {
+                Log.d(TAG, "result is empty. retry in 3 seconds. source: ${scanResults.size}")
+                ivRefresh?.postDelayed({
+                    if (!isDetached) {
+                        startScan()
+                    }
+                }, 3 * 1000)
+            }
         }
     }
 

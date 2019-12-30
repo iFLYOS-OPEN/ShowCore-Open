@@ -78,6 +78,8 @@ class MusicFragment : BaseFragment() {
             getMediaApi()?.getSongList(it.id, 1, SongListFragment.LIMIT)?.enqueue(object :
                 Callback<SongList> {
                 override fun onFailure(call: Call<SongList>, t: Throwable) {
+                    if (isRemoving || isDetached)
+                        return
                     if (requestingGroupId != it.id)
                         return
 
@@ -92,6 +94,8 @@ class MusicFragment : BaseFragment() {
                 }
 
                 override fun onResponse(call: Call<SongList>, response: Response<SongList>) {
+                    if (isRemoving || isDetached)
+                        return
                     if (requestingGroupId != it.id)
                         return
                     if (response.isSuccessful) {
@@ -151,6 +155,8 @@ class MusicFragment : BaseFragment() {
     private fun getMediaSection(id: String) {
         getMediaApi()?.getMediaSection(id)?.enqueue(object : Callback<Group> {
             override fun onFailure(call: Call<Group>, t: Throwable) {
+                if (isRemoving || isDetached)
+                    return
                 t.printStackTrace()
                 hidePlaceholder()
 
@@ -163,6 +169,8 @@ class MusicFragment : BaseFragment() {
             }
 
             override fun onResponse(call: Call<Group>, response: Response<Group>) {
+                if (isRemoving || isDetached)
+                    return
                 hidePlaceholder()
                 if (response.isSuccessful) {
                     group = response.body()

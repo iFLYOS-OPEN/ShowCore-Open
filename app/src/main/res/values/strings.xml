@@ -281,4 +281,17 @@
     <string name="you_can_say">你可以说："%s"</string>
     <string name="response_sound_message">打开后，设备将完成识别后播报提示音</string>
     <string name="response_sound">完成识别提示</string>
+
+    <!-- copy from aosp -->
+    <string name="screen_zoom_summary_custom">"自定义 (<xliff:g id="DENSITYDPI">%d</xliff:g>)"</string>
+    <string name="screen_zoom_summary_default">"默认"</string>
+    <string name="screen_zoom_summary_small">"小"</string>
+    <string name="screen_zoom_summary_large">"大"</string>
+    <string name="screen_zoom_summary_very_large">"较大"</string>
+    <string name="screen_zoom_summary_extremely_large">"最大"</string>
+    <string name="saving">正在保存</string>
+    <string name="saving_language_and_speaker">正在保存语言与音色</string>
+    <string name="content_recommend">内容推荐</string>
+    <string name="content_discovery">内容发现</string>
+    <string name="about_device">关于设备</string>
 </resources>

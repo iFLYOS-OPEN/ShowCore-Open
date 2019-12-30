@@ -7,6 +7,7 @@ import android.os.PowerManager
 import android.os.SystemClock
 import android.os.UserHandle
 import android.provider.Settings
+import com.iflytek.cyber.iot.show.core.ShowCoreDream
 import java.util.concurrent.TimeUnit
 
 object ScreenOffTimeoutUtils {
@@ -107,7 +108,7 @@ object ScreenOffTimeoutUtils {
 
         setActiveDream(
             context,
-            ComponentName("com.android.deskclock", "com.android.deskclock.Screensaver")
+            ComponentName(context, ShowCoreDream::class.java)
         )
     }
 

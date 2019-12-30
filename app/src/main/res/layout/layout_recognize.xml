@@ -17,14 +17,15 @@
     <TextView
         android:id="@+id/iat_text"
         android:layout_width="match_parent"
-        android:layout_height="@dimen/dp_72"
+        android:layout_height="@dimen/dp_70"
         android:layout_gravity="bottom"
+        android:layout_marginBottom="@dimen/dp_32"
         android:ellipsize="end"
-        android:gravity="center_vertical"
-        android:paddingStart="@dimen/dp_96"
+        android:gravity="bottom"
+        android:paddingStart="@dimen/dp_40"
         android:paddingEnd="@dimen/dp_40"
         android:singleLine="true"
         android:textColor="@android:color/white"
-        android:textSize="@dimen/sp_18" />
+        android:textSize="@dimen/sp_20"/>
 
 </FrameLayout>

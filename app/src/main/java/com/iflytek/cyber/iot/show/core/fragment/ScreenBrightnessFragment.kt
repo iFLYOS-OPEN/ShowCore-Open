@@ -39,6 +39,8 @@ class ScreenBrightnessFragment : BaseFragment(), View.OnClickListener, PageScrol
 
     private var selectedViewList = ArrayList<TextView>()
 
+    private var backCount = 0
+
     private val brightnessObserver = object : ContentObserver(Handler()) {
         override fun onChange(selfChange: Boolean, uri: Uri) {
             val context = context ?: return
@@ -136,6 +138,9 @@ class ScreenBrightnessFragment : BaseFragment(), View.OnClickListener, PageScrol
         tvSleepEnableTips = view.findViewById(R.id.tv_sleep_enable_tips)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 

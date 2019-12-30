@@ -34,6 +34,7 @@ import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
 import com.google.android.exoplayer2.C
+import com.google.android.exoplayer2.Player
 import com.google.gson.Gson
 import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
@@ -105,6 +106,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     private var isAnimatingScreenLrc = false
 
     private var retryCount = 0
+    private var backCount = 0
 
     private var songsAdapter: SongsAdapter? = null
 
@@ -307,23 +309,30 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                 }
             }
         }
+
         val transformer = MultiTransformation(
             CenterCrop(),
             RoundedCornersTransformation(dp4, 0)
         )
-        Glide.with(musicCover.context)
+
+        Glide.with(requireActivity())
             .asBitmap()
             .load(playerInfo?.content?.imageUrl)
-            .transform(transformer)
-            .apply(
-                RequestOptions
-                    .placeholderOf(R.drawable.cover_default)
-                    .error(R.drawable.cover_default)
-            )
+            .placeholder(R.drawable.cover_default)
+            .error(R.drawable.cover_default)
             .into(object : SimpleTarget<Bitmap>() {
                 override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    musicCover.setImageBitmap(resource)
-                    Blurry.with(musicCover.context)
+                    //musicCover.setImageBitmap(resource)
+                    if (isRemoving || isDetached)
+                        return
+                    val context = context ?: return
+
+                    Glide.with(musicCover)
+                        .load(playerInfo?.content?.imageUrl)
+                        .transform(transformer)
+                        .into(musicCover)
+
+                    Blurry.with(context)
                         .sampling(4)
                         .color(Color.parseColor("#66212121"))
                         .from(resource)
@@ -332,11 +341,14 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
                 override fun onLoadFailed(errorDrawable: Drawable?) {
                     super.onLoadFailed(errorDrawable)
+                    if (isRemoving || isDetached)
+                        return
+                    context ?: return
                     musicCover.setImageResource(R.drawable.cover_default)
                 }
             })
         val dp8 = musicCover.context.resources.getDimensionPixelSize(R.dimen.dp_8)
-        Glide.with(ivLogo.context)
+        Glide.with(requireActivity())
             .load(playerInfo?.provider?.logoUrl)
             .apply(
                 RequestOptions()
@@ -446,7 +458,10 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
             R.id.iv_play_pause -> {
                 val audioPlayer = EvsAudioPlayer.get(context)
-                if (audioPlayer.playbackResourceId.isNullOrEmpty()) {
+                if (audioPlayer.playbackResourceId.isNullOrEmpty() || audioPlayer.getPlayerPlaybackState(
+                        AudioPlayer.TYPE_PLAYBACK
+                    ) == Player.STATE_IDLE
+                ) {
                     val playback = launcher?.getService()?.getPlaybackController()
                     playback?.sendCommand(PlaybackController.Command.Resume, object :
                         RequestCallback {
@@ -480,6 +495,9 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                 })
             }
             R.id.back -> {
+                if (backCount != 0)
+                    return
+                backCount++
                 launcher?.onBackPressed()
             }
             R.id.lyric_click_content -> {

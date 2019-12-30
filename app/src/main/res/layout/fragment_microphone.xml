@@ -95,19 +95,118 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content">
 
-                <LinearLayout
+                <FrameLayout
+                    android:id="@+id/voice_button"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_height="@dimen/dp_64"
+                    android:background="?selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        style="@style/H4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/dp_40"
+                        android:layout_marginEnd="@dimen/dp_100"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/voice_button" />
+
+                    <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
+                        android:id="@+id/voice_button_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="@dimen/dp_40" />
+
+                    <View
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_1"
+                        android:layout_gravity="bottom"
+                        android:layout_marginStart="@dimen/dp_40"
+                        android:layout_marginEnd="@dimen/dp_40"
+                        android:alpha="0.1"
+                        android:background="@android:color/black" />
+
+                </FrameLayout>
+
+                <View
+                    android:id="@+id/voice_button_cover"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_64"
+                    android:background="#80FFFFFF"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </FrameLayout>
+
+            <TextView
+                style="@style/Body14.Grey500"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_4"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:layout_marginBottom="@dimen/dp_40"
+                android:text="点击辅助唤醒按钮可以唤醒设备，与设备交互。" />
+
+            <LinearLayout
+                android:id="@+id/continous_mode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <FrameLayout
+                    android:id="@+id/continous_mode_clickable"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_64"
+                    android:background="?selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/H4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/dp_40"
+                        android:layout_marginEnd="@dimen/dp_100"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/continous_interaction" />
+
+                    <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
+                        android:id="@+id/continous_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="@dimen/dp_40" />
+                </FrameLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="@dimen/dp_40"
+                    android:layout_marginEnd="@dimen/dp_40"
+                    android:alpha="0.1"
+                    android:background="@android:color/black" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
 
                     <FrameLayout
-                        android:id="@+id/voice_button"
+                        android:id="@+id/background_recognize_clickable"
                         android:layout_width="match_parent"
                         android:layout_height="@dimen/dp_64"
                         android:background="?selectableItemBackground"
                         android:clickable="true"
-                        android:focusable="true"
-                        android:orientation="horizontal">
+                        android:focusable="true">
 
                         <TextView
                             style="@style/H4"
@@ -118,291 +217,194 @@
                             android:layout_marginEnd="@dimen/dp_100"
                             android:ellipsize="end"
                             android:maxLines="1"
-                            android:text="@string/voice_button" />
+                            android:text="@string/background_recognize" />
 
                         <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
-                            android:id="@+id/voice_button_switch"
+                            android:id="@+id/background_recognize_switch"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center_vertical|end"
                             android:layout_marginEnd="@dimen/dp_40" />
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_1"
-                            android:layout_gravity="bottom"
-                            android:layout_marginStart="@dimen/dp_40"
-                            android:layout_marginEnd="@dimen/dp_40"
-                            android:alpha="0.1"
-                            android:background="@android:color/black" />
-
                     </FrameLayout>
 
+                    <View
+                        android:id="@+id/background_recognize_cover"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_64"
+                        android:alpha="0.5"
+                        android:background="@android:color/white"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:visibility="gone" />
+                </FrameLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="@dimen/dp_40"
+                    android:layout_marginEnd="@dimen/dp_40"
+                    android:alpha="0.1"
+                    android:background="@android:color/black" />
+
+                <TextView
+                    style="@style/Body14.Grey500"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_40"
+                    android:layout_marginTop="@dimen/dp_4"
+                    android:layout_marginEnd="@dimen/dp_40"
+                    android:layout_marginBottom="@dimen/dp_40"
+                    android:text="@string/background_recognize_message" />
+
+            </LinearLayout>
+
+            <FrameLayout
+                android:id="@+id/language_and_speaker"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_80"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="vertical">
+
                     <TextView
-                        style="@style/Body14.Grey500"
+                        style="@style/H4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/dp_40"
+                        android:layout_marginEnd="@dimen/dp_100"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/language_and_speaker" />
+
+                    <TextView
+                        android:id="@+id/language_and_speaker_value"
+                        style="@style/Body16.Grey"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="@dimen/dp_40"
-                        android:layout_marginTop="@dimen/dp_4"
-                        android:layout_marginEnd="@dimen/dp_40"
-                        android:layout_marginBottom="@dimen/dp_40"
-                        android:text="可以在关闭唤醒语音唤醒的情况下，点击辅助唤醒按钮唤醒设备，与设备交互。" />
+                        android:layout_marginEnd="@dimen/dp_100"
+                        tools:text="普通话, 沉稳大叔, 逍遥子" />
+                </LinearLayout>
 
-                    <LinearLayout
-                        android:id="@+id/continous_mode"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:visibility="gone"
-                        tools:visibility="visible">
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="@dimen/dp_40"
+                    android:layout_marginEnd="@dimen/dp_40"
+                    android:alpha="0.1"
+                    android:background="@android:color/black" />
 
-                        <FrameLayout
-                            android:id="@+id/continous_mode_clickable"
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_64"
-                            android:background="?selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true">
+            </FrameLayout>
 
-                            <TextView
-                                style="@style/H4"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical"
-                                android:layout_marginStart="@dimen/dp_40"
-                                android:layout_marginEnd="@dimen/dp_100"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/continous_interaction" />
+            <FrameLayout
+                android:id="@+id/recognize_profile"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_80"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:orientation="horizontal">
 
-                            <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
-                                android:id="@+id/continous_switch"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical|end"
-                                android:layout_marginEnd="@dimen/dp_40" />
-                        </FrameLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_1"
-                            android:layout_gravity="bottom"
-                            android:layout_marginStart="@dimen/dp_40"
-                            android:layout_marginEnd="@dimen/dp_40"
-                            android:alpha="0.1"
-                            android:background="@android:color/black" />
-
-                        <FrameLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content">
-
-                            <FrameLayout
-                                android:id="@+id/background_recognize_clickable"
-                                android:layout_width="match_parent"
-                                android:layout_height="@dimen/dp_64"
-                                android:background="?selectableItemBackground"
-                                android:clickable="true"
-                                android:focusable="true">
-
-                                <TextView
-                                    style="@style/H4"
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center_vertical"
-                                    android:layout_marginStart="@dimen/dp_40"
-                                    android:layout_marginEnd="@dimen/dp_100"
-                                    android:ellipsize="end"
-                                    android:maxLines="1"
-                                    android:text="@string/background_recognize" />
-
-                                <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
-                                    android:id="@+id/background_recognize_switch"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="center_vertical|end"
-                                    android:layout_marginEnd="@dimen/dp_40" />
-                            </FrameLayout>
-
-                            <View
-                                android:id="@+id/background_recognize_cover"
-                                android:layout_width="match_parent"
-                                android:layout_height="@dimen/dp_64"
-                                android:alpha="0.5"
-                                android:background="@android:color/white"
-                                android:clickable="true"
-                                android:focusable="true"
-                                android:visibility="gone" />
-                        </FrameLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_1"
-                            android:layout_gravity="bottom"
-                            android:layout_marginStart="@dimen/dp_40"
-                            android:layout_marginEnd="@dimen/dp_40"
-                            android:alpha="0.1"
-                            android:background="@android:color/black" />
-
-                        <TextView
-                            style="@style/Body14.Grey500"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/dp_40"
-                            android:layout_marginTop="@dimen/dp_4"
-                            android:layout_marginEnd="@dimen/dp_40"
-                            android:layout_marginBottom="@dimen/dp_40"
-                            android:text="@string/background_recognize_message" />
-
-                    </LinearLayout>
-
-                    <FrameLayout
-                        android:id="@+id/language_and_speaker"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/dp_80"
-                        android:background="?selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:orientation="horizontal"
-                        android:visibility="gone"
-                        tools:visibility="visible">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/H4"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical"
-                                android:layout_marginStart="@dimen/dp_40"
-                                android:layout_marginEnd="@dimen/dp_100"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/language_and_speaker" />
-
-                            <TextView
-                                android:id="@+id/language_and_speaker_value"
-                                style="@style/Body16.Grey"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/dp_40"
-                                android:layout_marginEnd="@dimen/dp_100"
-                                tools:text="普通话, 沉稳大叔, 逍遥子" />
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_1"
-                            android:layout_gravity="bottom"
-                            android:layout_marginStart="@dimen/dp_40"
-                            android:layout_marginEnd="@dimen/dp_40"
-                            android:alpha="0.1"
-                            android:background="@android:color/black" />
-
-                    </FrameLayout>
-
-                    <FrameLayout
-                        android:id="@+id/recognize_profile"
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/dp_80"
-                        android:background="?selectableItemBackground"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:orientation="horizontal">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center_vertical"
-                            android:orientation="vertical">
-
-                            <TextView
-                                style="@style/H4"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical"
-                                android:layout_marginStart="@dimen/dp_40"
-                                android:layout_marginEnd="@dimen/dp_100"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/recognize_profile" />
-
-                            <TextView
-                                android:id="@+id/recognize_profile_value"
-                                style="@style/Body16.Grey"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_marginStart="@dimen/dp_40"
-                                android:layout_marginEnd="@dimen/dp_100"
-                                android:text="@string/summary_far_field" />
-                        </LinearLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_1"
-                            android:layout_gravity="bottom"
-                            android:layout_marginStart="@dimen/dp_40"
-                            android:layout_marginEnd="@dimen/dp_40"
-                            android:alpha="0.1"
-                            android:background="@android:color/black" />
-
-                    </FrameLayout>
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content">
-
-                        <FrameLayout
-                            android:id="@+id/response_sound_clickable"
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_64"
-                            android:background="?selectableItemBackground"
-                            android:clickable="true"
-                            android:focusable="true">
-
-                            <TextView
-                                style="@style/H4"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical"
-                                android:layout_marginStart="@dimen/dp_40"
-                                android:layout_marginEnd="@dimen/dp_100"
-                                android:ellipsize="end"
-                                android:maxLines="1"
-                                android:text="@string/response_sound" />
-
-                            <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
-                                android:id="@+id/response_sound_switch"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:layout_gravity="center_vertical|end"
-                                android:layout_marginEnd="@dimen/dp_40" />
-                        </FrameLayout>
-
-                        <View
-                            android:layout_width="match_parent"
-                            android:layout_height="@dimen/dp_1"
-                            android:layout_gravity="bottom"
-                            android:layout_marginStart="@dimen/dp_40"
-                            android:layout_marginEnd="@dimen/dp_40"
-                            android:alpha="0.1"
-                            android:background="@android:color/black" />
-
-                    </FrameLayout>
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center_vertical"
+                    android:orientation="vertical">
 
                     <TextView
-                        style="@style/Body14.Grey500"
+                        style="@style/H4"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
                         android:layout_marginStart="@dimen/dp_40"
-                        android:layout_marginTop="@dimen/dp_4"
-                        android:layout_marginEnd="@dimen/dp_40"
-                        android:text="@string/response_sound_message" />
+                        android:layout_marginEnd="@dimen/dp_100"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/recognize_profile" />
+
+                    <TextView
+                        android:id="@+id/recognize_profile_value"
+                        style="@style/Body16.Grey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/dp_40"
+                        android:layout_marginEnd="@dimen/dp_100"
+                        android:text="@string/summary_far_field" />
                 </LinearLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="@dimen/dp_40"
+                    android:layout_marginEnd="@dimen/dp_40"
+                    android:alpha="0.1"
+                    android:background="@android:color/black" />
+
             </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <FrameLayout
+                    android:id="@+id/response_sound_clickable"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_64"
+                    android:background="?selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/H4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/dp_40"
+                        android:layout_marginEnd="@dimen/dp_100"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/response_sound" />
+
+                    <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
+                        android:id="@+id/response_sound_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="@dimen/dp_40" />
+                </FrameLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="@dimen/dp_40"
+                    android:layout_marginEnd="@dimen/dp_40"
+                    android:alpha="0.1"
+                    android:background="@android:color/black" />
+
+            </FrameLayout>
+
+            <TextView
+                style="@style/Body14.Grey500"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_4"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:text="@string/response_sound_message" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

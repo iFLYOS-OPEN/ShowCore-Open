@@ -44,6 +44,17 @@
             android:background="?selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
+            android:src="@drawable/ic_voice_skill_center"
+            android:visibility="gone" />
+
+        <ImageView
+            android:id="@+id/launcher"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_marginStart="@dimen/dp_8"
+            android:background="?selectableItemBackgroundBorderless"
+            android:clickable="true"
+            android:focusable="true"
             android:src="@drawable/ic_voice_skill_center" />
 
         <TextView

@@ -37,6 +37,8 @@ class SkillDetailFragment : BaseFragment(), PageScrollable {
     private var scrollView: NestedScrollView? = null
     private var contentContainer: View? = null
 
+    private var backCount = 0
+
     companion object {
         fun newInstance(skill: Skill): SkillDetailFragment {
             return SkillDetailFragment().apply {
@@ -63,7 +65,12 @@ class SkillDetailFragment : BaseFragment(), PageScrollable {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        view.findViewById<View>(R.id.back).setOnClickListener { launcher?.onBackPressed() }
+        view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
+            launcher?.onBackPressed()
+        }
 
         scrollView = view.findViewById(R.id.scroll_view)
         contentContainer = view.findViewById(R.id.content_container)

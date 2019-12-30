@@ -29,6 +29,8 @@ import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.adapter.VideoListAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
+import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager.setVolume
+import com.iflytek.cyber.iot.show.core.impl.screen.EvsScreen
 import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
 import com.iflytek.cyber.iot.show.core.impl.videoplayer.EvsVideoPlayer
@@ -40,10 +42,13 @@ import com.iflytek.cyber.iot.show.core.utils.BrightnessUtils
 import com.iflytek.cyber.iot.show.core.utils.VoiceButtonUtils
 import com.iflytek.cyber.iot.show.core.widget.BoxedVertical
 import com.iflytek.cyber.iot.show.core.widget.ProgressFrameLayout
+import com.kk.taurus.playerbase.AVPlayer
 import com.kk.taurus.playerbase.widget.SuperContainer
 import com.warkiz.widget.IndicatorSeekBar
 import com.warkiz.widget.OnSeekChangeListener
 import com.warkiz.widget.SeekParams
+import kotlinx.android.synthetic.main.fragment_main_2.*
+import kotlinx.android.synthetic.main.fragment_settings.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -91,6 +96,8 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
     private var volumeAnimator: Animator? = null
     private var animatingVolumeTo = 0f
+
+    private var backCount = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -162,6 +169,9 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         seekBar.setProgress(videoPlayerImpl.getOffset().toFloat())
 
         back.setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 
@@ -212,9 +222,15 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             Settings.System.SCREEN_BRIGHTNESS
         )
         brightnessProgress.setProgress(currentBrightness * 100 / 255f)
+        Log.e("Video", "currentBrightness: " + currentBrightness * 100 / 255f)
         val mode = Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE)
         brightnessProgress.setOnTouchProgressChangeListener(object :
             ProgressFrameLayout.OnTouchProgressChangeListener {
+            override fun onDown() {
+                val brightness = BrightnessUtils.getBrightness(context)
+                brightnessProgress.setProgress(brightness.toFloat())
+            }
+
             override fun onTouchProgressChanged(progress: Int) {
                 VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
                 if (!slideBar.isVisible) {
@@ -238,32 +254,25 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             }
         })
 
-        val currentVolume = EvsSpeaker.get(context).getCurrentVolume()
+        val speaker = EvsSpeaker.get(context)
+        val currentVolume = speaker.getCurrentVolume()
         volumeProgress.setProgress(currentVolume.toFloat())
+        setVolumeIcon(speaker.getCurrentVolume())
         volumeProgress.setOnTouchProgressChangeListener(object :
             ProgressFrameLayout.OnTouchProgressChangeListener {
+            override fun onDown() {
+                val volume = speaker.getCurrentVolume()
+                volumeProgress.setProgress(volume.toFloat())
+            }
+
             override fun onTouchProgressChanged(progress: Int) {
                 if (!volumeBar.isVisible) {
                     volumeBar.isVisible = true
                 }
                 volumeSlideBar.setValue(progress)
-                val speaker = EvsSpeaker.get(context)
                 speaker.setVolumeLocally(progress)
                 val volume = speaker.getCurrentVolume()
-                when {
-                    volume == 0 -> {
-                        animateVolumeTo(volumeIcon.progress, VOLUME_0)
-                    }
-                    volume in 1..32 -> {
-                        animateVolumeTo(volumeIcon.progress, VOLUME_1)
-                    }
-                    volume in 33..66 -> {
-                        animateVolumeTo(volumeIcon.progress, VOLUME_2)
-                    }
-                    volume >= 67 -> {
-                        animateVolumeTo(volumeIcon.progress, VOLUME_3)
-                    }
-                }
+                setVolumeIcon(volume)
             }
 
             override fun onStopTouch() {
@@ -278,6 +287,23 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         loadPlayList()
 
         launcher?.registerCallback(simpleRenderCallback)
+    }
+
+    private fun setVolumeIcon(volume: Int) {
+        when {
+            volume == 0 -> {
+                animateVolumeTo(volumeIcon.progress, VOLUME_0)
+            }
+            volume in 1..32 -> {
+                animateVolumeTo(volumeIcon.progress, VOLUME_1)
+            }
+            volume in 33..66 -> {
+                animateVolumeTo(volumeIcon.progress, VOLUME_2)
+            }
+            volume >= 67 -> {
+                animateVolumeTo(volumeIcon.progress, VOLUME_3)
+            }
+        }
     }
 
     override fun onSupportVisible() {
@@ -382,6 +408,9 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
         override fun onError(player: VideoPlayer, resourceId: String, errorCode: String) {
             Log.e("VideoFragment", "play video error:$resourceId errorCode: $errorCode")
+            if (errorCode == VideoPlayer.MEDIA_ERROR_INVALID_REQUEST) {
+
+            }
         }
     }
 
@@ -531,7 +560,9 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             }
             R.id.iv_play_pause -> {
                 val player = EvsVideoPlayer.get(context)
-                if (player.resourceId.isNullOrEmpty()) {
+                if (player.resourceId.isNullOrEmpty()
+                    || player.getPlaybackState() == AVPlayer.STATE_STOPPED
+                ) {
                     val playback = launcher?.getService()?.getPlaybackController()
                     playback?.sendCommand(PlaybackController.Command.Resume, object :
                         RequestCallback {
@@ -544,7 +575,7 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
                         }
                     })
                 } else {
-                    if (player.state == VideoPlayer.STATE_RUNNING) {
+                    if (player.state == VideoPlayer.STATE_PLAYING) {
                         player.pause()
                     } else {
                         player.resume()

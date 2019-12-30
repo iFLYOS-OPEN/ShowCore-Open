@@ -82,6 +82,7 @@ class EvsVideoPlayerInstance {
             OnErrorEventListener.ERROR_EVENT_DATA_PROVIDER_ERROR,
             OnErrorEventListener.ERROR_EVENT_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK,
             OnErrorEventListener.ERROR_EVENT_UNSUPPORTED -> {
+                stop()
                 listener?.onPlayerError(this, VideoPlayer.MEDIA_ERROR_INVALID_REQUEST, null)
             }
             OnErrorEventListener.ERROR_EVENT_SERVER_DIED -> {
@@ -226,5 +227,9 @@ class EvsVideoPlayerInstance {
         basePlayer.destroy()
 
         EvsSpeaker.get(null).removeOnVolumeChangedListener(onVolumeChangedListener)
+    }
+
+    fun getPlaybackState(): Int {
+        return basePlayer.state
     }
 }

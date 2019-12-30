@@ -35,6 +35,8 @@ class VolumeFragment : BaseFragment() {
     private var mediaVolumeAnimator: Animator? = null
     private var mediaAnimatingVolumeTo = 0f
 
+    private var backCount = 0
+
     private val volumeChangeReceiver = object : SelfBroadcastReceiver(VOLUME_CHANGED_ACTION) {
         override fun onReceiveAction(action: String, intent: Intent) {
             when (action) {
@@ -70,6 +72,9 @@ class VolumeFragment : BaseFragment() {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 

@@ -68,11 +68,12 @@ class BodyTemplateView1 @JvmOverloads constructor(
                 bodyScrollView.smoothScrollTo(0, offset)
             }
         }
-        horizontalBodyText.onHighlightChangeListener = object : HighlightTextView.OnHighlightChangeListener {
-            override fun onHighlightChange(view: HighlightTextView, line: Int, offset: Int) {
-                horizontalScrollView.smoothScrollTo(0, offset)
+        horizontalBodyText.onHighlightChangeListener =
+            object : HighlightTextView.OnHighlightChangeListener {
+                override fun onHighlightChange(view: HighlightTextView, line: Int, offset: Int) {
+                    horizontalScrollView.smoothScrollTo(0, offset)
+                }
             }
-        }
         childView.findViewById<View>(R.id.back)?.setOnClickListener(innerOnClickBackListener)
 
         addView(childView)
@@ -246,8 +247,10 @@ class BodyTemplateView1 @JvmOverloads constructor(
     fun isBodyAnimating() = bodyText.isAnimationStarted() || horizontalBodyText.isAnimationStarted()
 
     fun stopBodyAnimation() {
-        bodyText.stopAnimation()
-        horizontalBodyText.stopAnimation()
+        post {
+            bodyText.stopAnimation()
+            horizontalBodyText.stopAnimation()
+        }
     }
 
     fun setOnClickBackListener(onClickListener: OnClickListener?) {

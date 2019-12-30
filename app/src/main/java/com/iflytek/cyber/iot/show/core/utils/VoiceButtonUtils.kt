@@ -12,6 +12,11 @@ object VoiceButtonUtils : ConfigUtils.OnConfigChangedListener {
             field = value
             requestRefresh()
         }
+    var isMicrophoneEnabled = false
+        set(value) {
+            field = value
+            requestRefresh()
+        }
     var lastTouchTime = 0L
         set(value) {
             field = value
@@ -31,7 +36,9 @@ object VoiceButtonUtils : ConfigUtils.OnConfigChangedListener {
             ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_BUTTON_ENABLED, true)
         val isSetupCompleted = ConfigUtils.getBoolean(ConfigUtils.KEY_SETUP_COMPLETED, false)
 
-        if (!isPairing && isVoiceButtonEnabled && isSetupCompleted && !isWelcoming && !isBackgroundRecognizing) {
+        if (!isPairing && isVoiceButtonEnabled && isSetupCompleted
+            && !isWelcoming && !isBackgroundRecognizing && isMicrophoneEnabled
+        ) {
             onVoiceButtonVisibleCallback?.onShow()
         } else {
             onVoiceButtonVisibleCallback?.onDisappear()

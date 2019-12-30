@@ -34,6 +34,7 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
 
     private var microphoneSwitch: StyledSwitch? = null
     private var voiceButtonSwitch: StyledSwitch? = null
+    private var voiceButtonCover: View? = null
 
     private var dialectView: View? = null
     private var speakerView: View? = null
@@ -55,6 +56,8 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
 
     private var chatConfigData: ChatConfigData? = null
 
+    private var backCount = 0
+
     private val configChangedListener = object : ConfigUtils.OnConfigChangedListener {
         override fun onConfigChanged(key: String, value: Any?) {
             when (key) {
@@ -69,6 +72,7 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
                     val microphoneEnabled = value == true
                     if (microphoneSwitch?.isChecked != microphoneEnabled)
                         microphoneSwitch?.isChecked = microphoneEnabled
+                    voiceButtonCover?.isVisible = !microphoneEnabled
                 }
                 ConfigUtils.KEY_VOICE_BUTTON_ENABLED -> {
                     val voiceButtonEnabled = value == true
@@ -98,6 +102,7 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
 
         microphoneSwitch = view.findViewById(R.id.microphone_switch)
         voiceButtonSwitch = view.findViewById(R.id.voice_button_switch)
+        voiceButtonCover = view.findViewById(R.id.voice_button_cover)
 
         scrollView = view.findViewById(R.id.scroll_view)
         contentContainer = view.findViewById(R.id.content_container)
@@ -114,6 +119,9 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
         tvRecognizerProfile = view.findViewById(R.id.recognize_profile_value)
 
         view.findViewById<View>(R.id.back).setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
         view.findViewById<View>(R.id.recognize_profile).setOnClickListener {
@@ -163,7 +171,8 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
         view.findViewById<View>(R.id.response_sound_clickable).setOnClickListener {
             responseSoundSwitch?.isChecked = responseSoundSwitch?.isChecked != true
         }
-        responseSoundSwitch?.setOnCheckedChangeListener(object : StyledSwitch.OnCheckedChangeListener {
+        responseSoundSwitch?.setOnCheckedChangeListener(object :
+            StyledSwitch.OnCheckedChangeListener {
             override fun onCheckedChange(switch: StyledSwitch, isChecked: Boolean) {
                 val responseSoundEnabled =
                     ConfigUtils.getBoolean(ConfigUtils.KEY_RESPONSE_SOUND, true)
@@ -178,7 +187,8 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
                 }
             }
         })
-        responseSoundSwitch?.isChecked = ConfigUtils.getBoolean(ConfigUtils.KEY_RESPONSE_SOUND, true)
+        responseSoundSwitch?.isChecked =
+            ConfigUtils.getBoolean(ConfigUtils.KEY_RESPONSE_SOUND, true)
         microphoneSwitch?.setOnCheckedChangeListener(object : StyledSwitch.OnCheckedChangeListener {
             override fun onCheckedChange(switch: StyledSwitch, isChecked: Boolean) {
                 val microphoneEnabled =
@@ -310,6 +320,8 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
 
         val voiceButtonEnabled = ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_BUTTON_ENABLED, true)
         voiceButtonSwitch?.isChecked = voiceButtonEnabled
+
+        voiceButtonCover?.isVisible = !microphoneEnabled
     }
 
     private fun toastError(stringResId: Int) {

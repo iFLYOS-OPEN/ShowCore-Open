@@ -178,7 +178,7 @@ data class SongList(
     val image: String,
     val name: String?,
     val items: ArrayList<SongItem>
-): Parcelable
+) : Parcelable
 
 @Parcelize
 data class SongItem(
@@ -190,7 +190,7 @@ data class SongItem(
     val liked: Boolean,
     val name: String,
     @SerializedName("source_type") val sourceType: String
-): Parcelable
+) : Parcelable
 
 data class Error(
     val message: String,
@@ -243,3 +243,10 @@ data class ChatConfigData(
     val config: ChatConfig?,
     @SerializedName("interaction_modes") val interactionModes: List<InteractionMode>?
 ) : Parcelable
+
+data class Weather(
+    val temperature: String?,
+    val lifestyle: String?,
+    val icon: String?,
+    val description: String?
+)

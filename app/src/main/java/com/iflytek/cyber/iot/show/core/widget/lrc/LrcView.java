@@ -527,7 +527,14 @@ public class LrcView extends View {
 
         @Override
         public boolean onSingleTapConfirmed(MotionEvent e) {
+            if (mLrcEntryList.isEmpty())
+                return false;
             int centerLine = getCenterLine();
+
+            if (centerLine < 0 || centerLine >= mLrcEntryList.size()) {
+                return super.onSingleTapConfirmed(e);
+            }
+
             long centerLineTime = mLrcEntryList.get(centerLine).getTime();
             if (hasLrc() && isShowTimeline && mPlayDrawable.getBounds().contains((int) e.getX(), (int) e.getY())) {
                 // onPlayClick 消费了才更新 UI
@@ -541,6 +548,7 @@ public class LrcView extends View {
             } else if (hasLrc() && mOnPlayClickListener != null) {
                 mOnPlayClickListener.onContentClick();
             }
+
             return super.onSingleTapConfirmed(e);
         }
     };

@@ -66,6 +66,8 @@ class SettingsFragment2 : BaseFragment(), PageScrollable {
     private var itemCount = 0
     private var scrollAnimator: Animator? = null
 
+    private var backCount = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
@@ -126,6 +128,9 @@ class SettingsFragment2 : BaseFragment(), PageScrollable {
         super.onViewCreated(view, savedInstanceState)
 
         view.findViewById<View>(R.id.back)?.setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
         view.findViewById<View>(R.id.wifi)?.setOnClickListener {

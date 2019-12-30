@@ -31,6 +31,7 @@ import okhttp3.internal.http2.ConnectionShutdownException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.*
+import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLHandshakeException
 
 class PairFragment2 : BaseFragment() {
@@ -40,6 +41,7 @@ class PairFragment2 : BaseFragment() {
     private var pairWakeLock: PowerManager.WakeLock? = null
 
     private var retryCount = 0
+    private var backCount = 0
 
     private var currentRequestId: String? = null
 
@@ -113,6 +115,9 @@ class PairFragment2 : BaseFragment() {
             requestQrCode()
         }
         view.findViewById<View>(R.id.back)?.setOnClickListener {
+            if (backCount != 0)
+                return@setOnClickListener
+            backCount++
             pop()
         }
 
@@ -316,6 +321,12 @@ class PairFragment2 : BaseFragment() {
     private fun releaseWakeLock() {
         pairWakeLock?.release()
         pairWakeLock = null
+
+        val powerManager = context?.getSystemService(Context.POWER_SERVICE) as PowerManager
+        val flag = PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+        val wakeLock = powerManager.newWakeLock(flag, "iflytek:pair")
+
+        wakeLock.acquire(TimeUnit.SECONDS.toMillis(10)) // 尝试保持十秒
     }
 
     override fun onDestroy() {

@@ -192,7 +192,7 @@ internal class OkHttpWebSocket : SocketManager.EvsWebSocket() {
                         disconnect()
                     }
                     is SocketTimeoutException -> {
-                        onSendFailed(EvsError.Code.ERROR_SOCKET_TIMEOUT, "")
+                        onDisconnected(EvsError.Code.ERROR_SOCKET_TIMEOUT, null, false)
 
                         disconnect()
                     }
