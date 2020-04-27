@@ -39,6 +39,7 @@ abstract class AppAction {
         const val KEY_EXTRAS = "extras"
         const val KEY_FAILURE_CODE = "failure_code"
         const val KEY_SUPPORTED_EXECUTE = "supported_execute"
+        const val KEY_FEEDBACK_TEXT = "feedback_text"
 
         const val DATA_TYPE_ACTIVITY = "activity"
         const val DATA_TYPE_SERVICE = "service"

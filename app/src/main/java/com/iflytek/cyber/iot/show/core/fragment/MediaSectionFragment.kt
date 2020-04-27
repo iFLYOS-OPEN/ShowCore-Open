@@ -17,6 +17,7 @@ import com.iflytek.cyber.iot.show.core.adapter.MediaSectionAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
 import com.iflytek.cyber.iot.show.core.model.Group
 import com.iflytek.cyber.iot.show.core.model.SongList
+import kotlinx.android.synthetic.main.item_app.*
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -54,16 +55,24 @@ class MediaSectionFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        sectionList = view.findViewById(R.id.section_list)
+
+        placeholderView = view.findViewById(R.id.placeholder)
+
+        sectionList.postDelayed({
+            hidePlaceholder()
+        }, 200)
+    }
+
+    override fun onLazyInitView(savedInstanceState: Bundle?) {
+        super.onLazyInitView(savedInstanceState)
+
         val name = arguments?.getString("name")
         val groups = arguments?.getParcelableArrayList<Group>("groups")
 
         if (name.isNullOrEmpty() || groups == null) {
             return
         }
-
-        sectionList = view.findViewById(R.id.section_list)
-
-        placeholderView = view.findViewById(R.id.placeholder)
 
         mediaSectionAdapter = MediaSectionAdapter(name, groups, {
             requestingGroupId = it.id
@@ -166,10 +175,6 @@ class MediaSectionFragment : BaseFragment() {
             })
         })
         sectionList.adapter = mediaSectionAdapter
-
-        sectionList.postDelayed({
-            hidePlaceholder()
-        }, 200)
     }
 
     private fun hidePlaceholder() {

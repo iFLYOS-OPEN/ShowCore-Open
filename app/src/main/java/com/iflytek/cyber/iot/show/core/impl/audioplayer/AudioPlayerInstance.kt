@@ -6,9 +6,15 @@ import android.os.Handler
 import android.os.Looper
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.audio.AudioAttributes
+import com.google.android.exoplayer2.extractor.DefaultExtractorsFactory
+import com.google.android.exoplayer2.source.ExtractorMediaSource
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.android.exoplayer2.upstream.DataSource
+import com.google.android.exoplayer2.upstream.DataSpec
+import com.google.android.exoplayer2.upstream.FileDataSource
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
 import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
+import java.io.File
 
 internal class AudioPlayerInstance(context: Context, private val type: String) {
     companion object {
@@ -150,8 +156,33 @@ internal class AudioPlayerInstance(context: Context, private val type: String) {
         handler.post {
             val uri = Uri.parse(url)
             val mediaSource = mMediaSourceFactory.createHttpMediaSource(uri)
-            player.prepare(mediaSource, true, false)
+            player.prepare(mediaSource, true, true)
             player.playWhenReady = true
+        }
+    }
+
+    fun playTtsFile(path: String) {
+        handler.post {
+            try {
+                val uri = Uri.fromFile(File(path))
+                val dataSpec = DataSpec(uri)
+                val fileDataSource = FileDataSource()
+                fileDataSource.open(dataSpec)
+                val factory = DataSource.Factory {
+                    fileDataSource
+                }
+                val audioSource = ExtractorMediaSource(
+                    fileDataSource.uri,
+                    factory,
+                    DefaultExtractorsFactory(),
+                    null,
+                    null
+                )
+                player.prepare(audioSource, true, false)
+                player.playWhenReady = true
+            } catch (t: Throwable) {
+                t.printStackTrace()
+            }
         }
     }
 

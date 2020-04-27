@@ -17,7 +17,7 @@ import com.iflytek.cyber.iot.show.core.model.Song
 import com.iflytek.cyber.iot.show.core.utils.RoundedCornersTransformation
 
 class VideoListAdapter(
-    private val videoList: ArrayList<Song>,
+    val videoList: ArrayList<Song>,
     private val onItemClickListener: (song: Song) -> Unit
 ) : RecyclerView.Adapter<VideoListAdapter.VideoListHolder>() {
 

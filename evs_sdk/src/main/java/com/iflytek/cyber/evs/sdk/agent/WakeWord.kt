@@ -1,12 +1,14 @@
 package com.iflytek.cyber.evs.sdk.agent
 
 import com.alibaba.fastjson.JSONObject
+import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.RequestManager
 import com.iflytek.cyber.evs.sdk.model.Constant
 
 abstract class WakeWord {
     companion object {
         const val NAME_SET_WAKE_WORD = "${Constant.NAMESPACE_WAKE_WORD}.set_wakeword"
+        const val NAME_RESET_WAKE_WORD = "${Constant.NAMESPACE_WAKE_WORD}.reset_wakeword"
         const val NAME_SET_WAKE_WORD_RESULT = "${Constant.NAMESPACE_WAKE_WORD}.set_wakeword_result"
 
         const val PAYLOAD_WAKE_WORD_ID = "wakeword_id"
@@ -19,18 +21,29 @@ abstract class WakeWord {
         const val RESULT_FAILED = "FAILED"
         const val ERROR_DOWNLOAD_ERROR = "DOWNLOAD_ERROR"
         const val ERROR_CAE_ERROR = "CAE_ERROR"
+        const val ERROR_USER_DENY = "USER_DENY"
     }
 
-    val version = "1.0"
+    val version = "1.1"
 
     abstract fun setWakeWord(wakeWordId: String?, wakeWord: String?, url: String?)
 
-    fun sendSetWakeWordSucceed(wakeWordId: String, wakeWord: String) {
+    abstract fun resetWakeWord(wakeWordId: String?)
+
+    fun sendSetWakeWordSucceed(wakeWordId: String, wakeWord: String?) {
         val jsonObject = JSONObject()
         jsonObject[PAYLOAD_RESULT] = RESULT_SUCCEED
         jsonObject[PAYLOAD_WAKE_WORD_ID] = wakeWordId
         jsonObject[PAYLOAD_WAKE_WORD] = wakeWord
         RequestManager.sendRequest(NAME_SET_WAKE_WORD_RESULT, jsonObject)
+    }
+
+    fun sendSetWakeWordSucceed(wakeWordId: String?, wakeWord: String?, resultCallback: RequestCallback) {
+        val jsonObject = JSONObject()
+        jsonObject[PAYLOAD_RESULT] = RESULT_SUCCEED
+        jsonObject[PAYLOAD_WAKE_WORD_ID] = wakeWordId
+        jsonObject[PAYLOAD_WAKE_WORD] = wakeWord
+        RequestManager.sendRequest(NAME_SET_WAKE_WORD_RESULT, jsonObject, resultCallback)
     }
 
     /**

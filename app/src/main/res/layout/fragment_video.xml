@@ -7,18 +7,18 @@
     android:layout_height="match_parent"
     android:theme="@style/AppTheme.Dark">
 
+    <View
+        android:id="@+id/root_cover"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/black" />
+
     <FrameLayout
         android:id="@+id/super_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:clickable="true"
         android:focusable="true" />
-
-    <View
-        android:id="@+id/root_cover"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/black" />
 
     <FrameLayout
         android:id="@+id/iv_alpha_cover"
@@ -31,12 +31,13 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
-        <ProgressBar
-            android:id="@+id/progress_bar"
-            android:layout_width="@dimen/dp_56"
-            android:layout_height="@dimen/dp_56"
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/loading"
+            android:layout_width="@dimen/dp_48"
+            android:layout_height="@dimen/dp_48"
             android:layout_gravity="center"
-            android:theme="@style/AppTheme.WhiteAccent" />
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/animation_loading_l_white"/>
 
     </FrameLayout>
 
@@ -99,92 +100,168 @@
 
         </LinearLayout>
 
-        <com.warkiz.widget.IndicatorSeekBar
-            android:id="@+id/seek_bar"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_alignParentBottom="true"
-            android:layout_marginStart="@dimen/dp_24"
-            android:layout_marginTop="@dimen/dp_30"
-            android:layout_marginEnd="@dimen/dp_24"
-            android:layout_marginBottom="@dimen/dp_64"
-            android:paddingStart="@dimen/dp_24"
-            android:paddingEnd="@dimen/dp_24"
-            app:isb_clear_default_padding="false"
-            app:isb_indicator_time_text_size="@dimen/sp_8"
-            app:isb_indicator_top_view_type="custom"
-            app:isb_normal_thumb_drawable="@drawable/normal_thumb"
-            app:isb_press_thumb_drawable="@drawable/press_thumb"
-            app:isb_progress_style="music_style"
-            app:isb_thumb_drawable="@drawable/music_thumb_drawable"
-            app:isb_thumb_size="24dp"
-            app:isb_thumb_type="video"
-            app:isb_track_background_color="#80FFFFFF"
-            app:isb_track_progress_color="#80FFFFFF" />
-
         <LinearLayout
-            android:id="@+id/control_content"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_alignParentBottom="true"
-            android:background="#01000000"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingTop="@dimen/dp_24"
-            android:paddingBottom="@dimen/dp_2">
+            android:orientation="vertical">
 
-            <ImageView
-                android:id="@+id/iv_previous"
-                android:layout_width="@dimen/dp_56"
-                android:layout_height="@dimen/dp_56"
-                android:layout_marginStart="@dimen/dp_18"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_12"
-                android:src="@drawable/ic_music_previous" />
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_30"
+                android:layout_marginStart="@dimen/dp_24"
+                android:layout_marginEnd="@dimen/dp_24">
 
-            <ImageView
-                android:id="@+id/iv_play_pause"
-                android:layout_width="@dimen/dp_64"
-                android:layout_height="@dimen/dp_64"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_12"
-                android:src="@drawable/ic_music_play" />
+                <TextView
+                    android:id="@+id/tv_position"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="@dimen/dp_8"
+                    android:layout_marginEnd="@dimen/dp_4"
+                    android:alpha="0.55"
+                    android:paddingStart="@dimen/dp_4"
+                    android:paddingEnd="@dimen/dp_4"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/sp_14"
+                    tools:text="0:00" />
 
-            <ImageView
-                android:id="@+id/iv_next"
-                android:layout_width="@dimen/dp_56"
-                android:layout_height="@dimen/dp_56"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_12"
-                android:src="@drawable/ic_music_next" />
+                <com.warkiz.widget.IndicatorSeekBar
+                    android:id="@+id/seek_bar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_toStartOf="@id/tv_duration"
+                    android:layout_toEndOf="@id/tv_position"
+                    android:paddingStart="@dimen/dp_22"
+                    android:paddingTop="@dimen/dp_4"
+                    android:paddingEnd="@dimen/dp_22"
+                    android:paddingBottom="@dimen/dp_4"
+                    app:isb_clear_default_padding="false"
+                    app:isb_indicator_time_text_size="@dimen/sp_8"
+                    app:isb_indicator_top_view_type="custom"
+                    app:isb_normal_thumb_drawable="@drawable/normal_thumb"
+                    app:isb_press_thumb_drawable="@drawable/music_press_thumb"
+                    app:isb_progress_style="music_style"
+                    app:isb_thumb_drawable="@drawable/music_thumb_drawable"
+                    app:isb_thumb_size="24dp"
+                    app:isb_thumb_type="music"
+                    app:isb_track_background_color="#80FFFFFF"
+                    app:isb_track_progress_color="#80FFFFFF" />
+
+                <TextView
+                    android:id="@+id/tv_duration"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_alignParentEnd="true"
+                    android:layout_centerVertical="true"
+                    android:layout_marginStart="@dimen/dp_4"
+                    android:layout_marginEnd="@dimen/dp_8"
+                    android:alpha="0.55"
+                    android:paddingStart="@dimen/dp_4"
+                    android:paddingEnd="@dimen/dp_4"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/sp_14"
+                    tools:text="4:53" />
+
+            </RelativeLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:id="@+id/control_content"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:background="#01000000"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingBottom="@dimen/dp_2">
+
+                    <ImageView
+                        android:id="@+id/iv_previous"
+                        android:layout_width="@dimen/dp_56"
+                        android:layout_height="@dimen/dp_56"
+                        android:layout_marginStart="@dimen/dp_18"
+                        android:background="@drawable/selectable_item_background_borderless"
+                        android:padding="@dimen/dp_12"
+                        android:src="@drawable/ic_music_previous" />
+
+                    <ImageView
+                        android:id="@+id/iv_play_pause"
+                        android:layout_width="@dimen/dp_64"
+                        android:layout_height="@dimen/dp_64"
+                        android:background="@drawable/selectable_item_background_borderless"
+                        android:padding="@dimen/dp_12"
+                        android:src="@drawable/ic_music_play" />
+
+                    <ImageView
+                        android:id="@+id/iv_next"
+                        android:layout_width="@dimen/dp_56"
+                        android:layout_height="@dimen/dp_56"
+                        android:background="@drawable/selectable_item_background_borderless"
+                        android:padding="@dimen/dp_12"
+                        android:src="@drawable/ic_music_next" />
+
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right"
+                    android:background="#01000000"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:paddingTop="@dimen/dp_16"
+                    android:paddingBottom="@dimen/dp_16">
+
+                    <ImageView
+                        android:id="@+id/iv_play_list"
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
+                        android:layout_gravity="end|center_vertical"
+                        android:layout_marginStart="@dimen/dp_28"
+                        android:layout_marginEnd="@dimen/dp_28"
+                        android:background="@drawable/selectable_item_background_borderless"
+                        android:padding="@dimen/dp_4"
+                        android:src="@drawable/ic_playing_list"
+                        android:visibility="visible"
+                        tools:visibility="visible" />
+
+                </FrameLayout>
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/llyt_recommend"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_16"
+                android:visibility="gone"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="@dimen/dp_20"
+                    android:text="@string/recommend_for_you"
+                    android:textSize="@dimen/sp_16"
+                    android:textColor="@android:color/white"
+                    android:textStyle="bold"/>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rcyc_recommend"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_110"
+                    android:layout_marginTop="@dimen/dp_16"/>
+
+            </LinearLayout>
 
         </LinearLayout>
-
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentEnd="true"
-            android:layout_alignParentBottom="true"
-            android:background="#01000000"
-            android:clickable="true"
-            android:focusable="true"
-            android:paddingTop="@dimen/dp_16"
-            android:paddingBottom="@dimen/dp_16">
-
-            <ImageView
-                android:id="@+id/iv_play_list"
-                android:layout_width="@dimen/dp_40"
-                android:layout_height="@dimen/dp_40"
-                android:layout_gravity="end|center_vertical"
-                android:layout_marginStart="@dimen/dp_28"
-                android:layout_marginEnd="@dimen/dp_28"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_4"
-                android:src="@drawable/ic_playing_list"
-                android:visibility="gone"
-                tools:visibility="visible" />
-
-        </FrameLayout>
 
     </RelativeLayout>
 

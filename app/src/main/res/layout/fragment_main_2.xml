@@ -6,70 +6,84 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@android:color/white"
+    android:descendantFocusability="blocksDescendants"
     android:orientation="vertical"
-    android:theme="@style/AppTheme.Dark"
-    tools:background="@android:color/background_dark">
+    android:theme="@style/AppTheme">
 
-    <androidx.viewpager2.widget.ViewPager2
+    <!--<androidx.viewpager2.widget.ViewPager2
         android:id="@+id/background_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/tablet_index_bg" />
+        android:background="@color/tablet_index_bg" />-->
 
-    <LinearLayout
+    <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="#01000000"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingStart="@dimen/dp_40"
-        android:paddingTop="@dimen/dp_32"
-        android:paddingEnd="@dimen/dp_40"
-        android:paddingBottom="@dimen/dp_32">
+        android:layout_height="wrap_content">
 
         <ImageView
-            android:id="@+id/found"
-            android:layout_width="@dimen/dp_40"
-            android:layout_height="@dimen/dp_40"
+            android:id="@+id/apps"
+            android:layout_width="@dimen/dp_36"
+            android:layout_height="@dimen/dp_36"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/dp_32"
+            android:layout_marginTop="@dimen/dp_12"
+            android:layout_marginBottom="@dimen/dp_6"
             android:background="?selectableItemBackgroundBorderless"
             android:clickable="true"
             android:focusable="true"
-            android:src="@drawable/ic_content_explore" />
+            android:padding="@dimen/dp_6"
+            android:src="@drawable/ic_skill_center" />
 
-        <ImageView
-            android:id="@+id/skills"
-            android:layout_width="@dimen/dp_40"
-            android:layout_height="@dimen/dp_40"
-            android:layout_marginStart="@dimen/dp_8"
-            android:background="?selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_voice_skill_center"
-            android:visibility="gone" />
-
-        <ImageView
-            android:id="@+id/launcher"
-            android:layout_width="@dimen/dp_40"
-            android:layout_height="@dimen/dp_40"
-            android:layout_marginStart="@dimen/dp_8"
-            android:background="?selectableItemBackgroundBorderless"
-            android:clickable="true"
-            android:focusable="true"
-            android:src="@drawable/ic_voice_skill_center" />
-
-        <TextView
-            android:id="@+id/launcher_clock"
-            style="@style/H2.White"
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/time_text"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="@dimen/dp_16"
-            android:gravity="center"
+            android:layout_marginStart="@dimen/dp_80"
+            android:layout_marginTop="@dimen/dp_13"
+            android:textColor="@color/grey_500"
+            android:textSize="@dimen/sp_28"
             tools:text="10:30" />
 
         <LinearLayout
-            android:layout_width="0dp"
+            android:id="@+id/battery_container"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_24"
+            android:layout_marginStart="@dimen/dp_164"
+            android:layout_marginTop="@dimen/dp_20"
+            android:background="@drawable/bg_battery_container"
+            android:clickable="true"
+            android:focusable="true"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_10"
+            android:paddingEnd="@dimen/dp_10"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <com.iflytek.cyber.iot.show.core.widget.BatteryView
+                android:id="@+id/battery_view"
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                app:borderColor="@color/tablet_grey_300"
+                app:contentColor="@color/tablet_grey_500"
+                app:contentPadding="@dimen/dp_1"
+                tools:level="70" />
+
+            <TextView
+                android:id="@+id/tv_battery"
+                style="@style/Body12.Grey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_4"
+                tools:text="72%" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
+            android:layout_gravity="end"
+            android:layout_marginTop="@dimen/dp_13"
+            android:layout_marginEnd="@dimen/dp_24"
             android:gravity="center_vertical|end"
             android:orientation="horizontal">
 
@@ -81,7 +95,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:src="@drawable/ic_wifi_error_white_40dp"
-                android:tint="@android:color/white"
+                android:tint="@color/tablet_grey_500"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
@@ -94,7 +108,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:src="@drawable/ic_mute_mode_white_40dp"
-                android:tint="@android:color/white"
+                android:tint="@color/tablet_grey_500"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
@@ -107,7 +121,7 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:src="@drawable/ic_voice_zero_white_40dp"
-                android:tint="@android:color/white"
+                android:tint="@color/tablet_grey_500"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
@@ -126,7 +140,7 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:src="@drawable/ic_message_white_40dp"
-                    android:tint="@android:color/white" />
+                    android:tint="@color/tablet_grey_500" />
 
                 <androidx.appcompat.widget.AppCompatTextView
                     android:id="@+id/message_num"
@@ -151,62 +165,63 @@
                 android:clickable="true"
                 android:focusable="true"
                 android:src="@drawable/ic_alarm_white_40dp"
-                android:tint="@android:color/white"
+                android:tint="@color/tablet_grey_500"
                 android:visibility="gone"
                 tools:visibility="visible" />
 
-            <FrameLayout
-                android:id="@+id/cover_container"
-                android:layout_width="@dimen/dp_40"
-                android:layout_height="@dimen/dp_40"
-                android:layout_marginStart="@dimen/dp_12"
-                android:background="?selectableItemBackgroundBorderless"
-                android:clickable="true"
-                android:focusable="true">
-
-                <com.airbnb.lottie.LottieAnimationView
-                    android:id="@+id/iv_cover"
-                    android:layout_width="@dimen/dp_40"
-                    android:layout_height="@dimen/dp_40"
-                    android:scaleType="centerCrop"
-                    app:lottie_loop="true"
-                    app:lottie_rawRes="@raw/animation_music_playing" />
-            </FrameLayout>
-
-            <LinearLayout
-                android:id="@+id/battery_container"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/dp_24"
-                android:layout_marginStart="@dimen/dp_12"
-                android:background="@drawable/bg_battery_container"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center"
-                android:orientation="horizontal"
-                android:paddingStart="@dimen/dp_10"
-                android:paddingEnd="@dimen/dp_10"
-                android:visibility="gone"
-                tools:visibility="visible">
-
-                <com.iflytek.cyber.iot.show.core.widget.BatteryView
-                    android:id="@+id/battery_view"
-                    android:layout_width="@dimen/dp_24"
-                    android:layout_height="@dimen/dp_24"
-                    app:borderColor="@color/tablet_grey_300"
-                    app:contentColor="@android:color/white"
-                    app:contentPadding="@dimen/dp_1"
-                    tools:level="50" />
-
-                <TextView
-                    android:id="@+id/tv_battery"
-                    style="@style/Body12.White"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/dp_4"
-                    tools:text="72%" />
-            </LinearLayout>
         </LinearLayout>
 
-    </LinearLayout>
+        <!--<LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:background="@android:color/white"
+            android:paddingStart="@dimen/dp_16"
+            android:gravity="end"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/wifi_error"
+                android:layout_width="@dimen/dp_40"
+                android:layout_height="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:background="?selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@drawable/ic_wifi_error_white_40dp"
+                android:tint="@color/grey_500"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/alarm"
+                android:layout_width="@dimen/dp_40"
+                android:layout_height="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_12"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:background="?selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:src="@drawable/ic_alarm_white_40dp"
+                android:tint="@color/grey_500"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+        </LinearLayout>-->
+
+    </FrameLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.InterceptRecyclerView
+        android:id="@+id/template_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_56"
+        android:clipToPadding="false"
+        android:orientation="horizontal"
+        android:paddingStart="@dimen/dp_20"
+        android:paddingEnd="@dimen/dp_20"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        tools:listitem="@layout/item_main" />
 
 </com.iflytek.cyber.iot.show.core.widget.InterceptFrameLayout>

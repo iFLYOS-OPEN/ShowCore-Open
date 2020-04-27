@@ -64,6 +64,7 @@ class EvsSystem private constructor() : System() {
 
     private var contextRef: SoftReference<Context>? = null
     var onDeviceModeChangeListener: OnDeviceModeChangeListener? = null
+    var onEvsErrorListener: OnEvsErrorListener? = null
 
     fun init(context: Context) {
         contextRef = SoftReference(context)
@@ -97,6 +98,8 @@ class EvsSystem private constructor() : System() {
 
     override fun onError(payload: JSONObject) {
         super.onError(payload)
+
+        onEvsErrorListener?.onError(payload)
 
         try {
             val code = payload.getIntValue(PAYLOAD_CODE)
@@ -166,5 +169,9 @@ class EvsSystem private constructor() : System() {
 
     interface OnDeviceModeChangeListener {
         fun onDeviceModeChanged(kid: Boolean)
+    }
+
+    interface OnEvsErrorListener {
+        fun onError(payload: JSONObject)
     }
 }

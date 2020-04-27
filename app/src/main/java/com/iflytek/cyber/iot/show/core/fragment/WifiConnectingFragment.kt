@@ -102,7 +102,15 @@ class WifiConnectingFragment(private val ssid: String? = null) : BaseFragment() 
                     handleWifiConfigSucceed(checkId)
                 } else {
                     isChecking = false
-                    handleWifiConfigFailed()
+                    startWithPop(
+                        WifiConnectFailedFragment.newInstance(
+                            "网络可能不可用，是否选择其他网络",
+                            ssid,
+                            "忽略",
+                            "重新选择"
+                        )
+                    )
+                    countHandler.stopCount()
                 }
                 retryCount++
             }

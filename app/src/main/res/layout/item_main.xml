@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_item"
+    android:layout_width="@dimen/dp_680"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/dp_12"
+    android:paddingEnd="@dimen/dp_12">
+
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginBottom="@dimen/dp_16"
+        android:background="@drawable/bg_banner"
+        app:layout_constraintBottom_toTopOf="@id/video_frame"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="@dimen/dp_24"
+        android:layout_marginBottom="@dimen/dp_19"
+        android:orientation="horizontal"
+        app:layout_constraintBottom_toBottomOf="@id/view_pager"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/current_page_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_18"
+            tools:text="1" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/page_count_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_12"
+            tools:text="/12" />
+
+    </LinearLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
+        android:id="@+id/video_frame"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/dp_86"
+        android:layout_marginTop="@dimen/dp_16"
+        android:layout_marginEnd="@dimen/dp_8"
+        android:layout_marginBottom="@dimen/dp_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/fav_frame"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toStartOf="parent"
+        app:sl_cornerRadius="@dimen/dp_16"
+        app:sl_dx="0dp"
+        app:sl_dy="@dimen/dp_8"
+        app:sl_shadowColor="#0D000000"
+        app:sl_shadowRadius="@dimen/dp_20">
+
+        <ImageView
+            android:id="@+id/iqiyi_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            tools:src="@drawable/img_bg_card_iqiyi" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="@dimen/dp_19"
+            android:layout_marginBottom="@dimen/dp_14"
+            android:text="@string/iqiyi_text"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_20" />
+
+    </com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
+        android:id="@+id/fav_frame"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/dp_86"
+        android:layout_marginStart="@dimen/dp_8"
+        android:layout_marginTop="@dimen/dp_16"
+        android:layout_marginEnd="@dimen/dp_8"
+        android:layout_marginBottom="@dimen/dp_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/music_frame"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toEndOf="@id/video_frame"
+        app:sl_cornerRadius="@dimen/dp_16"
+        app:sl_dx="0dp"
+        app:sl_dy="@dimen/dp_8"
+        app:sl_shadowColor="#0D000000"
+        app:sl_shadowRadius="@dimen/dp_20">
+
+        <ImageView
+            android:id="@+id/fav_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:src="@drawable/bg_grey_round_36dp" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_20"
+            android:layout_marginTop="@dimen/dp_24"
+            android:text="@string/check_text"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_14" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_20"
+            android:layout_marginTop="@dimen/dp_44"
+            android:text="@string/fav_text"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_20" />
+
+    </com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
+        android:id="@+id/music_frame"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/dp_86"
+        android:layout_marginStart="@dimen/dp_8"
+        android:layout_marginTop="@dimen/dp_16"
+        android:layout_marginBottom="@dimen/dp_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toEndOf="@id/fav_frame"
+        app:sl_cornerRadius="@dimen/dp_16"
+        app:sl_dx="0dp"
+        app:sl_dy="@dimen/dp_8"
+        app:sl_shadowColor="#0D000000"
+        app:sl_shadowRadius="@dimen/dp_20">
+
+        <ImageView
+            android:id="@+id/music_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/bg_main_view_music"
+            tools:ignore="ContentDescription" />
+
+        <FrameLayout
+            android:id="@+id/music_content"
+            android:layout_width="@dimen/dp_86"
+            android:layout_height="@dimen/dp_86"
+            android:layout_gravity="end">
+
+            <ImageView
+                android:layout_width="@dimen/dp_86"
+                android:layout_height="match_parent"
+                android:layout_gravity="end"
+                android:src="@drawable/img_card_music_album_bottom" />
+
+            <ImageView
+                android:id="@+id/album_image"
+                android:layout_width="@dimen/dp_32"
+                android:layout_height="@dimen/dp_32"
+                android:layout_gravity="center" />
+
+        </FrameLayout>
+
+        <ImageView
+            android:layout_width="@dimen/dp_86"
+            android:layout_height="match_parent"
+            android:layout_gravity="end"
+            android:src="@drawable/img_card_music_album_top" />
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/playing_image"
+            android:layout_width="@dimen/dp_18"
+            android:layout_height="@dimen/dp_16"
+            android:layout_marginStart="@dimen/dp_22"
+            android:layout_marginTop="@dimen/dp_27"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/animation_music_playing_white" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/artist_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="@dimen/dp_20"
+            android:layout_marginBottom="@dimen/dp_14"
+            android:ellipsize="end"
+            android:maxWidth="@dimen/dp_118"
+            android:maxLines="1"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_20"
+            tools:text="wild tryler 附近的看风景" />
+
+    </com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

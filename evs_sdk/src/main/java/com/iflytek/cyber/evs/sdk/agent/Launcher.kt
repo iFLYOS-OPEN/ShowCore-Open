@@ -4,8 +4,6 @@ import androidx.annotation.CallSuper
 import com.alibaba.fastjson.JSONObject
 import com.iflytek.cyber.evs.sdk.RequestManager
 import com.iflytek.cyber.evs.sdk.model.Constant
-import com.iflytek.cyber.evs.sdk.socket.RequestBuilder
-import com.iflytek.cyber.evs.sdk.socket.SocketManager
 
 /**
  * 启动器模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/launcher.html#%E5%90%AF%E5%8A%A8%E5%99%A8
@@ -21,11 +19,23 @@ abstract class Launcher {
             "${Constant.NAMESPACE_LAUNCHER}.start_activity_result"
         const val NAME_BACK_RESULT =
             "${Constant.NAMESPACE_LAUNCHER}.back_result"
+        const val NAME_START_INTERNAL_APP = "${Constant.NAMESPACE_LAUNCHER}.start_internal_app"
+        const val NAME_START_INTERNAL_APP_RESULT = "${Constant.NAMESPACE_LAUNCHER}.start_internal_app_result"
 
         const val PAYLOAD_PAGE = "page"
         const val PAYLOAD_RESULT = "result"
         const val PAYLOAD_FAILURE_CODE = "failure_code"
         const val PAYLOAD_FEEDBACK_TEXT = "feedback_text"
+
+        const val KEY_SUPPORTED_APP_TYPE = "supported_app_type"
+        const val KEY_FOREGROUND_APP_TYPE = "foreground_app_type"
+        const val KEY_FOREGROUND_APP_ID = "foreground_app_id"
+        const val KET_INTERNAL_APP = "internal_app"
+
+        const val TYPE_TEMPLATE = "TEMPLATE"
+        const val TYPE_SKILL = "SKILL"
+        const val TYPE_EVALUATE = "EVALUATE"
+        const val TYPE_H5_APP = "H5_APP"
 
         const val PAGE_HOME = "home"
         const val PAGE_SETTINGS = "settings"
@@ -41,6 +51,7 @@ abstract class Launcher {
 
         const val FAILURE_CODE_NOT_FOUND_PAGE = "NOT_FOUND_PAGE"
         const val FAILURE_CODE_INTERNAL_ERROR = "INTERNAL_ERROR"
+        const val FAILURE_CODE_NOT_FOUND_APP = "APP_NOT_FOUND"
     }
 
     /**
@@ -50,6 +61,14 @@ abstract class Launcher {
     abstract fun startActivity(page: String, callback: ExecuteCallback): Boolean
 
     abstract fun back(callback: ExecuteCallback)
+
+    abstract fun startInternalApp(payload: JSONObject, callback: ExecuteCallback): Boolean
+
+    abstract fun getForegroundAppType(): String?
+
+    abstract fun getForegroundAppId(): String?
+
+    abstract fun getSupportedType(): List<String>
 
     @CallSuper
     open fun sendStartActivitySucceed(page: String, feedbackText: String? = null) {
@@ -97,6 +116,38 @@ abstract class Launcher {
             payload[PAYLOAD_FEEDBACK_TEXT] = it
         }
         RequestManager.sendRequest(NAME_BACK_RESULT, payload)
+    }
+
+    open fun sendStartInternalAppSucceed(
+        internalAppId: String,
+        type: String,
+        feedbackText: String? = null
+    ) {
+        val payload = JSONObject()
+        payload[PAYLOAD_RESULT] = RESULT_SUCCEED
+        payload["id"] = internalAppId
+        payload["type"] = type
+        feedbackText?.let {
+            payload[PAYLOAD_FEEDBACK_TEXT] = it
+        }
+        RequestManager.sendRequest(NAME_START_INTERNAL_APP_RESULT, payload)
+    }
+
+    open fun sendStartInternalAppFailed(
+        internalAppId: String,
+        type: String,
+        feedbackText: String? = null,
+        failureCode: String? = null
+    ) {
+        val payload = JSONObject()
+        payload[PAYLOAD_RESULT] = RESULT_FAILED
+        payload["id"] = internalAppId
+        payload["type"] = type
+        payload["failure_code"] = failureCode
+        feedbackText?.let {
+            payload[PAYLOAD_FEEDBACK_TEXT] = it
+        }
+        RequestManager.sendRequest(NAME_START_INTERNAL_APP_RESULT, payload)
     }
 
     abstract class ExecuteCallback {

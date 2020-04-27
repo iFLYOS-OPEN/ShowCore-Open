@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/dp_32"
+    android:paddingEnd="@dimen/dp_32">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:gravity="center"
+        android:orientation="vertical">
+
+        <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
+            android:id="@+id/styled_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_10"
+            android:text="儿童内容\n优先展示"
+            android:textColor="@color/tablet_grey_500"
+            android:textSize="@dimen/sp_12" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/state_content"
+        android:layout_width="@dimen/dp_60"
+        android:layout_height="@dimen/dp_100"
+        android:layout_centerInParent="true"
+        android:visibility="gone" />
+
+</RelativeLayout>

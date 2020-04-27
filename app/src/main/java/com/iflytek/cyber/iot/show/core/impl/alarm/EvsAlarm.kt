@@ -187,6 +187,8 @@ class EvsAlarm private constructor(context: Context) : Alarm() {
         }
     }
 
+    fun isPlaying() = alarmPlayer.isPlaying()
+
     override fun deleteAlarm(alarmId: String) {
         super.deleteAlarm(alarmId)
         cancelAlarm(alarmId)

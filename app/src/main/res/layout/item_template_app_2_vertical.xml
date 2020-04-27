@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/dp_16"
+    android:paddingBottom="@dimen/dp_4">
+
+    <FrameLayout
+        android:id="@+id/clickable_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_12"
+        android:layout_marginEnd="@dimen/dp_12"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="@drawable/bg_clickable_round_6dp"
+        app:layout_constraintDimensionRatio="3:4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/tv_index"
+            android:layout_width="@dimen/dp_26"
+            android:layout_height="@dimen/dp_22"
+            android:background="@drawable/bg_index_template_app_2"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            tools:text="1" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/name"
+        style="@style/Body16.White"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/clickable_view"
+        app:layout_constraintStart_toStartOf="@id/clickable_view"
+        app:layout_constraintTop_toBottomOf="@id/clickable_view"
+        tools:text="社会科学" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

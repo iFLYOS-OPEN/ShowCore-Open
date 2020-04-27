@@ -8,7 +8,11 @@ import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.template.OptionTemplateView.OptionElement
 
 object TemplateViewBuilder {
-    fun build(context: Context, payload: String, onClickBackListener: View.OnClickListener? = null): View? {
+    fun build(
+        context: Context,
+        payload: String,
+        onClickBackListener: View.OnClickListener? = null
+    ): View? {
         val json = JsonParser().parse(payload).asJsonObject
         val templateId = json.get(Constant.PAYLOAD_TEMPLATE_ID).asString
         return when (json.get(Constant.PAYLOAD_TYPE).asString) {
@@ -32,10 +36,12 @@ object TemplateViewBuilder {
                 OptionTemplateView.Builder(context).payload(payload)
                     .onElementSelectedListener(
                         object : OptionTemplateView.OnElementSelectedListener {
-                            override fun onElementSelected(parent: OptionTemplateView,
-                                                           itemView: View,
-                                                           position: Int,
-                                                           element: OptionElement) {
+                            override fun onElementSelected(
+                                parent: OptionTemplateView,
+                                itemView: View,
+                                position: Int,
+                                element: OptionElement
+                            ) {
                                 val intent = Intent(context, EngineService::class.java)
                                 intent.action = EngineService.ACTION_SEND_TEMPLATE_ELEMENT_SELECTED
                                 intent.putExtra(EngineService.EXTRA_ELEMENT_ID, element.elementId)
@@ -55,4 +61,16 @@ object TemplateViewBuilder {
         }
     }
 
+    fun buildCustom(
+        context: Context,
+        html: String,
+        onClickBackListener: View.OnClickListener? = null,
+        overrideUrlLoadingCallback: CustomTemplateView.OverrideUrlLoadingCallback? = null
+    ): View? {
+        return CustomTemplateView.Builder(context)
+            .setHtml(html)
+            .onClickBackListener(onClickBackListener)
+            .overrideUrlLoadingCallback(overrideUrlLoadingCallback)
+            .build()
+    }
 }

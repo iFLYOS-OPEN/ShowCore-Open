@@ -60,227 +60,385 @@
                 android:layout_marginEnd="@dimen/dp_32"
                 android:layout_marginBottom="@dimen/dp_20" />
 
-        </RelativeLayout>
+            <RelativeLayout
+                android:id="@+id/rlyt_small_control"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_64"
+                android:layout_toEndOf="@+id/back"
+                android:gravity="center_vertical"
+                android:visibility="gone">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/music_content"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@id/seek_bar_content"
-            android:layout_below="@id/toolbar">
-
-            <ImageView
-                android:id="@+id/iv_cover"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginStart="@dimen/dp_32"
-                android:layout_marginTop="@dimen/dp_8"
-                app:layout_constraintDimensionRatio="1:1"
-                app:layout_constraintStart_toStartOf="parent" />
-
-            <com.airbnb.lottie.LottieAnimationView
-                android:id="@+id/lyric_loading"
-                android:layout_width="@dimen/dp_64"
-                android:layout_height="@dimen/dp_24"
-                android:layout_marginStart="@dimen/dp_4"
-                android:layout_marginTop="@dimen/dp_100"
-                android:visibility="gone"
-                app:layout_constraintStart_toEndOf="@id/iv_cover"
-                app:layout_constraintTop_toTopOf="parent"
-                app:lottie_loop="true"
-                app:lottie_rawRes="@raw/animation_loading_l_white" />
-
-            <TextView
-                android:id="@+id/tv_only_title"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dp_24"
-                android:layout_marginEnd="@dimen/dp_32"
-                android:ellipsize="end"
-                android:maxLines="2"
-                android:textColor="@android:color/white"
-                android:textSize="@dimen/sp_24"
-                android:visibility="gone"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_cover"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:text="当你" />
-
-            <LinearLayout
-                android:id="@+id/title_content"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="@dimen/dp_24"
-                android:layout_marginTop="@dimen/dp_8"
-                android:layout_marginEnd="@dimen/dp_32"
-                android:orientation="vertical"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_cover"
-                app:layout_constraintTop_toTopOf="parent">
-
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tv_title"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="@dimen/dp_4"
-                    android:ellipsize="end"
-                    android:lineSpacingMultiplier="0.8"
-                    android:maxLines="2"
-                    android:textColor="@android:color/white"
-                    android:textSize="@dimen/sp_24"
-                    tools:text="当你" />
-
-                <androidx.appcompat.widget.AppCompatTextView
-                    android:id="@+id/tv_artist"
-                    style="@style/Body16.White"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    tools:text="林俊杰" />
+                <com.makeramen.roundedimageview.RoundedImageView
+                    android:id="@+id/iv_small_cover"
+                    android:layout_width="@dimen/dp_40"
+                    android:layout_height="@dimen/dp_40"
+                    android:layout_marginStart="@dimen/dp_8"/>
 
                 <TextView
-                    android:id="@+id/tv_lyric_error"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/dp_24"
-                    android:text="获取歌词失败，请重试"
-                    android:textColor="#B3FFFFFF"
-                    android:textSize="@dimen/sp_16"
-                    android:visibility="gone" />
+                    android:id="@+id/txt_small_title"
+                    android:layout_width="@dimen/dp_286"
+                    android:layout_height="@dimen/dp_20"
+                    android:layout_toEndOf="@+id/iv_small_cover"
+                    android:layout_marginStart="@dimen/dp_12"
+                    android:ellipsize="end"
+                    android:text="示例"
+                    android:textSize="@dimen/sp_14"
+                    android:textColor="@android:color/white"/>
 
-            </LinearLayout>
+                <com.iflytek.cyber.iot.show.core.widget.lrc.LrcView
+                    android:id="@+id/small_screen_lyric_view"
+                    android:layout_width="@dimen/dp_286"
+                    android:layout_height="@dimen/dp_18"
+                    android:layout_below="@+id/txt_small_title"
+                    android:layout_toEndOf="@+id/iv_small_cover"
+                    android:layout_marginStart="@dimen/dp_12"
+                    app:lrcAnimationDuration="500"
+                    app:lrcCurrentTextColor="@android:color/white"
+                    app:lrcLabel="  "
+                    app:lrcNormalTextColor="#80FFFFFF"
+                    app:lrcNormalTextSize="@dimen/sp_12"
+                    app:lrcTextGravity="left"
+                    app:lrcTextSize="@dimen/sp_12"
+                    app:lrcTimeTextColor="#80FFFFFF"
+                    app:lrcTimelineColor="#80BDBDBD"
+                    app:lrcTimelineTextColor="@android:color/white" />
 
-            <com.iflytek.cyber.iot.show.core.widget.lrc.LrcView
-                android:id="@+id/lrc_view"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_marginStart="@dimen/dp_24"
-                android:layout_marginTop="@dimen/dp_18"
-                android:layout_marginEnd="@dimen/dp_32"
-                android:layout_toEndOf="@id/iv_cover"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_cover"
-                app:layout_constraintTop_toBottomOf="@id/title_content"
-                app:lrcAnimationDuration="500"
-                app:lrcCurrentTextColor="@android:color/white"
-                app:lrcDividerHeight="@dimen/dp_8"
-                app:lrcLabel=" "
-                app:lrcNormalTextColor="#80FFFFFF"
-                app:lrcNormalTextSize="@dimen/sp_16"
-                app:lrcPadding="@dimen/dp_2"
-                app:lrcTextGravity="left"
-                app:lrcTextSize="@dimen/sp_18"
-                app:lrcTimeTextColor="#80FFFFFF"
-                app:lrcTimelineColor="#80BDBDBD"
-                app:lrcTimelineTextColor="#9FA8DA" />
+                <ImageView
+                    android:id="@+id/iv_small_play_pause"
+                    android:layout_toLeftOf="@+id/iv_small_next"
+                    android:layout_width="@dimen/dp_32"
+                    android:layout_height="@dimen/dp_32"
+                    android:layout_marginStart="@dimen/dp_64"
+                    android:background="@drawable/selectable_item_background_borderless"
+                    android:padding="@dimen/dp_2"
+                    android:src="@drawable/ic_music_play" />
 
-            <FrameLayout
-                android:id="@+id/lyric_click_content"
-                android:layout_width="0dp"
-                android:layout_height="0dp"
-                android:layout_marginStart="@dimen/dp_24"
-                android:layout_marginTop="@dimen/dp_18"
-                android:layout_marginEnd="@dimen/dp_32"
-                android:layout_toEndOf="@id/iv_cover"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toEndOf="@id/iv_cover"
-                app:layout_constraintTop_toBottomOf="@id/title_content" />
+                <ImageView
+                    android:id="@+id/iv_small_next"
+                    android:layout_toLeftOf="@+id/iv_small_play_list"
+                    android:layout_width="@dimen/dp_32"
+                    android:layout_height="@dimen/dp_32"
+                    android:layout_marginStart="@dimen/dp_24"
+                    android:padding="@dimen/dp_2"
+                    android:background="@drawable/selectable_item_background_borderless"
+                    android:src="@drawable/ic_music_next" />
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <ImageView
+                    android:id="@+id/iv_small_play_list"
+                    android:layout_width="@dimen/dp_32"
+                    android:layout_height="@dimen/dp_32"
+                    android:layout_gravity="end"
+                    android:layout_marginStart="@dimen/dp_24"
+                    android:layout_marginEnd="@dimen/dp_28"
+                    android:layout_alignParentEnd="true"
+                    android:background="@drawable/selectable_item_background_borderless"
+                    android:src="@drawable/ic_playing_list" />
 
-        <FrameLayout
-            android:id="@+id/seek_bar_content"
+            </RelativeLayout>
+
+        </RelativeLayout>
+        
+        <com.iflytek.cyber.iot.show.core.widget.TouchNestedScrollView
+            android:id="@+id/scroll_view"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_above="@+id/control_content"
-            android:layout_marginStart="@dimen/dp_24"
-            android:layout_marginTop="@dimen/dp_30"
-            android:layout_marginEnd="@dimen/dp_24">
+            android:layout_height="match_parent"
+            android:scrollbars="none"
+            android:layout_below="@id/toolbar">
 
-            <com.warkiz.widget.IndicatorSeekBar
-                android:id="@+id/seek_bar"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:paddingStart="@dimen/dp_22"
-                android:paddingTop="@dimen/dp_4"
-                android:paddingEnd="@dimen/dp_22"
-                android:paddingBottom="@dimen/dp_4"
-                app:isb_clear_default_padding="false"
-                app:isb_indicator_time_text_size="@dimen/sp_8"
-                app:isb_indicator_top_view_type="custom"
-                app:isb_normal_thumb_drawable="@drawable/normal_thumb"
-                app:isb_press_thumb_drawable="@drawable/music_press_thumb"
-                app:isb_progress_style="music_style"
-                app:isb_thumb_drawable="@drawable/music_thumb_drawable"
-                app:isb_thumb_size="24dp"
-                app:isb_thumb_type="music"
-                app:isb_track_background_color="#80FFFFFF"
-                app:isb_track_progress_color="#80FFFFFF" />
+                android:orientation="vertical">
+            
+                <RelativeLayout
+                    android:id="@+id/rlyt_music"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_344">
 
-        </FrameLayout>
+                    <androidx.constraintlayout.widget.ConstraintLayout
+                        android:id="@+id/music_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_above="@id/seek_bar_content">
 
-        <LinearLayout
-            android:id="@+id/control_content"
-            android:layout_width="match_parent"
-            android:layout_height="@dimen/dp_64"
-            android:layout_alignParentBottom="true"
-            android:background="#01000000"
-            android:gravity="center_vertical"
-            android:orientation="horizontal"
-            android:paddingTop="@dimen/dp_2"
-            android:paddingBottom="@dimen/dp_2">
+                        <ImageView
+                            android:id="@+id/iv_cover"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_marginStart="@dimen/dp_32"
+                            android:layout_marginTop="@dimen/dp_8"
+                            app:layout_constraintDimensionRatio="1:1"
+                            app:layout_constraintStart_toStartOf="parent" />
 
-            <ImageView
-                android:id="@+id/iv_previous"
-                android:layout_width="@dimen/dp_44"
-                android:layout_height="@dimen/dp_44"
-                android:layout_marginStart="@dimen/dp_22"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_6"
-                android:src="@drawable/ic_music_previous" />
+                        <com.airbnb.lottie.LottieAnimationView
+                            android:id="@+id/lyric_loading"
+                            android:layout_width="@dimen/dp_64"
+                            android:layout_height="@dimen/dp_24"
+                            android:layout_marginStart="@dimen/dp_4"
+                            android:layout_marginTop="@dimen/dp_100"
+                            android:visibility="gone"
+                            app:layout_constraintStart_toEndOf="@id/iv_cover"
+                            app:layout_constraintTop_toTopOf="parent"
+                            app:lottie_loop="true"
+                            app:lottie_rawRes="@raw/animation_loading_l_white" />
 
-            <ImageView
-                android:id="@+id/iv_play_pause"
-                android:layout_width="@dimen/dp_44"
-                android:layout_height="@dimen/dp_44"
-                android:layout_marginStart="@dimen/dp_10"
-                android:layout_marginEnd="@dimen/dp_10"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_2"
-                android:src="@drawable/ic_music_play" />
+                        <TextView
+                            android:id="@+id/tv_only_title"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/dp_24"
+                            android:layout_marginEnd="@dimen/dp_32"
+                            android:ellipsize="end"
+                            android:maxLines="2"
+                            android:textColor="@android:color/white"
+                            android:textSize="@dimen/sp_24"
+                            android:visibility="gone"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/iv_cover"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:text="当你" />
 
-            <ImageView
-                android:id="@+id/iv_next"
-                android:layout_width="@dimen/dp_44"
-                android:layout_height="@dimen/dp_44"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_6"
-                android:src="@drawable/ic_music_next" />
+                        <LinearLayout
+                            android:id="@+id/title_content"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/dp_24"
+                            android:layout_marginTop="@dimen/dp_8"
+                            android:layout_marginEnd="@dimen/dp_32"
+                            android:orientation="vertical"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/iv_cover"
+                            app:layout_constraintTop_toTopOf="parent">
 
-        </LinearLayout>
+                            <androidx.appcompat.widget.AppCompatTextView
+                                android:id="@+id/tv_title"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="@dimen/dp_4"
+                                android:ellipsize="end"
+                                android:lineSpacingMultiplier="0.8"
+                                android:maxLines="2"
+                                android:textColor="@android:color/white"
+                                android:textSize="@dimen/sp_24"
+                                tools:text="当你" />
 
-        <FrameLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_below="@+id/seek_bar_content"
-            android:layout_alignParentEnd="true"
-            android:background="#01000000">
+                            <androidx.appcompat.widget.AppCompatTextView
+                                android:id="@+id/tv_artist"
+                                style="@style/Body16.White"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                tools:text="林俊杰" />
 
-            <ImageView
-                android:id="@+id/iv_play_list"
-                android:layout_width="@dimen/dp_44"
-                android:layout_height="@dimen/dp_44"
-                android:layout_gravity="end|center_vertical"
-                android:layout_marginStart="@dimen/dp_32"
-                android:layout_marginEnd="@dimen/dp_22"
-                android:background="@drawable/selectable_item_background_borderless"
-                android:padding="@dimen/dp_6"
-                android:src="@drawable/ic_playing_list"
-                android:visibility="gone" />
+                            <TextView
+                                android:id="@+id/tv_lyric_error"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/dp_24"
+                                android:text="获取歌词失败，请重试"
+                                android:textColor="#B3FFFFFF"
+                                android:textSize="@dimen/sp_16"
+                                android:visibility="gone" />
 
-        </FrameLayout>
+                        </LinearLayout>
+
+                        <com.iflytek.cyber.iot.show.core.widget.lrc.LrcView
+                            android:id="@+id/lrc_view"
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_marginStart="@dimen/dp_24"
+                            android:layout_marginTop="@dimen/dp_18"
+                            android:layout_marginEnd="@dimen/dp_32"
+                            android:layout_toEndOf="@id/iv_cover"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/iv_cover"
+                            app:layout_constraintTop_toBottomOf="@id/title_content"
+                            app:lrcAnimationDuration="500"
+                            app:lrcCurrentTextColor="@android:color/white"
+                            app:lrcDividerHeight="@dimen/dp_8"
+                            app:lrcLabel=" "
+                            app:lrcNormalTextColor="#80FFFFFF"
+                            app:lrcNormalTextSize="@dimen/sp_16"
+                            app:lrcPadding="@dimen/dp_2"
+                            app:lrcTextGravity="left"
+                            app:lrcTextSize="@dimen/sp_18"
+                            app:lrcTimeTextColor="#80FFFFFF"
+                            app:lrcTimelineColor="#80BDBDBD"
+                            app:lrcTimelineTextColor="#9FA8DA" />
+
+                        <FrameLayout
+                            android:id="@+id/lyric_click_content"
+                            android:layout_width="0dp"
+                            android:layout_height="0dp"
+                            android:layout_marginStart="@dimen/dp_24"
+                            android:layout_marginTop="@dimen/dp_18"
+                            android:layout_marginEnd="@dimen/dp_32"
+                            android:layout_toEndOf="@id/iv_cover"
+                            app:layout_constraintBottom_toBottomOf="parent"
+                            app:layout_constraintEnd_toEndOf="parent"
+                            app:layout_constraintStart_toEndOf="@id/iv_cover"
+                            app:layout_constraintTop_toBottomOf="@id/title_content" />
+
+                    </androidx.constraintlayout.widget.ConstraintLayout>
+
+                    <RelativeLayout
+                        android:id="@+id/seek_bar_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_above="@+id/control_content"
+                        android:layout_marginStart="@dimen/dp_24"
+                        android:layout_marginTop="@dimen/dp_30"
+                        android:layout_marginEnd="@dimen/dp_24">
+
+                        <TextView
+                            android:id="@+id/tv_position"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="@dimen/dp_8"
+                            android:layout_marginEnd="@dimen/dp_4"
+                            android:alpha="0.55"
+                            android:paddingStart="@dimen/dp_4"
+                            android:paddingEnd="@dimen/dp_4"
+                            android:textColor="@android:color/white"
+                            android:textSize="@dimen/sp_14"
+                            tools:text="0:00" />
+
+                        <com.warkiz.widget.IndicatorSeekBar
+                            android:id="@+id/seek_bar"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:layout_toStartOf="@id/tv_duration"
+                            android:layout_toEndOf="@id/tv_position"
+                            android:paddingStart="@dimen/dp_22"
+                            android:paddingTop="@dimen/dp_4"
+                            android:paddingEnd="@dimen/dp_22"
+                            android:paddingBottom="@dimen/dp_4"
+                            app:isb_clear_default_padding="false"
+                            app:isb_indicator_time_text_size="@dimen/sp_8"
+                            app:isb_indicator_top_view_type="custom"
+                            app:isb_normal_thumb_drawable="@drawable/normal_thumb"
+                            app:isb_press_thumb_drawable="@drawable/music_press_thumb"
+                            app:isb_progress_style="music_style"
+                            app:isb_thumb_drawable="@drawable/music_thumb_drawable"
+                            app:isb_thumb_size="24dp"
+                            app:isb_thumb_type="music"
+                            app:isb_track_background_color="#80FFFFFF"
+                            app:isb_track_progress_color="#80FFFFFF" />
+
+                        <TextView
+                            android:id="@+id/tv_duration"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:layout_marginStart="@dimen/dp_4"
+                            android:layout_marginEnd="@dimen/dp_8"
+                            android:alpha="0.55"
+                            android:paddingStart="@dimen/dp_4"
+                            android:paddingEnd="@dimen/dp_4"
+                            android:textColor="@android:color/white"
+                            android:textSize="@dimen/sp_14"
+                            tools:text="4:53" />
+
+                    </RelativeLayout>
+
+                    <LinearLayout
+                        android:id="@+id/control_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_64"
+                        android:layout_alignParentBottom="true"
+                        android:background="#01000000"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal"
+                        android:paddingTop="@dimen/dp_2"
+                        android:paddingBottom="@dimen/dp_2">
+
+                        <ImageView
+                            android:id="@+id/iv_previous"
+                            android:layout_width="@dimen/dp_44"
+                            android:layout_height="@dimen/dp_44"
+                            android:layout_marginStart="@dimen/dp_22"
+                            android:background="@drawable/selectable_item_background_borderless"
+                            android:padding="@dimen/dp_6"
+                            android:src="@drawable/ic_music_previous" />
+
+                        <ImageView
+                            android:id="@+id/iv_play_pause"
+                            android:layout_width="@dimen/dp_44"
+                            android:layout_height="@dimen/dp_44"
+                            android:layout_marginStart="@dimen/dp_10"
+                            android:layout_marginEnd="@dimen/dp_10"
+                            android:background="@drawable/selectable_item_background_borderless"
+                            android:padding="@dimen/dp_2"
+                            android:src="@drawable/ic_music_play" />
+
+                        <ImageView
+                            android:id="@+id/iv_next"
+                            android:layout_width="@dimen/dp_44"
+                            android:layout_height="@dimen/dp_44"
+                            android:background="@drawable/selectable_item_background_borderless"
+                            android:padding="@dimen/dp_6"
+                            android:src="@drawable/ic_music_next" />
+
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_below="@+id/seek_bar_content"
+                        android:layout_alignParentEnd="true"
+                        android:background="#01000000">
+
+                        <ImageView
+                            android:id="@+id/iv_play_list"
+                            android:layout_width="@dimen/dp_44"
+                            android:layout_height="@dimen/dp_44"
+                            android:layout_gravity="end|center_vertical"
+                            android:layout_marginStart="@dimen/dp_32"
+                            android:layout_marginEnd="@dimen/dp_22"
+                            android:background="@drawable/selectable_item_background_borderless"
+                            android:padding="@dimen/dp_6"
+                            android:src="@drawable/ic_playing_list"
+                            android:visibility="gone" />
+
+                    </FrameLayout>
+
+                </RelativeLayout>
+
+                <LinearLayout
+                    android:id="@+id/llyt_recommend"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="@dimen/dp_32"
+                        android:layout_marginTop="@dimen/dp_20"
+                        android:text="@string/recommend_for_you"
+                        android:textColor="@android:color/white"
+                        android:textSize="@dimen/sp_16"
+                        android:textStyle="bold"/>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rcyc_recommend"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:minWidth="@dimen/dp_0"
+                        android:layout_marginStart="@dimen/dp_32"
+                        android:layout_marginEnd="@dimen/dp_32"
+                        android:layout_marginTop="@dimen/dp_16"
+                        android:background="@android:color/transparent"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+            
+        </com.iflytek.cyber.iot.show.core.widget.TouchNestedScrollView>
 
     </RelativeLayout>
 

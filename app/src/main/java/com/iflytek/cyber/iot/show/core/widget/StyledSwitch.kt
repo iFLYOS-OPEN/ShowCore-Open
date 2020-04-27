@@ -48,9 +48,9 @@ class StyledSwitch @JvmOverloads constructor(
     private var animator: Animator? = null
     private var pressAnimator: Animator? = null
 
-    private val thumbColor = resources.getColor(R.color.tablet_grey_300)
+    private var thumbColor = resources.getColor(R.color.tablet_grey_300)
     private val thumbEnableColor = resources.getColor(R.color.setup_primary)
-    private val trackColor = resources.getColor(R.color.tablet_grey_500)
+    private var trackColor = resources.getColor(R.color.tablet_grey_500)
     private val trackEnableColor = Color.argb(
         50, Color.red(thumbEnableColor),
         Color.green(thumbEnableColor), Color.blue(thumbEnableColor)
@@ -59,6 +59,16 @@ class StyledSwitch @JvmOverloads constructor(
     private val shadowEnableColor = Color.parseColor("#500E65FF")
 
     private var onCheckedChangeListener: OnCheckedChangeListener? = null
+
+    fun setTrackColor(trackColor: Int) {
+        this.trackColor = trackColor
+        trackPaint.color = trackColor
+    }
+
+    fun setThumbColor(thumbColor: Int) {
+        this.thumbColor = thumbColor
+        thumbPaint.color = thumbColor
+    }
 
     var isChecked = false
         set(value) {

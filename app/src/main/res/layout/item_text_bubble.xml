@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:minHeight="@dimen/dp_44"
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/dp_8">
+
+    <FrameLayout
+        android:id="@+id/clickable_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_white_round_12dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="@drawable/bg_clickable_round_12dp">
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/Body14"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="@dimen/dp_16"
+            android:paddingTop="@dimen/dp_12"
+            android:paddingEnd="@dimen/dp_16"
+            android:paddingBottom="@dimen/dp_12"
+            tools:text="打开爱奇艺" />
+    </FrameLayout>
+
+</FrameLayout>

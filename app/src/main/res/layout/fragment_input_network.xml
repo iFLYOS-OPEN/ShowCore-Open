@@ -71,7 +71,8 @@
             android:layout_height="@dimen/dp_40"
             android:layout_gravity="center"
             android:background="@null"
-            android:hint="请输入 WiFi 名称" />
+            android:hint="请输入 WiFi 名称"
+            android:imeOptions="flagNoExtractUi|actionSearch" />
 
         <View
             android:layout_width="match_parent"
@@ -103,6 +104,7 @@
                 android:layout_height="@dimen/dp_40"
                 android:background="@null"
                 android:hint="请输入 WiFi 密码"
+                android:imeOptions="flagNoExtractUi|actionSearch"
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 

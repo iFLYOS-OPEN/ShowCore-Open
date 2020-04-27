@@ -13,6 +13,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_vertical"
+        android:layout_marginEnd="@dimen/dp_268"
+        android:ellipsize="end"
+        android:maxLines="1"
         tools:text="Left Text" />
 
     <TextView
@@ -20,8 +23,10 @@
         style="@style/Body20.Grey"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_vertical"
-        android:layout_marginStart="@dimen/dp_160"
+        android:layout_gravity="center_vertical|end"
+        android:ellipsize="end"
+        android:maxWidth="@dimen/dp_204"
+        android:maxLines="2"
         tools:text="Right Text" />
 
     <View

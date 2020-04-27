@@ -12,7 +12,7 @@ import com.iflytek.cyber.evs.sdk.model.Constant
  */
 abstract class Template {
 
-    val version = "1.1"
+    val version = "1.2"
 
     var clearTimeout: Int = 0
         get() {
@@ -44,9 +44,15 @@ abstract class Template {
         const val KEY_TYPE = "type"
         const val KEY_TEMPLATE_ID = "template_id"
         const val KEY_ELEMENT_ID = "element_id"
+        const val KEY_SUPPORTED_CUSTOM_TEMPLATE = "supported_custom_template"
         const val KEY_FOCUSED = "focused"
         const val KEY_TEMPLATE_TYPE = "template_type"
         const val KEY_SHOULD_POPUP = "should_popup"
+        const val KEY_HTML_SOURCE_CODE = "html_source_code"
+        /**
+         * 可取值：LONG,SHORT,FOREVER。具体显示时长由设备端决定，一般来说，我们建议设备LONG=显示30s，SHORT=显示10s，FOREVER代表一直显示，直到用户手动关闭
+         */
+        const val KEY_SHOWING_DURATION = "showing_duration"
     }
 
     open fun isFocused(): Boolean {
@@ -58,11 +64,33 @@ abstract class Template {
     }
 
     /**
+     * 是否支持展示 custom_template（用于展示数据为 HTML 的 Template 页面）
+     */
+    open fun isSupportedCustomTemplate(): Boolean {
+        return false
+    }
+
+    /**
      * 请求渲染自定义模板
      */
+    @Deprecated(
+        replaceWith = ReplaceWith("renderCustomTemplate(type, templateId, htmlSourceCode)"),
+        message = "Deprecated. Use renderCustomTemplate(type, templateId, htmlSourceCode) please."
+    )
     open fun renderCustomTemplate(payload: String) {
         VisualFocusManager.requestActive(
-            VisualFocusManager.CHANNEL_OVERLAY_TEMPLATE, VisualFocusManager.TYPE_STATIC_TEMPLATE
+            VisualFocusManager.CHANNEL_OVERLAY_TEMPLATE, VisualFocusManager.TYPE_CUSTOM_TEMPLATE
+        )
+    }
+
+    open fun renderCustomTemplate(
+        type: String,
+        templateId: String,
+        showingDuration: String?,
+        htmlSourceCode: String
+    ) {
+        VisualFocusManager.requestActive(
+            VisualFocusManager.CHANNEL_OVERLAY_TEMPLATE, VisualFocusManager.TYPE_CUSTOM_TEMPLATE
         )
     }
 

@@ -1,0 +1,332 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/dp_5"
+    android:paddingBottom="@dimen/dp_19">
+
+    <TextView
+        android:id="@+id/album_title"
+        style="@style/H5"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_6"
+        android:layout_marginTop="@dimen/dp_8"
+        android:textSize="@dimen/sp_18"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:text="科学科普" />
+
+    <LinearLayout
+        android:id="@+id/album_more"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/dp_28"
+        android:layout_marginTop="@dimen/dp_7"
+        android:layout_marginEnd="@dimen/dp_6"
+        android:background="@drawable/bg_round_border_grey_28dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center_vertical"
+        android:paddingStart="@dimen/dp_12"
+        android:paddingEnd="@dimen/dp_6"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:id="@+id/tv_more"
+            style="@style/Body12"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.8"
+            android:text="@string/see_more" />
+
+        <ImageView
+            android:id="@+id/iv_more"
+            android:layout_width="@dimen/dp_14"
+            android:layout_height="@dimen/dp_14"
+            android:alpha="0.8"
+            android:src="@drawable/ic_next_white_24dp"
+            android:tint="@android:color/black" />
+    </LinearLayout>
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/line0"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.2" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/line1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.4" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/line2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.6" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/line3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.8" />
+
+    <ImageView
+        android:id="@+id/album_media_0"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_6"
+        android:layout_marginTop="@dimen/dp_12"
+        android:layout_marginEnd="@dimen/dp_6"
+        app:layout_constraintDimensionRatio="0.75"
+        app:layout_constraintEnd_toEndOf="@id/line0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/album_title"
+        tools:background="@android:color/black" />
+
+    <ImageView
+        android:id="@+id/album_media_1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_6"
+        android:layout_marginTop="@dimen/dp_12"
+        android:layout_marginEnd="@dimen/dp_6"
+        app:layout_constraintDimensionRatio="0.75"
+        app:layout_constraintEnd_toEndOf="@id/line1"
+        app:layout_constraintStart_toStartOf="@id/line0"
+        app:layout_constraintTop_toBottomOf="@id/album_title"
+        tools:background="@android:color/black" />
+
+    <ImageView
+        android:id="@+id/album_media_2"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_6"
+        android:layout_marginTop="@dimen/dp_12"
+        android:layout_marginEnd="@dimen/dp_6"
+        app:layout_constraintDimensionRatio="0.75"
+        app:layout_constraintEnd_toEndOf="@id/line2"
+        app:layout_constraintStart_toStartOf="@id/line1"
+        app:layout_constraintTop_toBottomOf="@id/album_title"
+        tools:background="@android:color/black" />
+
+    <ImageView
+        android:id="@+id/album_media_3"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_6"
+        android:layout_marginTop="@dimen/dp_12"
+        android:layout_marginEnd="@dimen/dp_6"
+        app:layout_constraintDimensionRatio="0.75"
+        app:layout_constraintEnd_toEndOf="@id/line3"
+        app:layout_constraintStart_toStartOf="@id/line2"
+        app:layout_constraintTop_toBottomOf="@id/album_title"
+        tools:background="@android:color/black" />
+
+    <ImageView
+        android:id="@+id/album_media_4"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_6"
+        android:layout_marginTop="@dimen/dp_12"
+        android:layout_marginEnd="@dimen/dp_6"
+        app:layout_constraintDimensionRatio="0.75"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/line3"
+        app:layout_constraintTop_toBottomOf="@id/album_title"
+        tools:background="@android:color/black" />
+
+    <TextView
+        android:id="@+id/title_media_0"
+        style="@style/Body16"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_0"
+        app:layout_constraintStart_toStartOf="@id/album_media_0"
+        app:layout_constraintTop_toBottomOf="@id/album_media_0"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/subtitle_media_0"
+        style="@style/Body14"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_0"
+        app:layout_constraintStart_toStartOf="@id/title_media_0"
+        app:layout_constraintTop_toBottomOf="@id/title_media_0"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/title_media_1"
+        style="@style/Body16"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_1"
+        app:layout_constraintStart_toStartOf="@id/album_media_1"
+        app:layout_constraintTop_toBottomOf="@id/album_media_1"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/subtitle_media_1"
+        style="@style/Body14"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_1"
+        app:layout_constraintStart_toStartOf="@id/title_media_1"
+        app:layout_constraintTop_toBottomOf="@id/title_media_1"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/title_media_2"
+        style="@style/Body16"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_2"
+        app:layout_constraintStart_toStartOf="@id/album_media_2"
+        app:layout_constraintTop_toBottomOf="@id/album_media_2"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/subtitle_media_2"
+        style="@style/Body14"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_2"
+        app:layout_constraintStart_toStartOf="@id/title_media_2"
+        app:layout_constraintTop_toBottomOf="@id/title_media_2"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/title_media_3"
+        style="@style/Body16"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_3"
+        app:layout_constraintStart_toStartOf="@id/album_media_3"
+        app:layout_constraintTop_toBottomOf="@id/album_media_3"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/subtitle_media_3"
+        style="@style/Body14"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_3"
+        app:layout_constraintStart_toStartOf="@id/title_media_3"
+        app:layout_constraintTop_toBottomOf="@id/title_media_3"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/title_media_4"
+        style="@style/Body16"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_4"
+        app:layout_constraintStart_toStartOf="@id/album_media_4"
+        app:layout_constraintTop_toBottomOf="@id/album_media_4"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/subtitle_media_4"
+        style="@style/Body14"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_4"
+        app:layout_constraintStart_toStartOf="@id/title_media_4"
+        app:layout_constraintTop_toBottomOf="@id/title_media_4"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/index_media_0"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="@dimen/dp_22"
+        android:background="@drawable/bg_index_template_app_2"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="@id/album_media_0"
+        app:layout_constraintTop_toTopOf="@id/album_media_0"
+        tools:text="1" />
+
+    <TextView
+        android:id="@+id/index_media_1"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="@dimen/dp_22"
+        android:background="@drawable/bg_index_template_app_2"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="@id/album_media_1"
+        app:layout_constraintTop_toTopOf="@id/album_media_1"
+        tools:text="1" />
+
+    <TextView
+        android:id="@+id/index_media_2"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="@dimen/dp_22"
+        android:background="@drawable/bg_index_template_app_2"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="@id/album_media_2"
+        app:layout_constraintTop_toTopOf="@id/album_media_2"
+        tools:text="1" />
+
+    <TextView
+        android:id="@+id/index_media_3"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="@dimen/dp_22"
+        android:background="@drawable/bg_index_template_app_2"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="@id/album_media_3"
+        app:layout_constraintTop_toTopOf="@id/album_media_3"
+        tools:text="1" />
+
+    <TextView
+        android:id="@+id/index_media_4"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="@dimen/dp_22"
+        android:background="@drawable/bg_index_template_app_2"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="@id/album_media_4"
+        app:layout_constraintTop_toTopOf="@id/album_media_4"
+        tools:text="1" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

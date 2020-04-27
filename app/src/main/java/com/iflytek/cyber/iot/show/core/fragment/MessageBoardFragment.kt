@@ -395,7 +395,7 @@ class MessageBoardFragment : BaseFragment() {
     }
 
     data class MessageBoard(
-        @SerializedName("title") val title: String?,
+        @SerializedName("text") val title: String?,
         @SerializedName("ownerUserId") val ownerUserId: String?,
         @SerializedName("icon") val icon: String?,
         @SerializedName("createtime") val createtime: String?

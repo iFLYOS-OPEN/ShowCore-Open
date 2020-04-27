@@ -1,0 +1,260 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/dp_12"
+    android:paddingEnd="@dimen/dp_12"
+    android:paddingBottom="@dimen/dp_24"
+    app:shadowColor="#1F000000"
+    app:shadowRadius="@dimen/dp_12">
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_white_round_16dp"
+        android:orientation="vertical"
+        tools:backgroundTint="#8C9DD0">
+
+        <ImageView
+            android:id="@+id/background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_56"
+            android:gravity="center_vertical">
+
+            <TextView
+                android:id="@+id/title"
+                style="@style/H5.White"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_24"
+                android:layout_weight="1"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="热播电视剧" />
+
+            <ImageView
+                android:id="@+id/refresh"
+                android:layout_width="@dimen/dp_32"
+                android:layout_height="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:padding="@dimen/dp_4"
+                android:background="?selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_reload_24dp"
+                android:tint="@android:color/white" />
+
+            <FrameLayout
+                android:id="@+id/more"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginTop="@dimen/dp_8"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:layout_marginBottom="@dimen/dp_8"
+                android:background="?selectableItemBackgroundBorderless"
+                android:clickable="true"
+                android:focusable="true"
+                android:paddingStart="@dimen/dp_8"
+                android:paddingEnd="@dimen/dp_8">
+
+                <TextView
+                    android:id="@+id/tv_more"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_round_border_white_16dp"
+                    android:paddingStart="@dimen/dp_9"
+                    android:layout_gravity="center"
+                    android:paddingTop="@dimen/dp_3"
+                    android:paddingEnd="@dimen/dp_9"
+                    android:paddingBottom="@dimen/dp_3"
+                    android:text="@string/more"
+                    android:textSize="@dimen/sp_14"
+                    tools:textColor="@android:color/white" />
+
+            </FrameLayout>
+        </LinearLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/dp_16"
+            android:layout_marginTop="@dimen/dp_48"
+            android:layout_marginEnd="@dimen/dp_16"
+            android:layout_marginBottom="@dimen/dp_16">
+
+            <FrameLayout
+                android:id="@+id/item_0"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:padding="@dimen/dp_8"
+                app:layout_constraintDimensionRatio="1.785"
+                app:layout_constraintHeight_percent="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <FrameLayout
+                    android:id="@+id/item_clickable_0"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="@drawable/bg_clickable_round_8dp">
+
+                    <ImageView
+                        android:id="@+id/iv_image_0"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        tools:src="@android:color/white" />
+
+                    <TextView
+                        android:id="@+id/tv_title_0"
+                        style="@style/Body12.White"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_28"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_black_bottom_round_8dp"
+                        android:ellipsize="end"
+                        android:gravity="center_vertical"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_12"
+                        android:paddingEnd="@dimen/dp_12"
+                        tools:text="庆余年|范闲大战哥斯拉" />
+                </FrameLayout>
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/item_1"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:padding="@dimen/dp_8"
+                app:layout_constraintDimensionRatio="1.785"
+                app:layout_constraintHeight_percent="0.5"
+                app:layout_constraintStart_toEndOf="@id/item_0"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <FrameLayout
+                    android:id="@+id/item_clickable_1"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="@drawable/bg_clickable_round_8dp">
+
+
+                    <ImageView
+                        android:id="@+id/iv_image_1"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        tools:src="@android:color/white" />
+
+                    <TextView
+                        android:id="@+id/tv_title_1"
+                        style="@style/Body12.White"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_28"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_black_bottom_round_8dp"
+                        android:ellipsize="end"
+                        android:gravity="center_vertical"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_12"
+                        android:paddingEnd="@dimen/dp_12"
+                        tools:text="庆余年|范闲大战哥斯拉" />
+                </FrameLayout>
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/item_2"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:padding="@dimen/dp_8"
+                app:layout_constraintDimensionRatio="1.785"
+                app:layout_constraintHeight_percent="0.5"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toBottomOf="@id/item_0">
+
+                <FrameLayout
+                    android:id="@+id/item_clickable_2"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="@drawable/bg_clickable_round_8dp">
+
+
+                    <ImageView
+                        android:id="@+id/iv_image_2"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        tools:src="@android:color/white" />
+
+                    <TextView
+                        android:id="@+id/tv_title_2"
+                        style="@style/Body12.White"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_28"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_black_bottom_round_8dp"
+                        android:ellipsize="end"
+                        android:gravity="center_vertical"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_12"
+                        android:paddingEnd="@dimen/dp_12"
+                        tools:text="庆余年|范闲大战哥斯拉" />
+                </FrameLayout>
+
+            </FrameLayout>
+
+            <FrameLayout
+                android:id="@+id/item_3"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:padding="@dimen/dp_8"
+                app:layout_constraintDimensionRatio="1.785"
+                app:layout_constraintHeight_percent="0.5"
+                app:layout_constraintStart_toEndOf="@id/item_0"
+                app:layout_constraintTop_toBottomOf="@id/item_1">
+
+                <FrameLayout
+                    android:id="@+id/item_clickable_3"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:foreground="@drawable/bg_clickable_round_8dp">
+
+
+                    <ImageView
+                        android:id="@+id/iv_image_3"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        tools:src="@android:color/white" />
+
+                    <TextView
+                        android:id="@+id/tv_title_3"
+                        style="@style/Body12.White"
+                        android:layout_width="match_parent"
+                        android:layout_height="@dimen/dp_28"
+                        android:layout_gravity="bottom"
+                        android:background="@drawable/bg_black_bottom_round_8dp"
+                        android:ellipsize="end"
+                        android:gravity="center_vertical"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_12"
+                        android:paddingEnd="@dimen/dp_12"
+                        tools:text="庆余年|范闲大战哥斯拉" />
+                </FrameLayout>
+
+            </FrameLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </FrameLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowLayout>

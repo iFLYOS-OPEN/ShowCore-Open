@@ -14,9 +14,7 @@ import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
 import android.util.Log
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.view.*
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
 import android.widget.*
@@ -24,9 +22,13 @@ import androidx.core.content.ContextCompat
 import androidx.core.os.postDelayed
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
+import androidx.core.widget.NestedScrollView
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
+import com.alibaba.fastjson.JSONException
+import com.alibaba.fastjson.JSONObject
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.MultiTransformation
 import com.bumptech.glide.load.resource.bitmap.CenterCrop
@@ -47,18 +49,25 @@ import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.FloatingService
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.accessibility.TouchAccessibility
+import com.iflytek.cyber.iot.show.core.adapter.RecommendMediaAdapter
 import com.iflytek.cyber.iot.show.core.adapter.SongsAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
 import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
 import com.iflytek.cyber.iot.show.core.model.*
+import com.iflytek.cyber.iot.show.core.recommend.RecommendAgent
 import com.iflytek.cyber.iot.show.core.utils.RoundedCornersTransformation
+import com.iflytek.cyber.iot.show.core.utils.ScreenUtils
+import com.iflytek.cyber.iot.show.core.utils.clickWithTrigger
 import com.iflytek.cyber.iot.show.core.widget.StyledQRCodeDialog
+import com.iflytek.cyber.iot.show.core.widget.TouchNestedScrollView
 import com.iflytek.cyber.iot.show.core.widget.lrc.LrcView
+import com.makeramen.roundedimageview.RoundedImageView
 import com.warkiz.widget.IndicatorSeekBar
 import com.warkiz.widget.OnSeekChangeListener
 import com.warkiz.widget.SeekParams
 import jp.wasabeef.blurry.Blurry
+import kotlinx.android.synthetic.main.fragment_search.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Call
@@ -71,10 +80,14 @@ import java.net.UnknownHostException
 import java.util.*
 
 class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
-    AudioPlayer.MediaStateChangedListener, PageScrollable {
+        AudioPlayer.MediaStateChangedListener, PageScrollable {
 
     companion object {
         private const val MAX_RETRY_COUNT = 5
+        private var toolbarHeight = 0
+
+        private var lastPlayResourceId: String? = ""
+        private var lastRecommendAudioList: List<MediaEntity>? = null
     }
 
     private lateinit var drawer: DrawerLayout
@@ -86,6 +99,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     private lateinit var musicCover: ImageView
     private lateinit var musicTitle: TextView
     private lateinit var musicArtist: TextView
+    private lateinit var toolBar: RelativeLayout
     private lateinit var ivLogo: ImageView
     private lateinit var ivBlurCover: ImageView
     private lateinit var lrcView: LrcView
@@ -96,9 +110,23 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     private lateinit var lrcLoading: LottieAnimationView
     private lateinit var tvLyricError: TextView
     private lateinit var seekBar: IndicatorSeekBar
-    private lateinit var tvDuration: TextView
     private lateinit var tvOnlyTitle: TextView
     private lateinit var ivPlayList: ImageView
+    private lateinit var tvPosition: TextView
+    private lateinit var tvDuration: TextView
+
+    /** 推荐相关 */
+    private lateinit var smallControl: RelativeLayout
+    private lateinit var scrollView: TouchNestedScrollView
+    private lateinit var musicLayout: RelativeLayout
+    private lateinit var recommendLayout: LinearLayout
+    private lateinit var recommendAudioView: RecyclerView
+    private lateinit var smallCover: RoundedImageView
+    private lateinit var smallTitle: TextView
+    private lateinit var smallLrc: LrcView
+    private lateinit var smallPlayPause: ImageView
+    private lateinit var smallPlayNext: ImageView
+    private lateinit var smallPlayList: ImageView
 
     private var seekBarDragging = false
     private var currentPosition = 0L
@@ -143,7 +171,9 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         lyricClickContent = view.findViewById(R.id.lyric_click_content)
         lyricClickContent.setOnClickListener(this)
         val ivBack = view.findViewById<View>(R.id.back)
-        ivBack.setOnClickListener(this)
+        ivBack.clickWithTrigger {
+            launcher?.onBackPressed()
+        }
         tvLyricError = view.findViewById(R.id.tv_lyric_error)
         tvLyricError.setOnClickListener(this)
         lrcView = view.findViewById(R.id.lrc_view)
@@ -157,28 +187,49 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         ivPlayList = view.findViewById(R.id.iv_play_list)
         ivPlayList.setOnClickListener(this)
         tvOnlyTitle = view.findViewById(R.id.tv_only_title)
+        tvPosition = view.findViewById(R.id.tv_position)
+        tvDuration = view.findViewById(R.id.tv_duration)
 
         ivBlurCover = view.findViewById(R.id.iv_cover_blur)
         ivLogo = view.findViewById(R.id.iv_logo)
         musicCover = view.findViewById(R.id.iv_cover)
         musicTitle = view.findViewById(R.id.tv_title)
         musicArtist = view.findViewById(R.id.tv_artist)
+        toolBar = view.findViewById(R.id.toolbar)
+
+        smallControl = view.findViewById(R.id.rlyt_small_control)
+        scrollView = view.findViewById(R.id.scroll_view)
+        musicLayout = view.findViewById(R.id.rlyt_music)
+        recommendLayout = view.findViewById(R.id.llyt_recommend)
+        recommendAudioView = view.findViewById(R.id.rcyc_recommend)
+
+        smallCover = view.findViewById(R.id.iv_small_cover)
+        smallTitle = view.findViewById(R.id.txt_small_title)
+        smallLrc = view.findViewById(R.id.small_screen_lyric_view)
+        smallPlayPause = view.findViewById(R.id.iv_small_play_pause)
+        smallPlayNext = view.findViewById(R.id.iv_small_next)
+        smallPlayList = view.findViewById(R.id.iv_small_play_list)
+
+        smallCover.setOnClickListener(this)
+        smallTitle.setOnClickListener(this)
+        smallPlayPause.setOnClickListener(this)
+        smallPlayNext.setOnClickListener(this)
+        smallPlayList.setOnClickListener(this)
+
+        scrollView.overScrollMode = ScrollView.OVER_SCROLL_NEVER
 
         if (launcher?.getService()?.getAudioPlayer()?.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
             playPause.setImageResource(R.drawable.ic_music_pause)
+            smallPlayPause.setImageResource(R.drawable.ic_music_pause)
         } else {
             playPause.setImageResource(R.drawable.ic_music_play)
+            smallPlayPause.setImageResource(R.drawable.ic_music_play)
         }
-
-        val topView = LayoutInflater.from(view.context).inflate(R.layout.indicator_top_view, null)
-        tvDuration = topView.findViewById(R.id.tv_duration)
-        seekBar.indicator.addTopContentView(topView)
 
         seekBar.onSeekChangeListener = object : OnSeekChangeListener {
             override fun onSeeking(seekParams: SeekParams) {
-                val duration =
-                    format(seekParams.progress.toLong()) + "-" + format(seekBar.max.toLong())
-                tvDuration.text = duration
+                val position = format(seekParams.progress.toLong())
+                tvPosition.text = position
             }
 
             override fun onStartTrackingTouch(seekBar: IndicatorSeekBar) {
@@ -228,6 +279,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         seekBar.isEnabled = playerInfo != null
         val player = launcher?.getService()?.getAudioPlayer()
         seekBar.max = player?.getDuration(AudioPlayer.TYPE_PLAYBACK)?.toFloat() ?: 0f
+        tvDuration.text = format(seekBar.max.toLong())
         seekBar.setProgress(player?.getOffset(AudioPlayer.TYPE_PLAYBACK)?.toFloat() ?: 0f)
         currentPosition = seekBar.progress.toLong()
         setupSeekBar()
@@ -242,6 +294,8 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                 loadPlayList()
             }
         }
+
+        tryToLoadRecommend(playerInfo)
 
         setupMusic(playerInfo)
         setupRecyclerView()
@@ -270,8 +324,11 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     private fun setupSeekBar() {
         val audioPlayer = EvsAudioPlayer.get(context)
         val mediaType = audioPlayer.getCurrentResourceMediaPlayerType()
-        if (audioPlayer.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING)
+        if (audioPlayer.playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING) {
             seekBar.isVisible = mediaType == C.TYPE_OTHER
+            tvPosition.isVisible = seekBar.isVisible
+            tvDuration.isVisible = seekBar.isVisible
+        }
     }
 
     private fun autoCloseDrawer() {
@@ -282,17 +339,17 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     }
 
     private fun setupTitleVisible(playerInfo: PlayerInfoPayload?) {
-        if (playerInfo?.content?.musicArtist.isNullOrEmpty() &&
-            playerInfo?.lyric?.url.isNullOrEmpty()
-        ) {
-            musicTitle.isVisible = false
-            musicArtist.isVisible = false
-            tvOnlyTitle.isVisible = true
-        } else {
+//        if (playerInfo?.content?.musicArtist.isNullOrEmpty() &&
+//            playerInfo?.lyric?.url.isNullOrEmpty()
+//        ) {
+//            musicTitle.isVisible = false
+//            musicArtist.isVisible = false
+//            tvOnlyTitle.isVisible = true
+//        } else {
             musicTitle.isVisible = true
             musicArtist.isVisible = true
             tvOnlyTitle.isVisible = false
-        }
+//        }
     }
 
     private fun setupMusic(playerInfo: PlayerInfoPayload?) {
@@ -304,7 +361,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                         .sampling(4)
                         .radius(75)
                         .color(Color.parseColor("#66212121"))
-                        .from(getBitmapFromVectorDrawable(R.drawable.cover_default))
+                        .from(getBitmapFromVectorDrawable(R.drawable.default_media_placeholder))
                         .into(imageView)
                 }
             }
@@ -315,11 +372,11 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             RoundedCornersTransformation(dp4, 0)
         )
 
-        Glide.with(requireActivity())
+        Glide.with(this)
             .asBitmap()
             .load(playerInfo?.content?.imageUrl)
-            .placeholder(R.drawable.cover_default)
-            .error(R.drawable.cover_default)
+            .placeholder(R.drawable.default_media_placeholder)
+            .error(R.drawable.default_media_placeholder)
             .into(object : SimpleTarget<Bitmap>() {
                 override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
                     //musicCover.setImageBitmap(resource)
@@ -327,7 +384,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                         return
                     val context = context ?: return
 
-                    Glide.with(musicCover)
+                    Glide.with(this@PlayerInfoFragment2)
                         .load(playerInfo?.content?.imageUrl)
                         .transform(transformer)
                         .into(musicCover)
@@ -344,11 +401,11 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                     if (isRemoving || isDetached)
                         return
                     context ?: return
-                    musicCover.setImageResource(R.drawable.cover_default)
+                    musicCover.setImageResource(R.drawable.default_media_placeholder)
                 }
             })
         val dp8 = musicCover.context.resources.getDimensionPixelSize(R.dimen.dp_8)
-        Glide.with(requireActivity())
+        Glide.with(this)
             .load(playerInfo?.provider?.logoUrl)
             .apply(
                 RequestOptions()
@@ -358,6 +415,10 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         musicTitle.text = playerInfo?.content?.musicTitle
         musicArtist.text = playerInfo?.content?.musicArtist
         tvOnlyTitle.text = playerInfo?.content?.musicTitle
+
+        if (TextUtils.isEmpty(musicArtist.text)) {
+            musicArtist.text = getString(R.string.unknown)
+        }
     }
 
     private fun setupRecyclerView() {
@@ -376,10 +437,18 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
 
             seekBar.isEnabled = playerInfo != null
+
+            scrollToHead()
+
             loadPlayList()
             setupMusic(playerInfo)
+
+            // 尝试加载推荐内容
+            tryToLoadRecommend(playerInfo)
+
             setupTitleVisible(playerInfo)
             getLyric()
+
             songsAdapter?.notifyDataSetChanged()
             currentResourceId = playerInfo?.resourceId
             currentPosition = 0L
@@ -419,9 +488,13 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         if (TextUtils.equals(playerInfo?.resourceId, endPlayingId)) {
             playNext.alpha = 0.5f
             playNext.isEnabled = false
+            smallPlayNext.alpha = 0.5f
+            smallPlayNext.isEnabled = false
         } else {
             playNext.alpha = 1f
             playNext.isEnabled = true
+            smallPlayNext.alpha = 1f
+            smallPlayNext.isEnabled = true
         }
 
         if (context != null) {
@@ -434,16 +507,31 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         }
     }
 
+    private fun scrollToCurrentPosition() {
+        var position = -1
+        songsAdapter?.songList?.forEachIndexed { index, song ->
+            val playingId = ContentStorage.get().playerInfo?.resourceId
+            if (TextUtils.equals(playingId, song.stream.token)) {
+                position = index
+                return@forEachIndexed
+            }
+        }
+        if (position != -1) {
+            musicList.scrollToPosition(position)
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
-            R.id.iv_play_list -> {
+            R.id.iv_play_list, R.id.iv_small_play_list -> {
+                scrollToCurrentPosition()
                 if (drawer.isDrawerOpen(GravityCompat.END)) {
                     drawer.closeDrawer(GravityCompat.END)
                 } else {
                     drawer.openDrawer(GravityCompat.END)
                 }
             }
-            R.id.iv_next -> {
+            R.id.iv_next, R.id.iv_small_next -> {
                 val playback = launcher?.getService()?.getPlaybackController()
                 playback?.sendCommand(PlaybackController.Command.Next, object :
                     RequestCallback {
@@ -456,7 +544,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                     }
                 })
             }
-            R.id.iv_play_pause -> {
+            R.id.iv_play_pause, R.id.iv_small_play_pause -> {
                 val audioPlayer = EvsAudioPlayer.get(context)
                 if (audioPlayer.playbackResourceId.isNullOrEmpty() || audioPlayer.getPlayerPlaybackState(
                         AudioPlayer.TYPE_PLAYBACK
@@ -494,12 +582,6 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                     }
                 })
             }
-            R.id.back -> {
-                if (backCount != 0)
-                    return
-                backCount++
-                launcher?.onBackPressed()
-            }
             R.id.lyric_click_content -> {
                 if (lrcView.hasLrc()) {
                     showScreenLyric()
@@ -510,6 +592,9 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
             R.id.tv_lyric_error -> {
                 getLyric()
+            }
+            R.id.iv_small_cover, R.id.txt_small_title -> {
+                scrollToHead()
             }
         }
     }
@@ -525,9 +610,13 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
     override fun onStarted(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
+            songsAdapter?.notifyDataSetChanged()
             playPause.setImageResource(R.drawable.ic_music_pause)
+            smallPlayPause.setImageResource(R.drawable.ic_music_pause)
             seekBar.max = player.getDuration(type).toFloat()
-
+            if (seekBar.max > 0) {
+                tvDuration.text = format(seekBar.max.toLong())
+            }
             setupSeekBar()
         }
     }
@@ -535,24 +624,32 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     override fun onResumed(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_pause)
+            smallPlayPause.setImageResource(R.drawable.ic_music_pause)
+            songsAdapter?.notifyDataSetChanged()
         }
     }
 
     override fun onPaused(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
+            smallPlayPause.setImageResource(R.drawable.ic_music_play)
+            songsAdapter?.notifyDataSetChanged()
         }
     }
 
     override fun onStopped(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
+            smallPlayPause.setImageResource(R.drawable.ic_music_play)
+            songsAdapter?.notifyDataSetChanged()
         }
     }
 
     override fun onCompleted(player: AudioPlayer, type: String, resourceId: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
+            smallPlayPause.setImageResource(R.drawable.ic_music_play)
+            songsAdapter?.notifyDataSetChanged()
         }
     }
 
@@ -568,16 +665,19 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
             if (currentPosition <= position) {
                 lrcView.updateTime(position)
+                smallLrc.updateTime(position)
                 screenLyricView.updateTime(position)
                 seekBar.setProgress(position.toFloat())
                 currentPosition = position
             }
             if (currentPosition <= position && position in 0L..999) {
                 setupSeekBar()
-                showMusicPress()
+                tvDuration.text = format(seekBar.max.toLong())
+                //showMusicPress()
                 playPause.setImageResource(R.drawable.ic_music_pause)
+                smallPlayPause.setImageResource(R.drawable.ic_music_pause)
             } else if (position >= 5000) {
-                hideMusicPress()
+                //hideMusicPress()
                 currentPosition = position
             }
         }
@@ -586,6 +686,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
     override fun onError(player: AudioPlayer, type: String, resourceId: String, errorCode: String) {
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
+            smallPlayPause.setImageResource(R.drawable.ic_music_play)
         }
     }
 
@@ -641,12 +742,22 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                         updatePlayButton(it.listLoop == true)
 
                         ivPlayList.isVisible = !songList.playlist.isNullOrEmpty()
+
+                        // 当打开推荐内容时，要打开播放列表
+                        if (isNextPlayRecommend) {
+                            scrollToCurrentPosition()
+                            if (!drawer.isDrawerOpen(GravityCompat.END)) {
+                                drawer.openDrawer(GravityCompat.END)
+                            }
+                        }
                     } ?: run {
                         ivPlayList.isVisible = false
                     }
                 } else {
                     ivPlayList.isVisible = false
                 }
+
+                isNextPlayRecommend = false
             }
 
             override fun onFailure(call: Call<PlayList>, t: Throwable) {
@@ -662,6 +773,8 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                     )
                     context?.sendBroadcast(intent)
                 }
+
+                isNextPlayRecommend = false
             }
         })
     }
@@ -692,6 +805,313 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         })
     }
 
+    private fun setNoRecommend() {
+        if (!isAdded || context == null) {
+            return
+        }
+        if (toolbarHeight <= 0f) {
+            toolBar.viewTreeObserver.addOnGlobalLayoutListener(object :
+                ViewTreeObserver.OnGlobalLayoutListener {
+                override fun onGlobalLayout() {
+                    toolbarHeight = toolBar.height
+                    toolBar.viewTreeObserver.removeOnGlobalLayoutListener(this)
+                    val screenHeight = ScreenUtils.getHeight(launcher!!)
+
+                    smallControl.visibility = View.GONE
+                    val layoutParams = LinearLayout.LayoutParams(musicLayout.layoutParams)
+                    layoutParams.height = screenHeight - toolbarHeight
+                    musicLayout.layoutParams = layoutParams
+                    recommendLayout.visibility = View.GONE
+
+                    musicLayout.invalidate()
+                }
+            })
+        } else {
+            val screenHeight = ScreenUtils.getHeight(launcher!!)
+
+            smallControl.visibility = View.GONE
+            val layoutParams = LinearLayout.LayoutParams(musicLayout.layoutParams)
+            layoutParams.height = screenHeight - toolbarHeight
+            musicLayout.layoutParams = layoutParams
+            recommendLayout.visibility = View.GONE
+
+            musicLayout.invalidate()
+        }
+    }
+
+    private fun scrollToHead() {
+        scrollView.smoothScrollTo(0, 0)
+    }
+
+    private var isNextPlayRecommend = false
+    private var isRecommendItemClickable = false
+
+    private fun playRecommend(music: MediaEntity) {
+        val client = CoreApplication.from(context!!).getClient()
+        if (client != null) {
+            Log.d("playRecommendMusic", "${music.url}")
+
+            val request = Request.Builder().get()
+                    .url(music.url!!)
+                    .build()
+            val call = client.newCall(request)
+            try {
+                val response = call.execute()
+                if (response.isSuccessful) {
+    //                    isNextPlayRecommend = true
+
+                    Log.d("playRecommendMusic", "success")
+                } else {
+                    isNextPlayRecommend = false
+
+                    try {
+                        val result = JSONObject.parseObject(response.body()?.string())
+                        val message = result.getString("message")
+
+                        Log.d("playRecommendMusic", "failed, result=$result")
+
+                        post {
+                            Toast.makeText(context!!, message, Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: JSONException) {
+                        post {
+                            Toast.makeText(context!!, R.string.play_recommend_fail, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e1: Exception) {
+                e1.printStackTrace()
+
+                isNextPlayRecommend = false
+
+                post {
+                    Toast.makeText(context!!, R.string.play_recommend_fail, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun getSmallTitleText(playerInfo: PlayerInfoPayload): String {
+        val sb = StringBuilder()
+        if (!playerInfo.content?.musicTitle.isNullOrEmpty()) {
+            sb.append(playerInfo.content?.musicTitle)
+        }
+
+        if (!playerInfo.content?.musicArtist.isNullOrEmpty()) {
+            sb.append("-").append(playerInfo.content?.musicArtist)
+        }
+
+        return sb.toString()
+    }
+
+    private var curScrollY = 0
+
+    private fun tryToLoadRecommend(playerInfo: PlayerInfoPayload?) {
+        if (!isAdded || context == null) {
+            return
+        }
+        if (playerInfo?.recommend?.url.isNullOrEmpty()) {
+            setNoRecommend()
+            return
+        }
+
+        Thread {
+            val resourceId = playerInfo?.resourceId
+            val audioList: List<MediaEntity>? = if (lastRecommendAudioList != null) {
+                if (resourceId == lastPlayResourceId) {
+                    lastRecommendAudioList
+                } else {
+                    RecommendAgent.getRecommendList(context!!,
+                            playerInfo?.recommend?.url!!,
+                            MediaEntity::class.java)
+                }
+            } else {
+                RecommendAgent.getRecommendList(context!!,
+                                playerInfo?.recommend?.url!!,
+                                MediaEntity::class.java)
+            }
+
+            lastRecommendAudioList = audioList
+            lastPlayResourceId = resourceId
+
+            post {
+                if (audioList.isNullOrEmpty()) {
+                    setNoRecommend()
+                } else {
+                    // 显示推荐
+                    val playerInfo = ContentStorage.get().playerInfo
+                    Glide.with(launcher!!)
+                            .load(playerInfo?.content?.imageUrl)
+                            .placeholder(R.drawable.default_media_placeholder)
+                            .error(R.drawable.default_media_placeholder)
+                            .into(smallCover)
+
+                    smallTitle.text = getSmallTitleText(playerInfo!!)
+
+                    val screenHeight = ScreenUtils.getHeight(launcher!!)
+                    toolbarHeight = toolBar.height
+
+                    val layoutParams = LinearLayout.LayoutParams(musicLayout.layoutParams)
+                    layoutParams.height = screenHeight - toolbarHeight -
+                            launcher!!.resources.getDimensionPixelSize(R.dimen.dp_80)
+                    musicLayout.layoutParams = layoutParams
+                    recommendLayout.visibility = View.VISIBLE
+
+                    val adapter = RecommendMediaAdapter()
+                    val audio = audioList[0]
+
+                    if (audio.image.isNullOrEmpty()) {
+                        adapter.setColsType(RecommendMediaAdapter.ColsType.THREE_COLS)
+                    } else {
+                        adapter.setColsType(RecommendMediaAdapter.ColsType.FIVE_COLS)
+                    }
+                    adapter.setItems(audioList)
+
+                    val layoutManager = GridLayoutManager(launcher!!, 5)
+                    layoutManager.orientation = RecyclerView.VERTICAL
+
+                    recommendAudioView.layoutManager = layoutManager
+                    recommendAudioView.adapter = adapter
+                    recommendAudioView.overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+                    recommendAudioView.isNestedScrollingEnabled = false
+                    recommendAudioView.minimumHeight = screenHeight - toolbarHeight -
+                            launcher!!.resources.getDimensionPixelSize(R.dimen.dp_60)
+
+                    adapter.setOnItemClickListener(object : RecommendMediaAdapter
+                        .OnItemClickListener {
+
+                        override fun onItemClicked(view: View, position: Int) {
+                            if (isRecommendItemClickable) {
+                                val music = (recommendAudioView.adapter as RecommendMediaAdapter)
+                                        .getItem(position)
+                                if (music != null) {
+                                    Thread {
+                                        playRecommend(music)
+                                    }.start()
+                                }
+                            }
+                        }
+                    })
+
+                    adapter.notifyDataSetChanged()
+
+                    val musicLayoutHeight = layoutParams.height
+                    val scrollLimit = musicLayoutHeight * 2 / 3
+                    val clickableLimit = launcher!!.resources.getDimensionPixelSize(R.dimen.dp_130)
+
+//                    scrollView.setOnTouchListener { v, event ->
+//                        when (event.action) {
+//                            MotionEvent.ACTION_DOWN -> {
+//                                Log.d("testtest", "ACTION_DOWN")
+//
+//                                handler.removeCallbacksAndMessages(null)
+//                            }
+//                            MotionEvent.ACTION_UP -> {
+//                                Log.d("testtest", "ACTION_UP")
+//
+//                                if (!enterInScreenLyricMode && curScrollY == 0) {
+//                                    handler.removeCallbacksAndMessages(null)
+//                                    handler.postDelayed(autoRunnable, 5000)
+//                                }
+//                            }
+//                        }
+//
+//                        false
+//                    }
+
+                    scrollView.setOnCustomTouchListener(object: TouchNestedScrollView.OnCustomTouchListener{
+                        override fun onTouchEvent(event: MotionEvent?) {
+                            when (event?.action) {
+                                MotionEvent.ACTION_DOWN -> {
+                                    handler.removeCallbacksAndMessages(null)
+                                }
+                                MotionEvent.ACTION_UP -> {
+                                    if (!enterInScreenLyricMode && curScrollY == 0) {
+                                        handler.removeCallbacksAndMessages(null)
+                                        handler.postDelayed(autoRunnable, 5000)
+                                    }
+                                }
+                            }
+                        }
+                    })
+
+                    scrollView.setOnScrollChangeListener { v: NestedScrollView?, scrollX: Int, scrollY: Int, oldScrollX: Int, oldScrollY: Int ->
+                        curScrollY = scrollY
+
+                        if (!enterInScreenLyricMode) {
+                            handler.removeCallbacksAndMessages(null)
+                        }
+
+                        if (scrollY == 0) {
+                            if (!enterInScreenLyricMode) {
+                                handler.removeCallbacksAndMessages(null)
+                                handler.postDelayed(autoRunnable, 5000)
+                            }
+                        }
+
+                        isRecommendItemClickable = scrollY > clickableLimit
+
+                        if (scrollY >= scrollLimit) {
+                            if (scrollY <= musicLayoutHeight) {
+                                if (smallControl.visibility == View.GONE) {
+                                    smallControl.visibility = View.VISIBLE
+                                    smallControl.alpha = 0.0f
+
+                                    ivLogo.visibility = View.GONE
+
+                                    smallCover.isClickable = false
+                                    smallTitle.isClickable = false
+                                    smallPlayPause.isClickable = false
+                                    smallPlayNext.isClickable = false
+                                    smallPlayList.isClickable = false
+                                }
+
+                                var alpha = (scrollY - scrollLimit) / ((musicLayoutHeight - scrollLimit).toFloat())
+                                if (alpha > 0.9f) {
+                                    alpha = 1.0f
+                                } else if (alpha < 0.1) {
+                                    alpha = 0.0f
+                                }
+
+                                smallControl.alpha = alpha
+
+                                if (alpha == 1.0f && !smallCover.isClickable) {
+                                    smallCover.isClickable = true
+                                    smallTitle.isClickable = true
+                                    smallPlayNext.isClickable = true
+                                    smallPlayPause.isClickable = true
+                                    smallPlayList.isClickable = true
+                                }
+                            } else {
+                                if (smallControl.visibility == View.GONE) {
+                                    smallControl.visibility = View.VISIBLE
+                                    ivLogo.visibility = View.GONE
+                                }
+
+                                if (smallControl.alpha != 1.0f) {
+                                    smallControl.alpha = 1.0f
+                                }
+
+                                if (!smallCover.isClickable) {
+                                    smallCover.isClickable = true
+                                    smallTitle.isClickable = true
+                                    smallPlayNext.isClickable = true
+                                    smallPlayPause.isClickable = true
+                                    smallPlayList.isClickable = true
+                                }
+                            }
+                        } else {
+                            if (smallControl.visibility == View.VISIBLE) {
+                                smallControl.visibility = View.GONE
+                                ivLogo.visibility = View.VISIBLE
+                            }
+                        }
+                    }
+                }
+            }
+        }.start()
+    }
+
     private fun showError(body: String?) {
         try {
             val error = Gson().fromJson(body, Error::class.java)
@@ -719,17 +1139,9 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         }
     }
 
-    private fun showMusicPress() {
-        if (isSupportVisible && mainContent.isVisible && !isAnimatingScreenLrc)
-            seekBar.showMusicPressState(true)
-    }
-
-    private fun hideMusicPress() {
-        seekBar.showMusicPressState(false)
-    }
-
     private fun getLyric() {
         lrcView.clearLrc()
+        smallLrc.clearLrc()
         screenLyricView.clearLrc()
 
         val playerInfo = ContentStorage.get().playerInfo
@@ -821,6 +1233,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             lrcLoading.isVisible = false
         }
         lrcView.loadLrc(lyric)
+        smallLrc.loadLrc(lyric)
         screenLyricView.loadLrc(lyric)
         if (!enterInScreenLyricMode) {
             handler.removeCallbacksAndMessages(null)
@@ -833,15 +1246,12 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             EvsAudioPlayer.get(context).playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING
         ) {
             enterInScreenLyricMode = true
-            hideMusicPress()
             showScreenLyric()
         }
     }
 
     private fun showScreenLyric() {
         isAnimatingScreenLrc = true
-
-        hideMusicPress()
 
         if (mainContent.isVisible) {
             val alpha = AlphaAnimation(1f, 0f)
@@ -904,7 +1314,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
     override fun onSupportInvisible() {
         super.onSupportInvisible()
-        hideMusicPress()
+        //hideMusicPress()
 
         EvsTemplate.get().isPlayerInfoFocused = false
     }

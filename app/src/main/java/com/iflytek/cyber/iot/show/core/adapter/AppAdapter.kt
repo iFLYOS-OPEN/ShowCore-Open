@@ -13,12 +13,13 @@ import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.transition.DrawableCrossFadeFactory
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.launcher.AppData
+import com.iflytek.cyber.iot.show.core.launcher.TemplateAppData
 import com.iflytek.cyber.iot.show.core.utils.OnItemClickListener
 
 class AppAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
     private val internalApps = mutableListOf<AppData>()
     private val partyApps = mutableListOf<AppData>()
-    private val templateApps = mutableListOf<AppData>()
+    private val templateApps = mutableListOf<TemplateAppData>()
     private val privateApps = mutableListOf<AppData>()
 
     var onItemClickListener: OnItemClickListener? = null
@@ -53,7 +54,7 @@ class AppAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         this.privateApps.addAll(apps)
     }
 
-    fun setTemplateAppData(apps: List<AppData>) {
+    fun setTemplateAppData(apps: List<TemplateAppData>) {
         this.templateApps.clear()
         this.templateApps.addAll(apps)
     }
@@ -92,19 +93,40 @@ class AppAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
                 val app = getAppData(position) ?: return
                 when (app.appType) {
                     AppData.TYPE_PARTY, AppData.TYPE_INTERNAL -> {
-                        holder.iconView.setImageDrawable(app.icon)
+                        if ((holder.itemView.tag == null
+                                || holder.itemView.tag?.toString() != "${app.name}|${app.packageName}")
+                            && app.icon != null
+                        ) {
+                            Glide.with(context)
+                                .asDrawable()
+                                .load(app.icon)
+                                .transition(
+                                    DrawableTransitionOptions.with(
+                                        DrawableCrossFadeFactory.Builder()
+                                            .setCrossFadeEnabled(true).build()
+                                    )
+                                )
+                                .into(holder.iconView)
+                            holder.itemView.tag = "${app.name}|${app.packageName}"
+                        }
                     }
                     AppData.TYPE_TEMPLATE -> {
-                        Glide.with(context)
-                            .asDrawable()
-                            .load(app.iconUrl)
-                            .transition(
-                                DrawableTransitionOptions.with(
-                                    DrawableCrossFadeFactory.Builder()
-                                        .setCrossFadeEnabled(true).build()
+                        if ((holder.itemView.tag == null
+                                || holder.itemView.tag?.toString() != "${app.name}|${app.packageName}")
+                            && !app.iconUrl.isNullOrEmpty()
+                        ) {
+                            Glide.with(context)
+                                .asDrawable()
+                                .load(app.iconUrl)
+                                .transition(
+                                    DrawableTransitionOptions.with(
+                                        DrawableCrossFadeFactory.Builder()
+                                            .setCrossFadeEnabled(true).build()
+                                    )
                                 )
-                            )
-                            .into(holder.iconView)
+                                .into(holder.iconView)
+                            holder.itemView.tag = "${app.name}|${app.packageName}"
+                        }
                     }
                 }
                 holder.nameView.text = app.name

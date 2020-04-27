@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:sl_cornerRadius="@dimen/dp_12"
+    app:sl_dx="0dp"
+    app:sl_dy="@dimen/dp_4"
+    app:sl_shadowColor="#0D000000"
+    app:sl_shadowRadius="@dimen/dp_12">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_8"
+        android:background="@drawable/bg_white_round_12dp">
+
+        <FrameLayout
+            android:id="@+id/clickable"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:background="@drawable/bg_clickable_round_12dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <ImageView
+            android:id="@+id/iv_device_icon"
+            android:layout_width="@dimen/dp_64"
+            android:layout_height="@dimen/dp_64"
+            android:layout_marginStart="@dimen/dp_16"
+            android:layout_marginTop="@dimen/dp_16"
+            android:layout_marginBottom="@dimen/dp_16"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:background="@color/textColorLightPrimary" />
+
+        <TextView
+            android:id="@+id/tv_device"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_12"
+            android:layout_marginTop="@dimen/dp_24"
+            android:layout_marginEnd="@dimen/dp_62"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_18"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toEndOf="@id/iv_device_icon"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="冰箱" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_12"
+            android:layout_marginTop="@dimen/dp_4"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            app:layout_constraintStart_toEndOf="@id/iv_device_icon"
+            app:layout_constraintTop_toBottomOf="@id/tv_device">
+
+            <ImageView
+                android:id="@+id/iv_device_status"
+                android:layout_width="@dimen/dp_8"
+                android:layout_height="@dimen/dp_8"
+                android:background="@drawable/bg_device_status_selector" />
+
+            <TextView
+                android:id="@+id/tv_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_4"
+                android:textColor="@color/text_device_status_selector"
+                android:textSize="@dimen/sp_14"
+                tools:text="在线" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_zone"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="@dimen/dp_8"
+            android:background="@drawable/bg_text_round_10dp"
+            android:paddingStart="@dimen/dp_4"
+            android:paddingTop="@dimen/dp_2"
+            android:paddingEnd="@dimen/dp_4"
+            android:paddingBottom="@dimen/dp_2"
+            android:textColor="@color/setup_primary"
+            android:textSize="@dimen/sp_12"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="客厅" />
+
+        <ImageView
+            android:id="@+id/iv_brand"
+            android:layout_width="@dimen/dp_20"
+            android:layout_height="@dimen/dp_20"
+            android:layout_margin="@dimen/dp_8"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>

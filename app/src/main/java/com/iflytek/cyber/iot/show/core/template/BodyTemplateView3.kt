@@ -7,6 +7,7 @@ import android.view.View
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.view.isVisible
 import com.bumptech.glide.Glide
 import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
@@ -49,7 +50,12 @@ class BodyTemplateView3 @JvmOverloads constructor(
 
         mainTitle.text = json.get(Constant.PAYLOAD_MAIN_TITLE)?.asString
 
-        bodyText.text = json.get(Constant.PAYLOAD_BODY_TEXT)?.asString
+        if (json.has(Constant.PAYLOAD_BODY_TEXT)) {
+            bodyText.isVisible = true
+            bodyText.text = json.get(Constant.PAYLOAD_BODY_TEXT)?.asString
+        } else {
+            bodyText.isVisible = false
+        }
         json.get(Constant.PAYLOAD_BODY_SUB_TEXT)?.asString?.let {
             if(it.isNotEmpty()){
                 bodySubText.text = it

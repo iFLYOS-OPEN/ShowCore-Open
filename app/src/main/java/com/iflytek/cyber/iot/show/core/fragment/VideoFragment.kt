@@ -6,10 +6,12 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.os.*
+import android.os.Message
 import android.provider.Settings
 import android.text.TextUtils
 import android.util.Log
 import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
 import android.view.ViewGroup
 import android.widget.*
@@ -17,8 +19,14 @@ import androidx.core.os.postDelayed
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
+import com.alibaba.fastjson.JSONException
+import com.alibaba.fastjson.JSONObject
+import com.bumptech.glide.Glide
+import com.bumptech.glide.GlideBuilder
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.google.gson.Gson
 import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.agent.PlaybackController
@@ -27,17 +35,14 @@ import com.iflytek.cyber.evs.sdk.socket.Result
 import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.R
+import com.iflytek.cyber.iot.show.core.adapter.RecommendMediaAdapter
 import com.iflytek.cyber.iot.show.core.adapter.VideoListAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
-import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager.setVolume
-import com.iflytek.cyber.iot.show.core.impl.screen.EvsScreen
 import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
 import com.iflytek.cyber.iot.show.core.impl.videoplayer.EvsVideoPlayer
-import com.iflytek.cyber.iot.show.core.model.ContentStorage
-import com.iflytek.cyber.iot.show.core.model.MusicBody
-import com.iflytek.cyber.iot.show.core.model.PlayList
-import com.iflytek.cyber.iot.show.core.model.Song
+import com.iflytek.cyber.iot.show.core.model.*
+import com.iflytek.cyber.iot.show.core.recommend.RecommendAgent
 import com.iflytek.cyber.iot.show.core.utils.BrightnessUtils
 import com.iflytek.cyber.iot.show.core.utils.VoiceButtonUtils
 import com.iflytek.cyber.iot.show.core.widget.BoxedVertical
@@ -47,13 +52,15 @@ import com.kk.taurus.playerbase.widget.SuperContainer
 import com.warkiz.widget.IndicatorSeekBar
 import com.warkiz.widget.OnSeekChangeListener
 import com.warkiz.widget.SeekParams
-import kotlinx.android.synthetic.main.fragment_main_2.*
-import kotlinx.android.synthetic.main.fragment_settings.*
+import okhttp3.Request
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
 import java.lang.ref.SoftReference
 import java.net.UnknownHostException
+import java.util.*
+import kotlin.Error
+import kotlin.collections.ArrayList
 import kotlin.math.abs
 
 class VideoFragment : BaseFragment(), View.OnClickListener {
@@ -63,11 +70,14 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         private const val VOLUME_1 = 0.34444f
         private const val VOLUME_2 = 0.66667f
         private const val VOLUME_3 = 1f
+
+        private const val KEY_RECOMMEND = "recommend"
+        private const val KEY_URL = "url"
     }
 
     private lateinit var drawerLayout: DrawerLayout
     private lateinit var videoList: RecyclerView
-    private lateinit var progressBar: ProgressBar
+    //private lateinit var progressBar: ProgressBar
     private lateinit var seekBar: IndicatorSeekBar
     private lateinit var playPause: ImageView
     private lateinit var mainContent: RelativeLayout
@@ -83,6 +93,14 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
     private lateinit var volumeIcon: LottieAnimationView
     private lateinit var volumeProgress: ProgressFrameLayout
     private lateinit var ivPlayList: ImageView
+    private lateinit var tvPosition: TextView
+    private lateinit var tvDuration: TextView
+    private lateinit var loading: LottieAnimationView
+
+    /** 推荐相关*/
+    private lateinit var recommendLayout: LinearLayout
+    private lateinit var recommendView: RecyclerView
+
     private var previousView: View? = null
     private var nextView: View? = null
     private val countFullScreenHandler = CountFullScreenHandler(this)
@@ -130,16 +148,23 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         tvVideoTitle = view.findViewById(R.id.tv_video_title)
         alphaCover = view.findViewById(R.id.iv_alpha_cover)
         videoList = view.findViewById(R.id.video_list)
-        progressBar = view.findViewById(R.id.progress_bar)
+        //progressBar = view.findViewById(R.id.progress_bar)
+        loading = view.findViewById(R.id.loading)
         seekBar = view.findViewById(R.id.seek_bar)
         ivPlayList = view.findViewById(R.id.iv_play_list)
         ivPlayList.setOnClickListener(this)
         playPause = view.findViewById(R.id.iv_play_pause)
         playPause.setOnClickListener(this)
+        tvPosition = view.findViewById(R.id.tv_position)
+        tvDuration = view.findViewById(R.id.tv_duration)
         previousView = view.findViewById<ImageView>(R.id.iv_previous)
         previousView?.setOnClickListener(this)
         nextView = view.findViewById<ImageView>(R.id.iv_next)
         nextView?.setOnClickListener(this)
+
+        recommendLayout = view.findViewById(R.id.llyt_recommend)
+        recommendView = view.findViewById(R.id.rcyc_recommend)
+
         val back = view.findViewById<View>(R.id.back)
 
         val renderContainer = view.findViewById<FrameLayout>(R.id.super_container)
@@ -176,10 +201,16 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         }
 
         val duration = launcher?.getService()?.getVideoPlayer()?.getDuration()
-        progressBar.isVisible = duration ?: 0 <= 0
+        loading.isVisible = true
+        loading.playAnimation()
+        if (duration != null) {
+            tvDuration.text = format(duration)
+        }
 
         seekBar.onSeekChangeListener = object : OnSeekChangeListener {
-            override fun onSeeking(seekParams: SeekParams?) {
+            override fun onSeeking(seekParams: SeekParams) {
+                val position = format(seekParams.progress.toLong())
+                tvPosition.text = position
             }
 
             override fun onStartTrackingTouch(seekBar: IndicatorSeekBar?) {
@@ -222,7 +253,6 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             Settings.System.SCREEN_BRIGHTNESS
         )
         brightnessProgress.setProgress(currentBrightness * 100 / 255f)
-        Log.e("Video", "currentBrightness: " + currentBrightness * 100 / 255f)
         val mode = Settings.System.getInt(contentResolver, Settings.System.SCREEN_BRIGHTNESS_MODE)
         brightnessProgress.setOnTouchProgressChangeListener(object :
             ProgressFrameLayout.OnTouchProgressChangeListener {
@@ -263,6 +293,7 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             override fun onDown() {
                 val volume = speaker.getCurrentVolume()
                 volumeProgress.setProgress(volume.toFloat())
+                setVolumeIcon(volume)
             }
 
             override fun onTouchProgressChanged(progress: Int) {
@@ -306,6 +337,15 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         }
     }
 
+    private fun format(duration: Long): String {
+        return String.format(
+            Locale.getDefault(),
+            "%2d:%02d",
+            duration / 1000 / 60,
+            duration / 1000 % 60
+        )
+    }
+
     override fun onSupportVisible() {
         super.onSupportVisible()
 
@@ -332,6 +372,8 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
     private val simpleRenderCallback = object : EvsTemplate.SimpleRenderCallback() {
         override fun renderVideoPlayerInfo(payload: String) {
             videoListAdapter?.notifyDataSetChanged()
+
+            tryToLoadRecommend(payload)
         }
     }
 
@@ -366,7 +408,8 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
     private val videoStateChangeListener = object : VideoPlayer.VideoStateChangedListener {
         override fun onStarted(player: VideoPlayer, resourceId: String) {
-            progressBar.isVisible = true
+            loading.isVisible = true
+            loading.playAnimation()
             loadPlayList()
         }
 
@@ -380,6 +423,9 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
         override fun onStopped(player: VideoPlayer, resourceId: String) {
             playPause.setImageResource(R.drawable.ic_music_play)
+
+            if (ContentStorage.get().video?.resourceId == resourceId)
+                ContentStorage.get().saveVideo(null)
         }
 
         override fun onCompleted(player: VideoPlayer, resourceId: String) {
@@ -388,7 +434,10 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
         override fun onPositionUpdated(player: VideoPlayer, resourceId: String, position: Long) {
             if (position > 0) {
-                progressBar.isVisible = false
+                if (loading.isVisible) {
+                    loading.isVisible = false
+                    loading.pauseAnimation()
+                }
                 rootCover.isVisible = false
                 playPause.setImageResource(R.drawable.ic_music_pause)
 //                SleepWorker.get(seekBar.context)
@@ -396,6 +445,7 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             }
             if (!seekDragging) {
                 seekBar.max = player.getDuration().toFloat()
+                tvDuration.text = format(seekBar.max.toLong())
                 seekBar.setProgress(position.toFloat())
                 if (position in 1L..999) {
                     seekBar.showMusicPressState(true)
@@ -427,8 +477,8 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
     }
 
     private fun releaseVideoWakeLock() {
-            videoWakeLock?.release()
-            videoWakeLock = null
+        videoWakeLock?.release()
+        videoWakeLock = null
     }
 
     private fun setupRecyclerView(items: ArrayList<Song>) {
@@ -451,6 +501,7 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             override fun onFailure(call: Call<PlayList>, t: Throwable) {
                 t.printStackTrace()
 
+                isNextPlayRecommend = false
                 ivPlayList.isVisible = false
 
                 if (t is UnknownHostException) {
@@ -485,6 +536,14 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
 
                                 drawerLayout.setDrawerLockMode(DrawerLayout.LOCK_MODE_UNLOCKED)
                                 ivPlayList.isVisible = true
+
+                                // 当打开推荐内容时，要打开播放列表
+                                if (isNextPlayRecommend) {
+                                    scrollToCurrentPosition()
+                                    if (!drawerLayout.isDrawerOpen(GravityCompat.END)) {
+                                        drawerLayout.openDrawer(GravityCompat.END)
+                                    }
+                                }
                             }
 
                             setupRecyclerView(it.playlist)
@@ -497,6 +556,8 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
                 } else {
                     ivPlayList.isVisible = false
                 }
+
+                isNextPlayRecommend = false
             }
         })
     }
@@ -536,9 +597,24 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
         }
     }
 
+    private fun scrollToCurrentPosition() {
+        var position = -1
+        videoListAdapter?.videoList?.forEachIndexed { index, video ->
+            val playingId = ContentStorage.get().video?.resourceId
+            if (TextUtils.equals(playingId, video.stream.token)) {
+                position = index
+                return@forEachIndexed
+            }
+        }
+        if (position != -1) {
+            videoList.scrollToPosition(position)
+        }
+    }
+
     override fun onClick(v: View?) {
         when (v?.id) {
             R.id.iv_play_list -> {
+                scrollToCurrentPosition()
                 if (drawerLayout.isDrawerOpen(GravityCompat.END)) {
                     drawerLayout.closeDrawer(GravityCompat.END)
                 } else {
@@ -642,7 +718,7 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
             msg.what = 1
             current = newTime
 
-            sendMessageDelayed(msg, 10 * 1000)
+            sendMessageDelayed(msg, 5 * 1000)
         }
 
         fun clearCount() {
@@ -657,6 +733,160 @@ class VideoFragment : BaseFragment(), View.OnClickListener {
                     fragment.updateControlUI()
                 }
             }
+        }
+    }
+
+    private fun setNoRecommend() {
+        recommendLayout.visibility = View.GONE
+    }
+
+    private var isNextPlayRecommend = false
+
+    private fun playRecommend(video: MediaEntity) {
+        val client = CoreApplication.from(context!!).getClient()
+        if (client != null) {
+            Log.d("playRecommendVideo", "${video.url}")
+
+            val request = Request.Builder().get()
+                    .url(video.url!!)
+                    .build()
+            val call = client.newCall(request)
+            try {
+                val response = call.execute()
+                if (response.isSuccessful) {
+//                    val result = response.body()?.string();
+//                    isNextPlayRecommend = true
+
+                    Log.d("playRecommendVideo", "success")
+                } else {
+                    isNextPlayRecommend = false
+
+                    try {
+                        val result = JSONObject.parseObject(response.body()?.string())
+                        val message = result.getString("message")
+
+                        Log.d("playRecommendVideo", "failed, result=$result")
+
+                        post {
+                            Toast.makeText(context!!, message, Toast.LENGTH_SHORT).show()
+                        }
+                    } catch (e: JSONException) {
+                        post {
+                            Toast.makeText(context!!, R.string.play_recommend_fail, Toast.LENGTH_SHORT).show()
+                        }
+                    }
+                }
+            } catch (e1: Exception) {
+                e1.printStackTrace()
+
+                isNextPlayRecommend = false
+
+                post {
+                    Toast.makeText(context!!, R.string.play_recommend_fail, Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun tryToLoadRecommend(payload: String) {
+        if (!isAdded || context == null) {
+            return
+        }
+
+        try {
+            val json = JSONObject.parseObject(payload)
+            if (!json.containsKey(KEY_RECOMMEND) ||
+                    json.getJSONObject(KEY_RECOMMEND).getString(KEY_URL).isNullOrEmpty()) {
+                setNoRecommend()
+                return
+            }
+
+            Thread {
+                val url = json.getJSONObject(KEY_RECOMMEND).getString(KEY_URL)
+                val videoList: List<MediaEntity>? = RecommendAgent.getRecommendList(context!!, url,
+                        MediaEntity::class.java)
+
+                if (!videoList.isNullOrEmpty()) {
+                    for (video in videoList) {
+                        Glide.with(this)
+                                .asBitmap()
+                                .load(video.url)
+                                .diskCacheStrategy(DiskCacheStrategy.ALL)
+                                .preload()
+                    }
+                }
+
+                post {
+                    if (videoList.isNullOrEmpty()) {
+                        setNoRecommend()
+                    } else {
+                        // 显示推荐
+                        recommendLayout.visibility = View.VISIBLE
+
+                        val adapter = RecommendMediaAdapter()
+                        adapter.setMediaType(RecommendMediaAdapter.MediaType.VIDEO)
+                        adapter.setItems(videoList)
+
+                        val layoutManager = LinearLayoutManager(context!!)
+                        layoutManager.orientation = RecyclerView.HORIZONTAL
+
+                        recommendView.layoutManager = layoutManager
+                        recommendView.adapter = adapter
+                        recommendView.overScrollMode = RecyclerView.OVER_SCROLL_NEVER
+
+                        adapter.setOnItemClickListener(object : RecommendMediaAdapter
+                            .OnItemClickListener {
+
+                                override fun onItemClicked(view: View, position: Int) {
+                                    val video = (recommendView.adapter as RecommendMediaAdapter)
+                                                    .getItem(position)
+                                    if (video != null) {
+                                        Thread {
+                                            playRecommend(video)
+                                        }.start()
+                                    }
+                                }
+                            })
+
+                        adapter.notifyDataSetChanged()
+
+                        // 如果用户持续触碰推荐item，则mainContent不消失
+                        recommendView.addOnItemTouchListener(object: RecyclerView.OnItemTouchListener{
+                            override fun onInterceptTouchEvent(rv: RecyclerView, e: MotionEvent): Boolean {
+                                when (e.action) {
+                                    MotionEvent.ACTION_DOWN -> {
+                                        if (mainContent.isVisible) {
+                                            countFullScreenHandler.clearCount()
+                                        } else {
+                                            mainContent.isVisible = true
+                                            alphaCover.isVisible = true
+                                        }
+                                    }
+                                    MotionEvent.ACTION_UP -> {
+                                        if (mainContent.isVisible) {
+                                            countFullScreenHandler.clearCount()
+                                            countFullScreenHandler.postNextClick()
+                                        }
+                                    }
+                                }
+
+                                return false
+                            }
+
+                            override fun onTouchEvent(rv: RecyclerView, e: MotionEvent) {
+
+                            }
+
+                            override fun onRequestDisallowInterceptTouchEvent(disallowIntercept: Boolean) {
+
+                            }
+                        })
+                    }
+                }
+            }.start()
+        } catch (e: JSONException) {
+            e.printStackTrace()
+            setNoRecommend()
         }
     }
 }

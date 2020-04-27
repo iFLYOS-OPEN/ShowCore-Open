@@ -65,6 +65,7 @@
             android:layout_marginBottom="@dimen/dp_32"
             android:hint="@string/setting_alarm_hint"
             android:paddingBottom="@dimen/dp_26"
+            android:maxLength="20"
             android:textColor="@color/semi_black"
             android:textColorHint="#CCCCCC"
             android:textSize="@dimen/sp_20" />

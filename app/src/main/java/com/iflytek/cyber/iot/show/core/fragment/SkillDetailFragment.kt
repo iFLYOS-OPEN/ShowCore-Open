@@ -106,8 +106,10 @@ class SkillDetailFragment : BaseFragment(), PageScrollable {
         tvVersion.text = detail.version
         tvDev.text = detail.developer
 
-        val adapter = ExampleAdapter(detail.examples)
-        recyclerView.adapter = adapter
+        detail.examples?.let { examples ->
+            val adapter = ExampleAdapter(examples)
+            recyclerView.adapter = adapter
+        }
     }
 
     private fun loadDetail(id: String) {
@@ -169,7 +171,7 @@ class SkillDetailFragment : BaseFragment(), PageScrollable {
         scrollView?.smoothScrollTo(0, scrollY)
     }
 
-    inner class ExampleAdapter(val examples: ArrayList<String>) :
+    inner class ExampleAdapter(val examples: ArrayList<String?>) :
         RecyclerView.Adapter<ExampleAdapter.ExampleHolder>() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ExampleHolder {

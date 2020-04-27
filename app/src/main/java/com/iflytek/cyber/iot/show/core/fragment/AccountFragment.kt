@@ -9,6 +9,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
 import com.google.gson.JsonParser
+import com.iflytek.cyber.iot.show.core.BuildConfig
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.model.UserInfo
 import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
@@ -27,6 +28,12 @@ class AccountFragment : BaseFragment(), PageScrollable {
         override fun onItemClick(parent: ViewGroup, itemView: View, position: Int) {
             if (position == adapter.itemCount - 1) {
                 start(PairFragment2())
+            } else if (position == adapter.itemCount - 2) {
+                val webViewFragment = WebViewFragment()
+                val arguments = Bundle()
+                arguments.putString("url", "https://homev2.iflyos.cn/accounts")
+                webViewFragment.arguments = arguments
+                start(webViewFragment)
             }
         }
     }
@@ -73,6 +80,8 @@ class AccountFragment : BaseFragment(), PageScrollable {
 
                     infoList.add(phoneItem)
                 }
+
+                infoList.add(Item("内容账号", null))
 
                 // 更换绑定
                 val changeBindingItem = Item("更换绑定", null)

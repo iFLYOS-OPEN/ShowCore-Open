@@ -17,6 +17,12 @@ class EvsRecognizer(context: Context) : Recognizer(), GlobalRecorder.Observer {
     private var isCapturing = false
     private val contextRef = SoftReference(context)
 
+    private var onEvaluateResultCallback: OnEvaluateResultCallback? = null
+
+    fun registerEvaluateResultCallback(onEvaluateResultCallback: OnEvaluateResultCallback) {
+        this.onEvaluateResultCallback = onEvaluateResultCallback
+    }
+
     init {
         GlobalRecorder.registerObserver(this)
 
@@ -87,5 +93,18 @@ class EvsRecognizer(context: Context) : Recognizer(), GlobalRecorder.Observer {
             sink = null
             source = null
         }
+    }
+
+    override fun onEvaluateResult(payload: String) {
+        super.onEvaluateResult(payload)
+        try {
+            onEvaluateResultCallback?.onEvaluateResult(payload)
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    interface OnEvaluateResultCallback {
+        fun onEvaluateResult(payload: String)
     }
 }

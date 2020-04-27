@@ -7,7 +7,7 @@ import androidx.recyclerview.widget.RecyclerView
 class OnLoadMoreListener(val callback: Callback) : RecyclerView.OnScrollListener() {
 
     override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
-        val layoutManager = recyclerView.layoutManager as LinearLayoutManager
+        val layoutManager = recyclerView.layoutManager as? LinearLayoutManager ?: return
         val visibleItemCount = recyclerView.childCount
         val totalItemCount = layoutManager.itemCount
         val firstVisibleItem = layoutManager.findFirstVisibleItemPosition()

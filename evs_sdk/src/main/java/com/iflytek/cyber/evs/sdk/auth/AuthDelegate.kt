@@ -15,9 +15,11 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import java.security.SecureRandom
 import java.security.cert.X509Certificate
+import java.util.*
 import java.util.concurrent.TimeUnit
 import javax.net.ssl.SSLContext
 import javax.net.ssl.X509TrustManager
+import kotlin.collections.HashSet
 
 /**
  * 认证授权类。
@@ -51,6 +53,8 @@ object AuthDelegate {
     private var httpClient: OkHttpClient? = null
 
     private val requestCache = HashSet<Thread>()
+
+    private var requestId: UUID? = null
 
     /**
      * 设置auth请求的url。
@@ -168,7 +172,7 @@ object AuthDelegate {
         deviceId: String,
         responseCallback: ResponseCallback<DeviceCodeResponse>,
         authResponseCallback: AuthResponseCallback? = null,
-        customScopeData: String = SCOPE_DATA_DEFAULT
+        customScopeData: String? = null
     ) {
         cancelPolling()
 
@@ -176,6 +180,8 @@ object AuthDelegate {
             httpClient = createHttpClient()
         }
         httpClient?.let { httpClient ->
+            val requestId = UUID.randomUUID()
+            AuthDelegate.requestId = requestId
             Thread {
                 try {
                     val scopeData = JSONObject()
@@ -184,7 +190,7 @@ object AuthDelegate {
                     scopeData[KEY_USER_IVS_ALL] = userIvsAll
 
                     val requestBody =
-                        "client_id=$clientId&scope=$customScopeData&scope_data=${scopeData.toJSONString()}"
+                        "client_id=$clientId${if (customScopeData.isNullOrEmpty()) "" else "&scope=$customScopeData"}&scope_data=${scopeData.toJSONString()}"
 
                     Log.d(TAG, requestBody)
 
@@ -202,6 +208,8 @@ object AuthDelegate {
                     val response = httpClient.newCall(request).execute()
 
                     if (response.isSuccessful) {
+                        if (requestId != AuthDelegate.requestId)
+                            return@Thread
                         response.body()?.string()?.let { body ->
                             val deviceCodeResponse =
                                 JSON.parseObject(body, DeviceCodeResponse::class.java)
@@ -219,6 +227,8 @@ object AuthDelegate {
                             newThread.start()
                         }
                     } else {
+                        if (requestId != AuthDelegate.requestId)
+                            return@Thread
                         responseCallback.onError(response.code(), response.body()?.string(), null)
                     }
                 } catch (e: Exception) {
@@ -236,6 +246,8 @@ object AuthDelegate {
      */
     fun cancelPolling() {
         Log.d(TAG, "cancelPolling")
+
+        requestId = null
 
         requestCache.map {
             try {
@@ -319,6 +331,7 @@ object AuthDelegate {
             val interval = deviceCodeResponse.interval
             val expiresIn = deviceCodeResponse.expiresIn
 
+            val requestId = requestId ?: return
             while (System.currentTimeMillis() / 1000 - current < expiresIn) {
                 try {
                     val requestBody = JSONObject()
@@ -343,12 +356,16 @@ object AuthDelegate {
                     Log.d(TAG, "code: $httpCode, body: $body")
 
                     if (response.isSuccessful) {
+                        if (requestId != AuthDelegate.requestId)
+                            return
                         val authResponse = JSON.parseObject(body, AuthResponse::class.java)
                         setAuthResponseToPref(context, authResponse)
 
                         authResponseCallback?.onAuthSuccess(authResponse)
                         return
                     } else {
+                        if (requestId != AuthDelegate.requestId)
+                            return
                         if (httpCode in 400 until 500) {
                             try {
                                 val json = JSON.parseObject(body)

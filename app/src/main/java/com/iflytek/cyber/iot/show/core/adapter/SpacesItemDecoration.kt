@@ -18,7 +18,7 @@ class SpacesItemDecoration(private val space: Int) : RecyclerView.ItemDecoration
         val bottom = if (bottom != -1) bottom else space / 2
         val top = if (top != -1) top else space / 2
 
-        // Add top margin only for the first item to avoid double space between items
+        // Add top margin only for the first item to avoid double space between result
         val layoutManager = parent.layoutManager as GridLayoutManager
         val spanCount = layoutManager.spanCount
         val position = parent.getChildLayoutPosition(view)

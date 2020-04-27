@@ -69,7 +69,7 @@ class InsetDividerDecoration(
             parent.getDecoratedBoundsWithMargins(child, this.mBounds)
             val bottom = this.mBounds.bottom + Math.round(child.translationY)
             val top = bottom - this.mDivider.intrinsicHeight
-            this.mDivider.setBounds(left + startPadding, top, right, bottom - endPadding)
+            this.mDivider.setBounds(left + startPadding, top, right - endPadding, bottom)
             this.mDivider.draw(canvas)
         }
 

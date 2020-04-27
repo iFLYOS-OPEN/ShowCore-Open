@@ -13,7 +13,9 @@ abstract class Interceptor {
 
     companion object {
         const val NAME_CUSTOM = "${Constant.NAMESPACE_INTERCEPTOR}.custom"
+        @Deprecated("Replace with NAME_TRANSFER_SEMANTIC")
         const val NAME_AIUI = "${Constant.NAMESPACE_INTERCEPTOR}.aiui"
+        const val NAME_TRANSFER_SEMANTIC = "${Constant.NAMESPACE_INTERCEPTOR}.transfer_semantic"
     }
 
     /**

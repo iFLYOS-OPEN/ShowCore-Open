@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/dp_12"
+    android:paddingEnd="@dimen/dp_12">
+
+    <FrameLayout
+        android:id="@+id/clickable_view"
+        android:layout_width="@dimen/dp_150"
+        android:layout_height="@dimen/dp_200"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="@drawable/bg_clickable_round_6dp">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TextView
+            android:id="@+id/tv_index"
+            android:layout_width="@dimen/dp_26"
+            android:layout_height="@dimen/dp_22"
+            android:background="@drawable/bg_index_template_app_2"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            tools:text="1" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/name"
+        style="@style/Body16.White"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:layout_gravity="center_horizontal"
+        android:ellipsize="end"
+        android:textSize="@dimen/sp_16"
+        android:maxLines="1"
+        tools:text="社会科学" />
+
+</LinearLayout>

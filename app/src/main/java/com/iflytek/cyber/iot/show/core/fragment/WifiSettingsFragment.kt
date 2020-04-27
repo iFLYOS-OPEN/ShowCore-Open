@@ -34,6 +34,7 @@ import com.iflytek.cyber.iot.show.core.utils.WifiUtils
 import com.iflytek.cyber.iot.show.core.widget.DividerItemDecoration
 import com.iflytek.cyber.iot.show.core.widget.StyledSwitch
 import java.util.*
+import java.util.concurrent.TimeUnit
 import kotlin.Comparator
 
 class WifiSettingsFragment : BaseFragment(), PageScrollable {
@@ -67,6 +68,8 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
     private var fromSetup = false
 
     private var backCount = 0
+
+    private var wakeLock: PowerManager.WakeLock? = null
 
     @Suppress("DEPRECATION")
     private val connectionReceiver = object : SelfBroadcastReceiver(
@@ -170,6 +173,9 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
                 }
             }
         }
+
+        if (context?.let { AuthDelegate.getAuthResponseFromPref(it) == null } == true)
+            acquireWakeLock()
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -284,9 +290,6 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
         if (wm?.isWifiEnabled == true) {
             startScan()
         }
-
-        if (context?.let { AuthDelegate.getAuthResponseFromPref(it) == null } == true)
-            acquireWakeLock()
     }
 
     @Suppress("DEPRECATION")
@@ -314,8 +317,6 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
 
         uiHandler.removeCallbacksAndMessages(null)
         warningAlert?.dismiss()
-
-        releaseWakeLock()
     }
 
     @SuppressLint("WakelockTimeout")
@@ -331,8 +332,17 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
     }
 
     private fun releaseWakeLock() {
-        wifiWakeLock?.release()
-        wifiWakeLock = null
+        wifiWakeLock?.let {
+            it.release()
+
+            val powerManager = context?.getSystemService(Context.POWER_SERVICE) as PowerManager
+            val flag = PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_BRIGHT_WAKE_LOCK
+            val wakeLock = powerManager.newWakeLock(flag, "iflytek:wifi.release")
+
+            wakeLock.acquire(TimeUnit.SECONDS.toMillis(10))
+
+            wifiWakeLock = null
+        }
     }
 
     override fun onBackPressedSupport(): Boolean {
@@ -357,6 +367,8 @@ class WifiSettingsFragment : BaseFragment(), PageScrollable {
                     connectivityManager.unregisterNetworkCallback(networkCallback)
                 }
         }
+
+        releaseWakeLock()
     }
 
     private fun handleScanResult() {

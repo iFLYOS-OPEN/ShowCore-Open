@@ -1,9 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<com.iflytek.cyber.iot.show.core.widget.ExFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/ex_frame_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@color/alarm_background"
+    android:clickable="true"
+    android:focusable="true"
     android:theme="@style/AppTheme.Dark">
 
     <LinearLayout
@@ -58,48 +62,21 @@
                 android:layout_height="wrap_content"
                 android:layout_centerVertical="true"
                 android:layout_gravity="center_vertical"
-                android:layout_marginStart="@dimen/dp_8"
                 android:layout_toEndOf="@id/iv_back"
                 android:text="@string/alarm_title"
                 android:textColor="@android:color/white"
-                android:textSize="@dimen/sp_16" />
+                android:textSize="@dimen/sp_18" />
 
         </RelativeLayout>
 
-        <androidx.core.widget.NestedScrollView
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/alarm_list"
             android:layout_width="match_parent"
-            android:layout_height="match_parent">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/tv_set_alarm_tips"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/dp_40"
-                    android:layout_marginTop="@dimen/dp_8"
-                    android:layout_marginEnd="@dimen/dp_40"
-                    android:text="@string/set_alarm_tips"
-                    android:textColor="@android:color/white"
-                    android:textSize="@dimen/sp_20" />
-
-                <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/alarm_list"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent"
-                    android:layout_marginTop="@dimen/dp_24"
-                    android:clipToPadding="false"
-                    android:overScrollMode="never"
-                    android:paddingStart="@dimen/dp_40"
-                    android:paddingEnd="@dimen/dp_40"
-                    app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
-
-            </LinearLayout>
-
-        </androidx.core.widget.NestedScrollView>
+            android:layout_height="match_parent"
+            android:layout_marginBottom="@dimen/dp_46"
+            android:clipToPadding="false"
+            android:overScrollMode="never"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
 
     </LinearLayout>
 
@@ -111,7 +88,56 @@
         android:gravity="center"
         android:text="@string/empty_alarm_tips"
         android:textColor="@android:color/white"
-        android:textSize="@dimen/sp_22"
+        android:textSize="@dimen/sp_30"
         android:visibility="gone" />
 
-</FrameLayout>
+    <androidx.appcompat.widget.AppCompatTextView
+        android:id="@+id/tv_summary"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom"
+        android:layout_marginBottom="@dimen/dp_15"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/sp_16"
+        tools:text="你可以说，蓝小飞，帮我设置工作日早上八点的闹钟" />
+
+    <LinearLayout
+        android:id="@+id/error_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="@string/network_error"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_16" />
+
+        <Button
+            android:id="@+id/retry"
+            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_12"
+            android:text="@string/retry"
+            android:textColor="@color/setup_primary"
+            android:textSize="@dimen/sp_14" />
+
+    </LinearLayout>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/loading"
+        android:layout_width="@dimen/dp_48"
+        android:layout_height="@dimen/dp_48"
+        android:visibility="gone"
+        android:layout_gravity="center"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/animation_loading_l_white" />
+
+</com.iflytek.cyber.iot.show.core.widget.ExFrameLayout>

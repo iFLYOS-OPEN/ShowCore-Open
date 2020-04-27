@@ -3,6 +3,7 @@ package com.iflytek.cyber.iot.show.core.impl.appaction
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import android.os.Process
 import com.alibaba.fastjson.JSONArray
 import com.alibaba.fastjson.JSONObject
 import com.iflytek.cyber.evs.sdk.agent.AppAction
@@ -58,12 +59,149 @@ class EvsAppAction private constructor(private val context: Context) : AppAction
         return resultPayload
     }
 
-    override fun execute(payload: JSONObject, result: JSONObject): Boolean {
-        val executeId = payload.getString(KEY_EXECUTION_ID)
-        val actionArray = payload.getJSONArray(KEY_ACTIONS)
-
+    fun executeAction(
+        data: JSONObject,
+        executeCallback: (isSuccess: Boolean, errorLevel: Int, succeedActionId: String?) -> Unit
+    ) {
         var isSuccess = false
         var errorLevel = 0
+        var succeedActionId: String? = null
+
+        try {
+
+            val actionId = data.getString(KEY_ACTION_ID)
+            val type = data.getString(KEY_TYPE)
+            val pkgName = data.getString(KEY_PACKAGE_NAME)
+            val actionName = data.getString(KEY_ACTION_NAME)
+            val className = data.getString(KEY_CLASS_NAME)
+            val uri = data.getString(KEY_URI)
+            val categoryName = data.getString(KEY_CATEGORY_NAME)
+            val extras = data.getJSONObject(KEY_EXTRAS)
+            val version = data.getJSONObject(KEY_VERSION)
+            var verStart = 0
+            var verEnd = Int.MAX_VALUE
+
+            if (version != null) {
+                verStart = version.getIntValue(KEY_START)
+                verEnd = version.getIntValue(KEY_END)
+            }
+
+            if (!pkgName.isNullOrEmpty()) {
+                val appInfo = AppUtil.getAppInfo(context, pkgName)
+                if (appInfo == null) {
+                    // 不存在对应的app
+                    if (errorLevel < FAILURE_LEVEL_APP_NOT_FOUND) {
+                        errorLevel = FAILURE_LEVEL_APP_NOT_FOUND
+                    }
+                } else {
+                    if (appInfo.version !in verStart..verEnd) {
+                        // 版本不符合，暂时当不存在app处理
+                        if (errorLevel < FAILURE_LEVEL_APP_NOT_FOUND) {
+                            errorLevel = FAILURE_LEVEL_APP_NOT_FOUND
+                        }
+                    }
+                }
+            }
+
+            val intent: Intent? = if (actionName.isNullOrEmpty()) {
+                if (uri.isNullOrEmpty()) {
+                    if (className.isNullOrEmpty()) {
+                        context.packageManager.getLaunchIntentForPackage(pkgName)
+                    } else {
+                        Intent()
+                    }
+                } else {
+                    Intent.parseUri(uri, 0)
+                }
+            } else {
+                Intent(actionName)
+            }
+
+            if (!pkgName.isNullOrEmpty()) {
+                intent?.setPackage(pkgName)
+            }
+
+            if (!className.isNullOrEmpty()) {
+                intent?.setClassName(pkgName, className)
+            }
+
+            if (!categoryName.isNullOrEmpty()) {
+                intent?.addCategory(categoryName)
+            }
+
+            if (!uri.isNullOrEmpty()) {
+                intent?.run {
+                    if (this.data == null) {
+                        this.data = Uri.parse(uri)
+                    }
+                }
+            }
+
+            if (!extras.isNullOrEmpty()) {
+                for (key: String in extras.keys) {
+                    intent?.putExtra(key, extras.getString(key))
+                }
+            }
+
+            if (!type.isNullOrEmpty() && intent != null) {
+                if (!AppUtil.isActionSupported(context, intent, type)) {
+                    if (type != DATA_TYPE_BROADCAST) {
+                        // 不支持action
+                        if (errorLevel < FAILURE_LEVEL_ACTION_UNSUPPORTED) {
+                            errorLevel = FAILURE_LEVEL_ACTION_UNSUPPORTED
+                        }
+                    }
+                }
+            }
+
+            when (type) {
+                DATA_TYPE_SERVICE -> {
+                    context.startService(intent)
+                    isSuccess = true
+                }
+                DATA_TYPE_BROADCAST -> {
+                    context.sendBroadcast(intent)
+                    isSuccess = true
+                }
+                DATA_TYPE_EXIT -> {
+                    if (!pkgName.isNullOrEmpty() && Process.myUid() == Process.SYSTEM_UID) {
+                        TerminalUtils.execute("am force-stop $pkgName")
+                        isSuccess = true
+                    }
+                }
+                else -> {
+                    // 打开app
+                    if (intent == null) {
+                        if (errorLevel < FAILURE_LEVEL_INTERNAL_ERROR) {
+                            errorLevel = FAILURE_LEVEL_INTERNAL_ERROR
+                        }
+                    } else {
+                        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
+                        context.startActivity(intent)
+                        isSuccess = true
+                    }
+                }
+            }
+
+            if (isSuccess) {
+                succeedActionId = actionId
+            }
+        } catch (t: Throwable) {
+            t.printStackTrace()
+
+            errorLevel = FAILURE_LEVEL_ACTION_UNSUPPORTED
+        }
+
+        executeCallback.invoke(isSuccess, errorLevel, succeedActionId)
+    }
+
+    fun executeActionArray(
+        actionArray: JSONArray,
+        executeCallback: (isSuccess: Boolean, errorLevel: Int, succeedActionId: String?) -> Unit
+    ) {
+        var isSuccess = false
+        var errorLevel = 0
+        var succeedActionId: String? = null
 
         for (i in 0 until actionArray.size) {
             try {
@@ -167,7 +305,7 @@ class EvsAppAction private constructor(private val context: Context) : AppAction
                         isSuccess = true
                     }
                     DATA_TYPE_EXIT -> {
-                        if (!pkgName.isNullOrEmpty()) {
+                        if (!pkgName.isNullOrEmpty() && Process.myUid() == Process.SYSTEM_UID) {
                             TerminalUtils.execute("am force-stop $pkgName")
                             isSuccess = true
                         }
@@ -187,23 +325,41 @@ class EvsAppAction private constructor(private val context: Context) : AppAction
                 }
 
                 if (isSuccess) {
-                    result[KEY_ACTION_ID] = actionId
-                    return true
+                    succeedActionId = actionId
                 }
             } catch (t: Throwable) {
                 t.printStackTrace()
 
                 errorLevel = FAILURE_LEVEL_ACTION_UNSUPPORTED
             }
+
+            if (isSuccess) {
+                executeCallback.invoke(isSuccess, errorLevel, succeedActionId)
+                return
+            }
         }
 
-        // 执行失败
-        result[KEY_EXECUTION_ID] = executeId
-        result[KEY_FAILURE_CODE] = codeMap[errorLevel]
+        executeCallback.invoke(isSuccess, errorLevel, succeedActionId)
+    }
 
-        Intent.ACTION_MAIN
+    override fun execute(payload: JSONObject, result: JSONObject): Boolean {
+        val executeId = payload.getString(KEY_EXECUTION_ID)
+        val actionArray = payload.getJSONArray(KEY_ACTIONS)
 
-        return false
+        var isResultSuccess = false
+        executeActionArray(actionArray) { isSuccess, errorLevel, succeedActionId ->
+            if (isSuccess) {
+                result[KEY_ACTION_ID] = succeedActionId
+                result[KEY_FEEDBACK_TEXT] = ""
+            } else {
+                // 执行失败
+                result[KEY_EXECUTION_ID] = executeId
+                result[KEY_FAILURE_CODE] = codeMap[errorLevel]
+            }
+            isResultSuccess = isSuccess
+        }
+
+        return isResultSuccess
     }
 
     override fun getForegroundApp(): AppUtil.AppInfo? {

@@ -1,6 +1,7 @@
 package com.iflytek.cyber.iot.show.core.adapter
 
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -11,10 +12,12 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.model.Song
 import com.iflytek.cyber.iot.show.core.model.SongItem
+import com.iflytek.cyber.iot.show.core.utils.clickWithTrigger
 
 class SongListAdapter(private val onItemClickListener: (SongItem) -> Unit)
     : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -69,14 +72,18 @@ class SongListAdapter(private val onItemClickListener: (SongItem) -> Unit)
             if (isPlaying) {
                 holder.ivPlaying.visibility = View.VISIBLE
                 holder.rank.visibility = View.GONE
+                if (ContentStorage.get().isMusicPlaying) {
+                    holder.ivPlaying.playAnimation()
+                } else {
+                    holder.ivPlaying.pauseAnimation()
+                }
             } else {
                 holder.ivPlaying.visibility = View.GONE
+                holder.ivPlaying.pauseAnimation()
                 holder.rank.visibility = View.VISIBLE
             }
-            holder.songContent.setOnClickListener {
-                if (item.available) {
-                    onItemClickListener.invoke(item)
-                }
+            holder.songContent.clickWithTrigger {
+                onItemClickListener.invoke(item)
             }
         } else if (getItemViewType(position) == R.layout.item_load_more) {
             holder as LoadingHolder
@@ -89,7 +96,7 @@ class SongListAdapter(private val onItemClickListener: (SongItem) -> Unit)
         var rank: TextView = itemView.findViewById(R.id.song_rank)
         var title: TextView = itemView.findViewById(R.id.song_title)
         var artist: TextView = itemView.findViewById(R.id.song_artist)
-        val ivPlaying: ImageView = itemView.findViewById(R.id.iv_icon_playing)
+        val ivPlaying: LottieAnimationView = itemView.findViewById(R.id.iv_icon_playing)
     }
 
     class LoadingHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

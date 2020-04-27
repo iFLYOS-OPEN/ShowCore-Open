@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/song_content"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
@@ -17,15 +18,14 @@
         android:layout_height="56dp"
         android:layout_gravity="center_vertical">
 
-        <ImageView
+        <com.airbnb.lottie.LottieAnimationView
             android:id="@+id/iv_icon_playing"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_width="@dimen/dp_18"
+            android:layout_height="@dimen/dp_18"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_music_is_playing_colorful_24dp"
             android:tint="?colorPrimary"
-            android:visibility="gone"
-            tools:visibility="visible" />
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/anim_music_playing_blue" />
 
         <TextView
             android:id="@+id/song_rank"

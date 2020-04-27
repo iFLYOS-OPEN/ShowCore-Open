@@ -29,7 +29,7 @@ android {
 
         buildConfigField "String", "AUTH_URL", '"https://auth.iflyos.cn/oauth/device"'
 
-        buildConfigField "String", "HOST", '"https://api.iflyos.cn/showcore/api/v1/"'
+        buildConfigField "String", "HOST", '"https://api.iflyos.cn/showcore/api/"'
 
         ndk {
             // Specifies the ABI configurations of your native
@@ -77,6 +77,7 @@ dependencies {
     //   * iqiyi-tv-r58697.jar      爱奇艺TV版 sdk
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation project(':evs_sdk')
+    implementation(name: 'webviewwrapper', ext: 'aar')
     implementation project(':ota') // 一个简易的 OTA 模块
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
@@ -109,6 +110,9 @@ dependencies {
     implementation 'com.github.zyyoona7:wheelview:1.0.6'
     implementation "com.daimajia.swipelayout:library:1.2.0@aar"
     implementation 'com.noober.background:core:1.5.6'
+    implementation 'com.hyman:flowlayout-lib:1.1.2'
+    implementation 'com.drakeet.multitype:multitype:4.2.0'
+    implementation 'com.makeramen:roundedimageview:2.3.0'
 
     implementation 'com.lijiankun24:shadowlayout:1.1.0'
 
@@ -145,4 +149,6 @@ dependencies {
     implementation('com.journeyapps:zxing-android-embedded:3.5.0') {
         exclude group: 'com.android.support'
     }
+
+    //implementation 'com.jakewharton.rxbinding3:rxbinding:3.1.0'
 }

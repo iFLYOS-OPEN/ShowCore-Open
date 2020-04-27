@@ -18,10 +18,12 @@ class StyledAlertDialog : DialogFragment() {
     private var dialogMessageView: TextView? = null
     private var dialogPositiveButton: TextView? = null
     private var dialogNegativeButton: TextView? = null
+    private var dialogNegativeButton2: TextView? = null
     private var isWarningAction = false
 
     private var positiveButton: Pair<String, View.OnClickListener?>? = null
     private var negativeButton: Pair<String, View.OnClickListener?>? = null
+    private var negativeButton2: Pair<String, View.OnClickListener?>? = null
 
     var title: String? = null
     var message: String? = null
@@ -66,6 +68,7 @@ class StyledAlertDialog : DialogFragment() {
         dialogMessageView = view.findViewById(R.id.dialog_message)
         dialogPositiveButton = view.findViewById(R.id.dialog_positive)
         dialogNegativeButton = view.findViewById(R.id.dialog_negative)
+        dialogNegativeButton2 = view.findViewById(R.id.dialog_negative_2)
 
         title?.let { title ->
             dialogTitleView?.text = title
@@ -91,6 +94,9 @@ class StyledAlertDialog : DialogFragment() {
         dialogNegativeButton?.let { dialogNegativeButton ->
             matchPairToButton(negativeButton, dialogNegativeButton)
         }
+        dialogNegativeButton2?.let { dialogNegativeButton ->
+            matchPairToButton(negativeButton2, dialogNegativeButton)
+        }
     }
 
     private fun matchPairToButton(pair: Pair<String, View.OnClickListener?>?, button: TextView) {
@@ -112,6 +118,7 @@ class StyledAlertDialog : DialogFragment() {
         private var iconDrawable: Drawable? = null
         private var positiveButton: Pair<String, View.OnClickListener?>? = null
         private var negativeButton: Pair<String, View.OnClickListener?>? = null
+        private var negativeButton2: Pair<String, View.OnClickListener?>? = null
         private var isWarningAction = false
 
         fun setTitle(title: String): Builder {
@@ -139,6 +146,11 @@ class StyledAlertDialog : DialogFragment() {
             return this
         }
 
+        fun setNegativeButton2(text: String, onClickListener: View.OnClickListener?): Builder {
+            negativeButton2 = Pair(text, onClickListener)
+            return this
+        }
+
         fun setWarningAction(isWarningAction: Boolean): Builder {
             this.isWarningAction = isWarningAction
             return this
@@ -151,6 +163,7 @@ class StyledAlertDialog : DialogFragment() {
             dialog.iconDrawable = iconDrawable
             dialog.positiveButton = positiveButton
             dialog.negativeButton = negativeButton
+            dialog.negativeButton2 = negativeButton2
             dialog.isWarningAction = isWarningAction
             return dialog
         }

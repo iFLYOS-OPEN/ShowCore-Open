@@ -11,18 +11,18 @@ import retrofit2.http.PUT
 
 interface DeviceApi {
 
-    @GET("device")
+    @GET("v1/device")
     fun get(): Call<ResponseBody>
 
-    @PUT("device")
+    @PUT("v1/device")
     fun put(@Body requestBody: RequestBody): Call<ResponseBody>
 
-    @GET("chat_config")
+    @GET("v1/chat_config")
     fun getChatConfig(): Call<ChatConfigData>
 
-    @PUT("chat_config")
+    @PUT("v1/chat_config")
     fun putChatConfig(@Body params: RequestBody): Call<ResponseBody>
 
-    @POST("device/restore_factory")
+    @POST("v1/device/restore_factory")
     fun postRestoreFactory(): Call<ResponseBody>
 }

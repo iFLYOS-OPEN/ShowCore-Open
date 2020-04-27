@@ -1,6 +1,5 @@
 package com.iflytek.cyber.evs.sdk
 
-import android.content.Context
 import android.os.Handler
 import com.alibaba.fastjson.JSON
 import com.alibaba.fastjson.JSONObject
@@ -25,6 +24,7 @@ internal object ResponseProcessor {
      */
     private const val MAX_PLAYER_INFO_CACHE_SIZE = 40
     private const val MAX_PARALLEL_CACHE_SIZE = 40
+    private const val MAX_NORMAL_MAP_MAX_SIZE = 40
 
     private var contextRef: SoftReference<EvsService>? = null
 
@@ -58,8 +58,10 @@ internal object ResponseProcessor {
     //    private var currentRequestId = ""
     //    private val pendingExecuteResponses =
 //        HashMap<String, MutableList<OsResponse>>() // requestId -> responses
-    private val audioNearlyFinishedSentMap = HashMap<String, Boolean>() // resourceId -> isSent
-    private val videoNearlyFinishedSentMap = HashMap<String, Boolean>() // resourceId -> isSent
+    private val audioNearlyFinishedSentMap =
+        HashSet<String>() // resourceId which hadn't send nearly_finish
+    private val videoNearlyFinishedSentMap =
+        HashSet<String>() // resourceId which hadn't send nearly_finish
     private val needSetOffsetResources = HashMap<String, Long>() // resourceId -> offset
     private val resourceIdRequestIdMap = HashMap<String, String>() // resourceId -> requestId
 
@@ -77,15 +79,17 @@ internal object ResponseProcessor {
                 payload[AudioPlayer.KEY_RESOURCE_ID] = resourceId
                 when (type) {
                     AudioPlayer.TYPE_PLAYBACK -> {
-                        audioNearlyFinishedSentMap[resourceId] = false
+                        if (audioNearlyFinishedSentMap.size > MAX_NORMAL_MAP_MAX_SIZE)
+                            audioNearlyFinishedSentMap.clear()
+                        audioNearlyFinishedSentMap.add(resourceId)
 
                         payload[AudioPlayer.KEY_OFFSET] = player.getOffset(type)
                         RequestManager.sendRequest(AudioPlayer.NAME_PLAYBACK_PROGRESS_SYNC, payload)
 
                         if (needSetOffsetResources.containsKey(resourceId)) {
                             player.seekTo(type, needSetOffsetResources[resourceId] ?: 0)
-                            needSetOffsetResources.remove(resourceId)
                         }
+                        needSetOffsetResources.clear()
 
                         if (playerInfoMap.containsKey(resourceId)) {
                             playerInfoMap[resourceId]?.let { playerInfo ->
@@ -132,8 +136,8 @@ internal object ResponseProcessor {
 
                         if (needSetOffsetResources.containsKey(resourceId)) {
                             player.seekTo(type, needSetOffsetResources[resourceId] ?: 0)
-                            needSetOffsetResources.remove(resourceId)
                         }
+                        needSetOffsetResources.clear()
 
                         AudioFocusManager.requestActive(
                             AudioFocusManager.CHANNEL_CONTENT,
@@ -251,7 +255,7 @@ internal object ResponseProcessor {
                 payload[AudioPlayer.KEY_RESOURCE_ID] = resourceId
                 when (type) {
                     AudioPlayer.TYPE_PLAYBACK -> {
-                        if (audioNearlyFinishedSentMap[resourceId] != true) {
+                        if (audioNearlyFinishedSentMap.contains(resourceId)) {
                             val nearlyFinishedPayload = JSONObject()
                             nearlyFinishedPayload[AudioPlayer.KEY_RESOURCE_ID] = resourceId
                             nearlyFinishedPayload[AudioPlayer.KEY_OFFSET] =
@@ -262,7 +266,7 @@ internal object ResponseProcessor {
                                 AudioPlayer.NAME_PLAYBACK_PROGRESS_SYNC,
                                 nearlyFinishedPayload
                             )
-                            audioNearlyFinishedSentMap[resourceId] = true
+                            audioNearlyFinishedSentMap.remove(resourceId)
                         }
 
                         payload[AudioPlayer.KEY_OFFSET] = player.getOffset(type)
@@ -346,12 +350,12 @@ internal object ResponseProcessor {
             resourceId: String,
             position: Long
         ) {
-            if (type == AudioPlayer.TYPE_PLAYBACK && audioNearlyFinishedSentMap[resourceId] == false) {
+            if (type == AudioPlayer.TYPE_PLAYBACK && audioNearlyFinishedSentMap.contains(resourceId)) {
                 handler?.post {
                     val duration = player.getDuration(type)
 //                    if (position > 5000) { // for test
                     if (position * 3 > duration) {
-                        audioNearlyFinishedSentMap[resourceId] = true
+                        audioNearlyFinishedSentMap.remove(resourceId)
 
                         val payload = JSONObject()
                         payload[AudioPlayer.KEY_RESOURCE_ID] = resourceId
@@ -398,14 +402,16 @@ internal object ResponseProcessor {
                 val payload = JSONObject()
                 payload[VideoPlayer.KEY_TYPE] = VideoPlayer.SYNC_TYPE_STARTED
                 payload[VideoPlayer.KEY_RESOURCE_ID] = resourceId
-                videoNearlyFinishedSentMap[resourceId] = false
+                if (videoNearlyFinishedSentMap.size >= MAX_NORMAL_MAP_MAX_SIZE)
+                    videoNearlyFinishedSentMap.clear()
+                videoNearlyFinishedSentMap.add(resourceId)
                 payload[VideoPlayer.KEY_OFFSET] = player.videoOffset
                 RequestManager.sendRequest(VideoPlayer.NAME_PROGRESS_SYNC, payload)
 
                 if (needSetOffsetResources.containsKey(resourceId)) {
                     player.seekTo(needSetOffsetResources[resourceId] ?: 0)
-                    needSetOffsetResources.remove(resourceId)
                 }
+                needSetOffsetResources.clear()
 
                 if (playerInfoMap.containsKey(resourceId)) {
                     playerInfoMap[resourceId]?.let { playerInfo ->
@@ -430,8 +436,8 @@ internal object ResponseProcessor {
 
                 if (needSetOffsetResources.containsKey(resourceId)) {
                     player.seekTo(needSetOffsetResources[resourceId] ?: 0)
-                    needSetOffsetResources.remove(resourceId)
                 }
+                needSetOffsetResources.clear()
 
                 AudioFocusManager.requestActive(
                     AudioFocusManager.CHANNEL_CONTENT,
@@ -456,14 +462,14 @@ internal object ResponseProcessor {
 
         override fun onCompleted(player: VideoPlayer, resourceId: String) {
             handler?.post {
-                if (videoNearlyFinishedSentMap[resourceId] != true) {
+                if (videoNearlyFinishedSentMap.contains(resourceId)) {
                     val payload = JSONObject()
                     payload[VideoPlayer.KEY_TYPE] = VideoPlayer.SYNC_TYPE_NEARLY_FINISHED
                     payload[VideoPlayer.KEY_RESOURCE_ID] = resourceId
                     payload[VideoPlayer.KEY_OFFSET] = player.videoOffset
                     RequestManager.sendRequest(VideoPlayer.NAME_PROGRESS_SYNC, payload)
 
-                    videoNearlyFinishedSentMap[resourceId] = true
+                    videoNearlyFinishedSentMap.remove(resourceId)
                 }
 
                 val payload = JSONObject()
@@ -491,11 +497,11 @@ internal object ResponseProcessor {
         }
 
         override fun onPositionUpdated(player: VideoPlayer, resourceId: String, position: Long) {
-            if (videoNearlyFinishedSentMap[resourceId] != true) {
+            if (videoNearlyFinishedSentMap.contains(resourceId)) {
                 handler?.post {
                     val duration = player.getDuration()
                     if (position * 3 > duration) {
-                        videoNearlyFinishedSentMap[resourceId] = true
+                        videoNearlyFinishedSentMap.remove(resourceId)
                         val payload = JSONObject()
                         payload[VideoPlayer.KEY_TYPE] = VideoPlayer.SYNC_TYPE_NEARLY_FINISHED
                         payload[VideoPlayer.KEY_RESOURCE_ID] = resourceId
@@ -930,6 +936,45 @@ internal object ResponseProcessor {
 
                                 })
                             }
+                            Launcher.NAME_START_INTERNAL_APP -> {
+                                val type = payload.getString("type")
+                                val id = payload.getString("id")
+                                val callback = object : Launcher.ExecuteCallback() {
+                                    override fun onFailed(
+                                        failureCode: String?,
+                                        feedbackText: String?
+                                    ) {
+                                        this.failureCode = failureCode
+                                        this.feedbackText = feedbackText
+                                        this.result = Launcher.RESULT_FAILED
+                                    }
+
+                                    override fun onSuccess(feedbackText: String?) {
+                                        this.result = Launcher.RESULT_SUCCEED
+                                        this.feedbackText = feedbackText
+                                    }
+                                }
+                                val result = it.startInternalApp(payload, callback)
+                                if (result) {
+                                    when (callback.result) {
+                                        Launcher.RESULT_SUCCEED -> {
+                                            it.sendStartInternalAppSucceed(
+                                                id,
+                                                type,
+                                                callback.feedbackText
+                                            )
+                                        }
+                                        Launcher.RESULT_FAILED -> {
+                                            it.sendStartInternalAppFailed(
+                                                id,
+                                                type,
+                                                callback.feedbackText,
+                                                callback.failureCode
+                                            )
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
@@ -974,7 +1019,25 @@ internal object ResponseProcessor {
                                 }
                             }
                             Template.NAME_CUSTOM_TEMPLATE -> {
-                                it.renderCustomTemplate(payload.toString())
+//                                it.renderCustomTemplate(payload.toString())
+                                val templateId = payload[Template.KEY_TEMPLATE_ID]?.toString()
+                                val templateType = payload[Template.KEY_TYPE]?.toString()
+                                val showingDuration =
+                                    payload[Template.KEY_SHOWING_DURATION]?.toString()
+                                val templateHtml =
+                                    payload[Template.KEY_HTML_SOURCE_CODE]?.toString()
+                                if (templateId.isNullOrEmpty() || templateType.isNullOrEmpty()
+                                    || templateHtml.isNullOrEmpty()
+                                ) {
+                                    Log.w(TAG, "Custom template without right data.")
+                                } else {
+                                    it.renderCustomTemplate(
+                                        templateType,
+                                        templateId,
+                                        showingDuration,
+                                        templateHtml
+                                    )
+                                }
                             }
                             Template.NAME_EXIT -> {
                                 when (val type = payload.getString(Template.KEY_TYPE)) {
@@ -1072,6 +1135,18 @@ internal object ResponseProcessor {
                             }
                             Recognizer.NAME_STOP_CAPTURE -> {
                                 it.stopCapture()
+
+                                contextRef?.get()?.let { service ->
+                                    if (service.isResponseSoundEnabled()
+                                        && !hadPlayResponseSoundRequestIdSet.contains(requestId)
+                                    ) {
+                                        if (hadPlayResponseSoundRequestIdSet.size > MAX_NORMAL_MAP_MAX_SIZE) {
+                                            hadPlayResponseSoundRequestIdSet.clear()
+                                        }
+                                        hadPlayResponseSoundRequestIdSet.add(requestId)
+                                        service.playResponseSound()
+                                    }
+                                }
                             }
                             Recognizer.NAME_EXPECT_REPLY -> {
                                 if (!it.isPreventExpectReply) {
@@ -1086,7 +1161,12 @@ internal object ResponseProcessor {
                                     }
 
                                     it.expectReply(replyKey)
+                                } else {
+
                                 }
+                            }
+                            Recognizer.NAME_EVALUATE_RESULT -> {
+                                it.onEvaluateResult(payload.toString())
                             }
                             else -> {
                             }
@@ -1168,6 +1248,8 @@ internal object ResponseProcessor {
                                     } else {
                                         markAsExecuteFinished = false
 
+                                        if (resourceIdRequestIdMap.size >= MAX_NORMAL_MAP_MAX_SIZE)
+                                            resourceIdRequestIdMap.clear()
                                         resourceIdRequestIdMap[resourceId] = requestId
 
                                         audioPlayer.play(type, resourceId, url)
@@ -1290,6 +1372,9 @@ internal object ResponseProcessor {
                             val url = payload.getString(WakeWord.PAYLOAD_URL)
 
                             it.setWakeWord(wakeWordId, wakeWord, url)
+                        } else if (name == WakeWord.NAME_RESET_WAKE_WORD) {
+                            val wakeWordId = payload.getString(WakeWord.PAYLOAD_WAKE_WORD_ID)
+                            it.resetWakeWord(wakeWordId)
                         }
                     }
                 }
@@ -1346,7 +1431,7 @@ internal object ResponseProcessor {
                             Log.d(
                                 TAG,
                                 "request_id{$pairRequestId} is not equals with " +
-                                    "current request_id{$currentManualRequestId}"
+                                        "current request_id{$currentManualRequestId}"
                             )
                             return
                         }
@@ -1357,7 +1442,6 @@ internal object ResponseProcessor {
                         else
                             normalPendingExecutingResponses.isNotEmpty()
                     var hasToStopCapture = false
-                    var avoidPlayResponseSound = false
                     responses.map {
                         val name = it.header.name
                         Log.v(TAG, "add response $name")
@@ -1365,10 +1449,6 @@ internal object ResponseProcessor {
                             name.startsWith(Constant.NAMESPACE_RECOGNIZER) -> {
                                 if (name == Recognizer.NAME_EXPECT_REPLY) {
                                     hasToStopCapture = true
-                                } else if (name == Recognizer.NAME_STOP_CAPTURE
-                                    || name == Recognizer.NAME_INTERMEDIATE_TEXT
-                                ) {
-                                    avoidPlayResponseSound = true
                                 }
                             }
                             name.startsWith(Constant.NAMESPACE_AUDIO_PLAYER) -> {
@@ -1391,30 +1471,12 @@ internal object ResponseProcessor {
                                 }
                             }
                             name.startsWith(Constant.NAMESPACE_SYSTEM) -> {
-                                if (name == System.NAME_PING) {
-                                    avoidPlayResponseSound = true
-                                }
                             }
                         }
                         if (pairRequestId.startsWith(RequestBuilder.PREFIX_MANUAL)) {
                             manualPendingExecutingResponses.add(Pair(pairRequestId, it))
                         } else {
                             normalPendingExecutingResponses.add(Pair(pairRequestId, it))
-                        }
-                    }
-                    if (responses.isNotEmpty()) {
-                        contextRef?.get()?.let { service ->
-                            if (!avoidPlayResponseSound
-                                && service.isResponseSoundEnabled()
-                                && pairRequestId.startsWith(RequestBuilder.PREFIX_MANUAL)
-                                && !hadPlayResponseSoundRequestIdSet.contains(pairRequestId)
-                            ) {
-                                if (hadPlayResponseSoundRequestIdSet.size > 100) {
-                                    hadPlayResponseSoundRequestIdSet.clear()
-                                }
-                                hadPlayResponseSoundRequestIdSet.add(pairRequestId)
-                                service.playResponseSound()
-                            }
                         }
                     }
                     if (pairRequestId.startsWith(RequestBuilder.PREFIX_MANUAL)) {
@@ -1433,17 +1495,17 @@ internal object ResponseProcessor {
                     val isParallel = ttsParallelMap[currentTtsResourceId] == true
                     val shouldBreakTts =
                         (pairRequestId.startsWith(RequestBuilder.PREFIX_MANUAL)
-                            && resourceIdRequestIdMap[currentTtsResourceId]?.startsWith(
+                                && resourceIdRequestIdMap[currentTtsResourceId]?.startsWith(
                             RequestBuilder.PREFIX_MANUAL
                         ) != true)
-                            || (!pairRequestId.startsWith(RequestBuilder.PREFIX_MANUAL)
-                            && resourceIdRequestIdMap[currentTtsResourceId]?.startsWith(
+                                || (!pairRequestId.startsWith(RequestBuilder.PREFIX_MANUAL)
+                                && resourceIdRequestIdMap[currentTtsResourceId]?.startsWith(
                             RequestBuilder.PREFIX_MANUAL
                         ) == true)
                     Log.v(
                         TAG,
                         "isExecuting: $isExecuting, isTtsPlaying: $isTtsPlaying, " +
-                            "isParallel: $isParallel, shouldBreakTts: $shouldBreakTts"
+                                "isParallel: $isParallel, shouldBreakTts: $shouldBreakTts"
                     )
                     if (!isExecuting && !(isTtsPlaying && !isParallel && !shouldBreakTts)) {
                         handler?.post {

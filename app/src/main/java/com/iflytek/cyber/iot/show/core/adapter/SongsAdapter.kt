@@ -12,6 +12,7 @@ import android.widget.TextView
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
+import com.airbnb.lottie.LottieAnimationView
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.model.Song
@@ -44,6 +45,11 @@ class SongsAdapter(private val onItemClickListener: (song: Song) -> Unit)
             holder.rank.visibility = View.GONE
             holder.title.setTextColor(playingTextColor)
             holder.onlyTitle.setTextColor(playingTextColor)
+            if (ContentStorage.get().isMusicPlaying) {
+                holder.ivPlaying.playAnimation()
+            } else {
+                holder.ivPlaying.pauseAnimation()
+            }
         } else {
             holder.ivPlaying.visibility = View.GONE
             holder.rank.visibility = View.VISIBLE
@@ -70,7 +76,7 @@ class SongsAdapter(private val onItemClickListener: (song: Song) -> Unit)
         var rank: TextView = itemView.findViewById(R.id.song_rank)
         var title: TextView = itemView.findViewById(R.id.song_title)
         var artist: TextView = itemView.findViewById(R.id.song_artist)
-        val ivPlaying: ImageView = itemView.findViewById(R.id.iv_icon_playing)
+        val ivPlaying: LottieAnimationView = itemView.findViewById(R.id.iv_icon_playing)
         val divider = itemView.findViewById<View>(R.id.divider)
         val textContent = itemView.findViewById<LinearLayout>(R.id.text_content)
         val onlyTitle = itemView.findViewById<TextView>(R.id.tv_only_title)

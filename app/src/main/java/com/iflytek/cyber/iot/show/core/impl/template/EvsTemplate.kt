@@ -35,6 +35,10 @@ class EvsTemplate private constructor() : Template() {
         return if (isPlayerInfoFocused && !isOtherTemplateFocused) TYPE_PLAYER_INFO else templateType
     }
 
+    override fun isSupportedCustomTemplate(): Boolean {
+        return true
+    }
+
     override fun exitStaticTemplate(type: String?) {
         super.exitStaticTemplate(type)
         renderCallback?.exitStaticTemplate(type)
@@ -55,6 +59,10 @@ class EvsTemplate private constructor() : Template() {
         renderCallback?.renderTemplate(payload)
     }
 
+    override fun renderCustomTemplate(type: String, templateId: String, showingDuration: String?, htmlSourceCode: String) {
+        super.renderCustomTemplate(type, templateId, showingDuration, htmlSourceCode)
+        renderCallback?.renderCustomTemplate(type, templateId, showingDuration, htmlSourceCode)
+    }
 
     override fun notifyPlayerInfoUpdated(resourceId: String, payload: String) {
         super.notifyPlayerInfoUpdated(resourceId, payload)
@@ -83,6 +91,7 @@ class EvsTemplate private constructor() : Template() {
         fun exitPlayerInfo()
         fun exitCustomTemplate()
         fun renderVideoPlayerInfo(payload: String)
+        fun renderCustomTemplate(type: String, templateId: String, showingDuration: String?, htmlSourceCode: String)
     }
 
     abstract class SimpleRenderCallback : RenderCallback {
@@ -105,6 +114,15 @@ class EvsTemplate private constructor() : Template() {
         }
 
         override fun renderVideoPlayerInfo(payload: String) {
+        }
+
+        override fun renderCustomTemplate(
+            type: String,
+            templateId: String,
+            showingDuration: String?,
+            htmlSourceCode: String
+        ) {
+
         }
     }
 }

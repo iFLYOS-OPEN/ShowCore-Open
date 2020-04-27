@@ -17,7 +17,7 @@ import com.iflytek.cyber.iot.show.core.R
 
 /**
  * DividerItemDecoration is a [RecyclerView.ItemDecoration] that can be used as a divider
- * between items of a [LinearLayoutManager]. It supports both [HORIZONTAL] and
+ * between result of a [LinearLayoutManager]. It supports both [HORIZONTAL] and
  * [VERTICAL] orientations.
  *
  * <pre>

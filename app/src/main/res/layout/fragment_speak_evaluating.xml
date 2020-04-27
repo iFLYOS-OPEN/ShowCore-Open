@@ -1,0 +1,338 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:clickable="true"
+    android:focusable="true"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:background="@android:color/white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/progress_container"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <ProgressBar
+                android:id="@+id/progress"
+                style="@android:style/Widget.ProgressBar.Horizontal"
+                android:layout_width="@dimen/dp_320"
+                android:layout_height="@dimen/dp_14"
+                android:max="100"
+                android:progress="10"
+                android:progressDrawable="@drawable/bg_horizontal_progress" />
+
+            <TextView
+                android:id="@+id/tv_progress"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_12"
+                android:textColor="#FFC300"
+                android:textSize="@dimen/sp_18"
+                tools:text="1/10" />
+
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/tv_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="句子评测"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_18"
+            android:visibility="gone" />
+
+        <ImageView
+            android:layout_width="@dimen/dp_28"
+            android:layout_height="@dimen/dp_28"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/dp_32"
+            android:src="@drawable/ic_app_speak_evaluation" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/chinese_sentence"
+        android:layout_width="@dimen/dp_360"
+        android:layout_height="@dimen/dp_200"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/dp_80"
+        android:background="@drawable/bg_blue_round_28"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:id="@+id/tv_record_tips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_21"
+            android:alpha="0.7"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            tools:text="请在开始录音后读出以下汉字" />
+
+        <TextView
+            android:id="@+id/tv_word"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_72"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_48"
+            tools:text="哈" />
+
+        <TextView
+            android:id="@+id/tv_sentence"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_24"
+            android:layout_marginTop="@dimen/dp_72"
+            android:layout_marginEnd="@dimen/dp_24"
+            android:layout_marginBottom="@dimen/dp_18"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_20"
+            android:visibility="gone"
+            tools:text="爷爷说，只有那不畏艰难的勇士，才能走进大海的世界只有那不畏艰难的勇士" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/english_sentence"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="@dimen/dp_40"
+        android:layout_marginTop="@dimen/dp_56"
+        android:layout_marginEnd="@dimen/dp_40"
+        android:background="@drawable/bg_blue_top_round_28dp"
+        android:visibility="gone">
+
+        <TextView
+            android:id="@+id/tv_english_tips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_14"
+            android:alpha="0.7"
+            android:textColor="@android:color/white"
+            android:textSize="16sp"
+            tools:text="请在开始录音后60s读完文章" />
+
+        <TextView
+            android:id="@+id/tv_english_article"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/dp_24"
+            android:layout_marginTop="@dimen/dp_48"
+            android:layout_marginEnd="@dimen/dp_24"
+            android:layout_marginBottom="@dimen/dp_24"
+            android:lineSpacingExtra="@dimen/dp_8"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_20"
+            tools:text="We are not born with courage, but neither are we born with fear. Maybe some of our fears are brought on by your own experiences, by what someone has told you, by what you’ve read in the papers." />
+
+    </FrameLayout>
+
+    <RelativeLayout
+        android:id="@+id/record_tool_content"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_56"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginStart="@dimen/dp_150"
+        android:layout_marginEnd="@dimen/dp_150"
+        android:layout_marginBottom="@dimen/dp_34"
+        android:background="@drawable/bg_white_round_28dp">
+
+        <TextView
+            android:id="@+id/restart_record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginStart="@dimen/dp_12"
+            android:background="@drawable/bg_restart_record"
+            android:foreground="@drawable/bg_clickable_round_18dp"
+            android:paddingStart="@dimen/dp_12"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingEnd="@dimen/dp_12"
+            android:paddingBottom="@dimen/dp_8"
+            android:text="@string/restart_record"
+            android:textColor="@color/bg_restart_record_text_selector"
+            android:textSize="@dimen/sp_14" />
+
+        <Space
+            android:id="@+id/center_space"
+            android:layout_width="@dimen/dp_64"
+            android:layout_height="@dimen/dp_64"
+            android:layout_centerInParent="true" />
+
+        <TextView
+            android:id="@+id/finish_record"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentEnd="true"
+            android:layout_centerVertical="true"
+            android:layout_marginEnd="@dimen/dp_12"
+            android:background="@drawable/bg_submit_record"
+            android:foreground="@drawable/bg_clickable_round_18dp"
+            android:paddingStart="@dimen/dp_12"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingEnd="@dimen/dp_12"
+            android:paddingBottom="@dimen/dp_8"
+            android:text="@string/submit_record"
+            android:textColor="@color/bg_submit_record_text_selector"
+            android:textSize="@dimen/sp_14" />
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/center_recording"
+            android:layout_width="@dimen/dp_98"
+            android:layout_height="@dimen/dp_36"
+            android:layout_centerInParent="true"
+            app:lottie_rawRes="@raw/animation_recording"
+            app:lottie_loop="true" />
+
+    </RelativeLayout>
+
+    <FrameLayout
+        android:id="@+id/record_button_content"
+        android:layout_width="@dimen/dp_80"
+        android:layout_height="@dimen/dp_80"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="@dimen/dp_22"
+        android:background="@drawable/bg_record_button">
+
+        <ImageView
+            android:id="@+id/record_button"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_gravity="center"
+            android:background="@drawable/ic_record_white_40" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/recording_container"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="@dimen/dp_24"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/recording"
+            android:layout_width="@dimen/dp_146"
+            android:layout_height="@dimen/dp_42"
+            android:layout_gravity="center"
+            android:visibility="visible"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/animation_recording" />
+
+        <TextView
+            android:id="@+id/tv_recording_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/dp_4"
+            android:text="我正在听..."
+            android:textColor="#D2D2D2"
+            android:textSize="@dimen/sp_14"
+            android:visibility="visible" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/start_record_tips"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginStart="@dimen/dp_114"
+        android:layout_marginBottom="@dimen/dp_52"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/dp_24"
+            android:layout_height="@dimen/dp_24"
+            android:src="@drawable/ic_finger_24"
+            tools:ignore="ContentDescription" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_4"
+            android:text="@string/start_record"
+            android:textColor="#8A91A0"
+            android:textSize="@dimen/sp_14" />
+
+    </LinearLayout>
+
+    <FrameLayout
+        android:id="@+id/end_record_tips"
+        android:layout_width="@dimen/dp_168"
+        android:layout_height="@dimen/dp_32"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginStart="@dimen/dp_180"
+        android:layout_marginBottom="@dimen/dp_27"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:background="@drawable/ic_tooltips_header" />
+
+        <View
+            android:layout_width="@dimen/dp_160"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/dp_4"
+            android:background="@drawable/bg_black_round_4dp" />
+
+        <ImageView
+            android:layout_width="@dimen/dp_24"
+            android:layout_height="@dimen/dp_24"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/dp_22"
+            android:src="@drawable/ic_finger_24" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/dp_50"
+            android:text="@string/end_record_text"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_14" />
+
+    </FrameLayout>
+
+</FrameLayout>

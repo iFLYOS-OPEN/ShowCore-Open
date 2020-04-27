@@ -33,7 +33,12 @@ class AlarmAdapter(private val onItemClickListener: (Alert) -> Unit,
         val description = if (alert.content.isNullOrEmpty()) {
             alert.description
         } else {
-            alert.description + ", " + alert.content
+            val content = if (alert.content?.length ?: 0 > 10) {
+                alert.content?.substring(0, 10) + "···"
+            } else {
+                alert.content
+            }
+            alert.description + ", " + content
         }
         holder.alarmDesc.text = description
         holder.item.setOnClickListener {

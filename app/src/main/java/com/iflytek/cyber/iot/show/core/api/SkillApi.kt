@@ -8,9 +8,9 @@ import retrofit2.http.Path
 
 interface SkillApi {
 
-    @GET("skill_sections")
+    @GET("v1/skill_sections")
     fun getSkillSections(): Call<ArrayList<SkillSection>>
 
-    @GET("skills/{id}")
+    @GET("v1/skills/{id}")
     fun getSkillDetail(@Path("id") id: String): Call<SkillDetail>
 }

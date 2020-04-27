@@ -38,6 +38,8 @@ class EditAlarmDescFragment : BaseFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        setFragmentResult(0, bundleOf())
+
         desc = arguments?.getString("desc")
 
         view.findViewById<View>(R.id.iv_back).setOnClickListener {

@@ -9,6 +9,7 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
+import android.os.Process
 import android.os.RecoverySystem
 import android.provider.Settings
 import com.iflytek.cyber.iot.show.core.BuildConfig
@@ -56,7 +57,7 @@ object DeviceUtils {
         } else {
             pm.isScreenOn
         }
-        if (screenOn) {
+        if (screenOn && Process.myUid() == Process.SYSTEM_UID) {
             // 点亮屏幕
             TerminalUtils.execute("input keyevent POWER")
         }

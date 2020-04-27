@@ -1,6 +1,9 @@
 package com.iflytek.cyber.iot.show.core.model
 
+import android.content.SyncResult
 import android.os.Parcelable
+import com.alibaba.fastjson.JSONObject
+import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.android.parcel.Parcelize
 
@@ -55,15 +58,15 @@ data class Skill(
 data class SkillDetail(
     @SerializedName("account_link_url") val accountLink: String?,
     @SerializedName("account_linked") val accountLinked: Boolean?,
-    @SerializedName("category_name") val categoryName: String,
-    val description: String,
-    val developer: String,
-    val examples: ArrayList<String>,
-    val icon: String,
-    val id: String,
-    val name: String,
-    @SerializedName("updated_time") val updatedTime: String,
-    val version: String
+    @SerializedName("category_name") val categoryName: String?,
+    val description: String?,
+    val developer: String?,
+    val examples: ArrayList<String?>?,
+    val icon: String?,
+    val id: String?,
+    val name: String?,
+    @SerializedName("updated_time") val updatedTime: String?,
+    val version: String?
 ) : Parcelable
 
 data class Video(
@@ -139,7 +142,7 @@ class AlertBody {
     var repeatDate: String? = null
 }
 
-data class Message(val code: String, val message: String)
+data class Message(val code: String, val message: String, val error: String?)
 
 data class UserInfo(
     val avatar: String?,
@@ -189,11 +192,15 @@ data class SongItem(
     val image: String?,
     val liked: Boolean,
     val name: String,
+    @SerializedName("album_id") val albumId: String,
+    val business: String,
     @SerializedName("source_type") val sourceType: String
 ) : Parcelable
 
 data class Error(
-    val message: String,
+    val message: String?,
+    val title: String?,
+    @SerializedName("qrcode_message") val qrCodeMessage: String?,
     @SerializedName("redirect_url") val redirectUrl: String?
 )
 
@@ -244,9 +251,371 @@ data class ChatConfigData(
     @SerializedName("interaction_modes") val interactionModes: List<InteractionMode>?
 ) : Parcelable
 
+data class WakeWord(
+    val id: String?,
+    val name: String?,
+    val score: Int?,
+    val default: Boolean?,
+    val enable: Boolean?,
+    val status: String?
+) {
+    fun toJson(): String {
+        return Gson().toJson(this)
+    }
+}
+
+data class WakeWordsBody(
+    @SerializedName("wakewords") val wakeWords: List<WakeWord>?
+)
+
 data class Weather(
     val temperature: String?,
     val lifestyle: String?,
     val icon: String?,
     val description: String?
 )
+
+data class RecommendTag(
+    val id: Int,
+    val name: String?,
+    @SerializedName("search_word") val tags: ArrayList<String>?,
+    val rank: Int
+)
+
+data class SearchBody(
+    val name: String,
+    val limit: Int = 20,
+    val page: Int = 1
+)
+
+data class SearchResult(
+    val type: Int,
+    val total: String?,
+    val page: String?,
+    val limit: String?,
+    val results: ArrayList<Result>?
+)
+
+@Parcelize
+data class Result(
+    val id: String,
+    val title: String,
+    val cover: String?,
+    val business: String?,
+    val source: String,
+    val author: String?
+) : Parcelable
+
+data class PlayBody(
+    @SerializedName("audio_id") val audioId: String,
+    val business: String?,
+    @SerializedName("source_type") val sourceType: String
+)
+
+data class MainTemplate(
+    val type: Int,
+    val data: List<Banner>
+)
+
+data class CollectionTag(val tags: ArrayList<Tags>)
+
+data class Tags(val id: Int, val name: String, val value: String?)
+
+@Parcelize
+data class CollectionSong(
+    val name: String,
+    val id: String,
+    @SerializedName("error_reason") val errorReason: String?,
+    val available: Boolean,
+    val artist: String?,
+    @SerializedName("music_img") val musicImg: String?,
+    @SerializedName("source_type") val sourceType: String?,
+    val business: String?,
+    @SerializedName("album_id") val albumId: String?
+) : Parcelable
+
+data class CollectionV2(
+    val total: Int,
+    val name: String,
+    var collections: ArrayList<CollectionSong>
+)
+
+data class CollectionV3(
+    val single: CollectionV2,
+    val album: CollectionV2,
+    @SerializedName("kugou_sync_status") val syncResult: SyncResult?
+)
+
+data class PlayResult(val music: MusicResult?)
+
+data class MusicResult(val name: String?)
+
+data class PlaySingleBody(
+    @SerializedName("tag_id") val tagId: Int,
+    @SerializedName("media_id") val mediaId: String
+)
+
+data class PlayAlbumBody(
+    @SerializedName("album_id") val albumId: String,
+    @SerializedName("source_type") val sourceType: String,
+    @SerializedName("media_id") val mediaId: String?,
+    val business: String
+)
+
+data class TemplateApp(
+    val source: String?,
+    val name: String?,
+    val icon: String?,
+    val img: String?,
+    val template: Int?,
+    val business: String?,
+    val isDark: Boolean?,
+    val type: String? = null,
+    val url: String? = null,
+    val textIn: String? = null
+) {
+    companion object {
+        const val TEMPLATE_XMLR = 0         // 喜马拉雅
+        const val TEMPLATE_TEMPLATE_1 = 1   // 模板一
+        const val TEMPLATE_TEMPLATE_2 = 2   // 模板二
+        const val TEMPLATE_TEMPLATE_3 = 3   // 模板三
+    }
+}
+
+data class TemplateApp2(
+    val source: String?,
+    val name: String?,
+    val img: String?,
+    val business: String?
+)
+
+data class TemplateMediaItem(
+    val type: Int,
+    val total: Int,
+    val template: Int,
+    val page: Int,
+    val limit: Int,
+    val source: String?,
+    val items: ArrayList<SourceItem>?
+)
+
+@Parcelize
+data class SourceItem(
+    val cover: String?,
+    val source: String?,
+    val subtitle: String?,
+    val title: String?,
+    val type: Int,
+    val metadata: SourceMetaData?
+) : Parcelable
+
+@Parcelize
+data class SourceMetaData(
+    val business: String?,
+    val resourceId: String?,
+    val album: String?,
+    val source: String?,
+    val topLevel: String?,
+    val secondLevel: String?,
+    val thirdLevel: String?,
+    val type: Int?
+) : Parcelable
+
+@Parcelize
+data class AlbumItem(
+    @SerializedName("album") val album: String?,
+    @SerializedName("album_id") val albumId: String?,
+    @SerializedName("business") val business: String?,
+    @SerializedName("cover") val cover: String?,
+    @SerializedName("source") val source: String?,
+    @SerializedName("title") val title: String?,
+    @SerializedName("type") val type: String?,
+    var from: String?,
+    val result: List<MediaItem>?
+) : Parcelable
+
+@Parcelize
+data class MediaItem(
+    @SerializedName("album_id") val albumId: String?,
+    @SerializedName("audio_type") val audioType: String?,
+    @SerializedName("business") val business: String?,
+    @SerializedName("cover") val cover: String?,
+    @SerializedName("id") val id: String?,
+    @SerializedName("media_type") val mediaType: String?,
+    @SerializedName("source") val source: String?,
+    @SerializedName("subtitle") val subtitle: String?,
+    @SerializedName("title") val title: String?,
+    @SerializedName("variable") val variable: Boolean?
+) : Parcelable
+
+data class XmlyAlbumItem(
+    @SerializedName("id") val id: String?,
+    @SerializedName("album_id") val albumId: String?,
+    @SerializedName("name") val name: String?,
+    val title: String?,
+    @SerializedName("subtitle") val subtitle: String?,
+    @SerializedName("cover") val cover: String?,
+    @SerializedName("description") val description: String?,
+    @SerializedName("from") val from: String?,
+    val result: List<MediaItem>?
+)
+
+data class XmlyCategoryItem(
+    @SerializedName("category_name") val categoryName: String?,
+    @SerializedName("category_id") val categoryId: String?,
+    val result: List<XmlyAlbumItem>?
+)
+
+data class AppShowResult(
+    val total: Int?,
+    val limit: Int?,
+    val page: Int?,
+    val album: String?,
+    val source: String?,
+    val description: String?,
+    val items: List<MediaItem>,
+    val result: List<MediaItem>
+)
+
+data class XmlyQueryResponse(
+    @SerializedName("albumId") val albumId: String?,
+    val name: String?,
+    val result: List<MediaItem>?
+)
+
+data class DeskRecommend(
+    val id: Int?,
+    var type: Int?,
+    var title: String?,
+    var titleColor: String?,
+    var background: String?,
+    var more: DeskRecommendMore?,
+    val items: ArrayList<DeskRecommendItem>?
+)
+
+data class DeskRecommendMore(
+    val type: Int?,
+    val text: String?,
+    val textColor: String?,
+    val metadata: JSONObject?
+)
+
+data class DeskRecommendItem(
+    var type: Int?,
+    var title: String?,
+    var titleColor: String?,
+    var subtitle: String?,
+    var subtitleColor: String?,
+    var background: String?,
+    var cover: String?,
+    var metadata: JSONObject?,
+    var shouldHide: Boolean = false
+)
+
+@Parcelize
+data class ReadWord(
+    @SerializedName("fluency_score") val fluencyScore: Float?,
+    @SerializedName("phone_score") val phoneScore: Float?,
+    @SerializedName("total_score") val totalScore: Float?,
+    @SerializedName("tone_score") val toneScore: Float?,
+    @SerializedName("accuracy_score") val accurecyScore: Float?,
+    @SerializedName("integrity_score") val integrityScore: Float?,
+    @SerializedName("standard_score") val standardScore: Float?,
+    @SerializedName("except_info") val exceptInfo: String?,
+    val content: String?,
+    val sentences: ArrayList<Sentence>
+) : Parcelable
+
+@Parcelize
+data class Sentence(
+    val content: String,
+    val words: ArrayList<Word>?,
+    val word: Word,
+    @SerializedName("fluency_score") val fluencyScore: Float?,
+    @SerializedName("phone_score") val phoneScore: Float?,
+    @SerializedName("total_score") val totalScore: Float?,
+    @SerializedName("tone_score") val toneScore: Float?
+) : Parcelable
+
+@Parcelize
+data class Word(
+    val symbol: String?,
+    val syllables: ArrayList<Syllable>?,
+    val content: String?,
+    @SerializedName("total_score") val totalScore: Float?,
+    @SerializedName("dp_message") val dpMessage: String?
+) : Parcelable
+
+@Parcelize
+data class Syllable(
+    val symbol: String?,
+    val content: String?,
+    @SerializedName("dp_message") val dpMessage: String?
+) : Parcelable
+
+data class Brand(
+    val name: String?,
+    val id: Int,
+    @SerializedName("icon_url") val iconUrl: String?,
+    val describe: String?,
+    @SerializedName("auth_state") val authState: AuthState?
+)
+
+data class AuthState(
+    val invalid: Boolean
+)
+
+data class DeviceList(
+    val devices: ArrayList<Device>?
+)
+
+data class Device(
+    val brand: String?,
+    @SerializedName("client_name") val clientName: String?,
+    @SerializedName("device_name") val deviceName: String?,
+    @SerializedName("device_type") val deviceType: DeviceType,
+    @SerializedName("device_type_id") val deviceTypeId: Int?,
+    @SerializedName("friendly_name") val friendlyName: String?,
+    val icon: String?,
+    val id: Int,
+    @SerializedName("infrared_id") val infraredId: String?,
+    @SerializedName("iot_info") val iotInfo: IotInfo?,
+    @SerializedName("iot_info_id") val iotInfoId: Int?,
+    val reacheable: Boolean?,
+    val zone: String?,
+    val actions: ArrayList<Action>?,
+    @SerializedName("device_id") val deviceId: String?
+)
+
+data class DeviceType(
+    val describe: String?,
+    val id: Int,
+    val name: String?
+)
+
+data class IotInfo(
+    @SerializedName("icon_url") val iconUrl: String?,
+    val id: Int?,
+    val name: String?
+)
+
+data class Action(
+    val name: String?,
+    val values: ArrayList<String>
+)
+
+data class AuthUrl(
+    @SerializedName("auth_url") val authUrl: String
+)
+
+data class DeviceAuthState(
+    @SerializedName("revoked_yet") val revokedYet: Boolean
+)
+
+// 音视频媒体推荐实体类
+@Parcelize
+data class MediaEntity(
+    @SerializedName("image") val image: String?,
+    @SerializedName("url") var url: String?,
+    @SerializedName("name") var name: String?
+) : Parcelable

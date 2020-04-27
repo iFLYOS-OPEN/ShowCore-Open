@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingStart="@dimen/dp_6"
+    android:paddingTop="@dimen/dp_4"
+    android:paddingEnd="@dimen/dp_6"
+    android:paddingBottom="@dimen/dp_16">
+
+    <FrameLayout
+        android:id="@+id/clickable_view"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="@drawable/bg_clickable_round_6dp"
+        app:layout_constraintDimensionRatio="1"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:id="@+id/image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/bg_default_template_app_2" />
+
+        <TextView
+            android:id="@+id/tv_index"
+            android:layout_width="@dimen/dp_26"
+            android:layout_height="@dimen/dp_22"
+            android:background="@drawable/bg_index_template_app_2"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            tools:text="1" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/first_line"
+        style="@style/Body16.White"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:gravity="start"
+        android:maxLines="2"
+        app:layout_constraintEnd_toEndOf="@id/clickable_view"
+        app:layout_constraintStart_toStartOf="@id/clickable_view"
+        app:layout_constraintTop_toBottomOf="@id/clickable_view"
+        tools:text="主标题" />
+
+    <TextView
+        android:id="@+id/second_line"
+        style="@style/Body14.White"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:ellipsize="end"
+        android:gravity="start"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/clickable_view"
+        app:layout_constraintStart_toStartOf="@id/clickable_view"
+        app:layout_constraintTop_toBottomOf="@id/first_line"
+        tools:text="次标题" />
+</androidx.constraintlayout.widget.ConstraintLayout>

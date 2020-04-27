@@ -405,6 +405,57 @@
                 android:layout_marginTop="@dimen/dp_4"
                 android:layout_marginEnd="@dimen/dp_40"
                 android:text="@string/response_sound_message" />
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content">
+
+                <FrameLayout
+                    android:id="@+id/wake_up_sound_clickable"
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_64"
+                    android:background="?selectableItemBackground"
+                    android:clickable="true"
+                    android:focusable="true">
+
+                    <TextView
+                        style="@style/H4"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/dp_40"
+                        android:layout_marginEnd="@dimen/dp_100"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/wake_up_sound" />
+
+                    <com.iflytek.cyber.iot.show.core.widget.StyledSwitch
+                        android:id="@+id/wake_up_sound_switch"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center_vertical|end"
+                        android:layout_marginEnd="@dimen/dp_40" />
+                </FrameLayout>
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_1"
+                    android:layout_gravity="bottom"
+                    android:layout_marginStart="@dimen/dp_40"
+                    android:layout_marginEnd="@dimen/dp_40"
+                    android:alpha="0.1"
+                    android:background="@android:color/black" />
+
+            </FrameLayout>
+
+            <TextView
+                style="@style/Body14.Grey500"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_40"
+                android:layout_marginTop="@dimen/dp_4"
+                android:layout_marginEnd="@dimen/dp_40"
+                android:text="@string/wake_up_sound_message" />
         </LinearLayout>
     </ScrollView>
 </LinearLayout>

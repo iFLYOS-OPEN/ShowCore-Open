@@ -91,6 +91,7 @@
     <string name="music_volume">媒体音量</string>
     <string name="alarm_volume">闹钟音量</string>
     <string name="voice_wakeup">语音唤醒</string>
+    <string name="panel_smart_home">智能家居</string>
     <string name="home_page">首页</string>
     <string name="message_board">留言板</string>
     <string name="voice_settings">语音设置</string>
@@ -114,9 +115,9 @@
         <item>蓝小飞，我要听火影忍者的主题曲</item>
     </string-array>
     <string-array name="alert_tips">
-        <item>蓝小飞，暂停</item>
-        <item>蓝小飞，停止闹钟</item>
-        <item>蓝小飞，关闭闹钟</item>
+        <item>暂停</item>
+        <item>停止闹钟</item>
+        <item>关闭闹钟</item>
     </string-array>
     <string-array name="weather_tips">
         <item>蓝小飞，明天呢？</item>
@@ -146,7 +147,7 @@
     <string name="alarm_title">闹钟</string>
     <string name="set_alarm_tips">你可以说：“帮我设置工作日早上八点半的闹钟”</string>
     <string name="add_new_alarm">添加闹钟</string>
-    <string name="empty_alarm_tips">尚未设置闹钟\n\n你可以试着说：“帮我设置一个闹钟”</string>
+    <string name="empty_alarm_tips">尚未设置闹钟</string>
     <string name="edit_alarm">编辑闹钟</string>
     <string name="ok">确定</string>
     <string name="alarm_desc">提醒内容</string>
@@ -281,6 +282,8 @@
     <string name="you_can_say">你可以说："%s"</string>
     <string name="response_sound_message">打开后，设备将完成识别后播报提示音</string>
     <string name="response_sound">完成识别提示</string>
+    <string name="wake_up_sound_message">打开后，设备将在被唤醒时播报提示音</string>
+    <string name="wake_up_sound">唤醒提示音</string>
 
     <!-- copy from aosp -->
     <string name="screen_zoom_summary_custom">"自定义 (<xliff:g id="DENSITYDPI">%d</xliff:g>)"</string>
@@ -294,4 +297,66 @@
     <string name="content_recommend">内容推荐</string>
     <string name="content_discovery">内容发现</string>
     <string name="about_device">关于设备</string>
+    <string name="connect_succeed">连接成功</string>
+    <string name="connecting_voice_service_please_wait">正在连接智能语音服务，请稍候</string>
+
+    <string name="search_hint">关键词搜索…</string>
+    <string name="search_history">历史记录</string>
+    <string name="search_recommend">推荐</string>
+    <string name="search">搜索</string>
+    <string name="view_all">查看全部</string>
+    <string name="search_tips">猜你想搜</string>
+    <string name="loading">正在加载&#8230;</string>
+    <string name="cannot_use_phone">手机不在身边</string>
+
+    <!-- MainFragment3 -->
+    <string name="iqiyi_text">爱奇艺</string>
+    <string name="check_text">查看</string>
+    <string name="fav_text">我的收藏</string>
+
+    <string name="please_wait">请稍候</string>
+    <string name="see_more">查看更多</string>
+
+    <string name="speak_evaluation">口语评测</string>
+    <string name="choose_test_language">请选择你要评测的语种</string>
+    <string name="choose_test_type">请选择你要评测的类型</string>
+    <string name="mandarin">普通话</string>
+    <string name="american_english">美式英语</string>
+    <string name="word_evaluation">单字评测</string>
+    <string name="words_evaluation">词语评测</string>
+    <string name="short_sentence_evaluation">短句评测</string>
+    <string name="english_word_evaluation">单词评测</string>
+    <string name="article_evaluation">篇章评测</string>
+    <string name="start_record">点击开始录音</string>
+    <string name="end_record_text">点击可结束录音</string>
+    <string name="app_action_unsupported">不支持该操作</string>
+    <string name="app_action_app_not_found">未安装该应用</string>
+    <string name="app_action_internal_error">操作执行失败</string>
+    <string name="restart_record">重录</string>
+    <string name="submit_record">提交</string>
+
+    <string name="add_new_device">添加设备</string>
+    <string name="smart_home">智能家居</string>
+    <string name="room_text">房间：%s</string>
+    <string name="device_detail">设备详情</string>
+    <string name="device_detail_tips">你可以说</string>
+    <string name="device_auth_tips">请扫描下方二维码添加设备</string>
+    <string name="third_party_auth">第三方授权</string>
+    <string name="empty_device_tips">你还没有添加任何设备哦</string>
+    <string name="sync_device">同步</string>
+    <string name="in_synchronous">同步中</string>
+    <!-- 格灵应用相关 -->
+    <string name="geling_children_edu">幼儿早教</string>
+    <string name="geling_pupil_edu">小学同步</string>
+    <string name="geling_junior_edu">初中同步</string>
+    <string name="geling_senior_edu">高中同步</string>
+    <string name="geling_speech_evalate">格灵口语评测</string>
+    <string name="geling_ar_book">教材识读</string>
+    <string name="geling_micro_class">知识点微课</string>
+
+    <!-- 推荐相关 -->
+    <string name="recommend_for_you">为你推荐</string>
+    <string name="play_recommend_fail">播放失败</string>
+    <string name="unknown">未知</string>
+
 </resources>

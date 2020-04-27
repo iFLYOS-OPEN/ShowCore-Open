@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="?selectableItemBackground">
+
+    <LinearLayout
+        android:id="@+id/item"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/dp_12"
+        android:paddingBottom="@dimen/dp_12">
+
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_16"
+            tools:text="超人要飞会i会UIUIUIu" />
+
+        <TextView
+            android:id="@+id/desc"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_6"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/grey"
+            android:textSize="@dimen/sp_14"
+            tools:text="好IF打击飞机的" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tv_only_title"
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_72"
+        android:gravity="center_vertical"
+        android:textColor="@color/semi_black"
+        android:textSize="@dimen/sp_16"
+        android:visibility="gone" />
+
+</FrameLayout>

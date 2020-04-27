@@ -8,15 +8,15 @@ import retrofit2.http.*
 
 interface AlarmApi {
 
-    @GET("alerts")
+    @GET("v1/alerts")
     fun getAlerts(): Call<ArrayList<Alert>>
 
-    @PUT("alerts/{id}")
+    @PUT("v1/alerts/{id}")
     fun updateAlert(@Path("id") id: String, @Body body: AlertBody): Call<Message>
 
-    @POST("alerts")
+    @POST("v1/alerts")
     fun addNewAlarm(@Body body: AlertBody): Call<Message>
 
-    @DELETE("alerts/{id}")
+    @DELETE("v1/alerts/{id}")
     fun deleteAlarm(@Path("id") id: String): Call<Message>
 }

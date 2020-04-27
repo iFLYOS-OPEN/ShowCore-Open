@@ -1,0 +1,156 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    android:clickable="true"
+    android:focusable="true">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="@dimen/dp_64"
+        android:background="@android:color/white"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_64"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="@dimen/dp_28"
+            android:layout_height="@dimen/dp_28"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/dp_32"
+            android:src="@drawable/ic_app_speak_evaluation" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal">
+
+        <View
+            android:layout_width="@dimen/dp_172"
+            android:layout_height="@dimen/dp_10"
+            android:layout_gravity="bottom|end"
+            android:layout_marginBottom="@dimen/dp_4"
+            android:background="@drawable/bg_orange_rectangle" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_40"
+            android:layout_marginEnd="@dimen/dp_12"
+            android:text="@string/choose_test_type"
+            android:textColor="@color/orange"
+            android:textSize="@dimen/sp_24" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_120"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:id="@+id/word_type"
+            android:layout_width="@dimen/dp_320"
+            android:layout_height="@dimen/dp_64"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_orange_round_42dp"
+            android:foreground="@drawable/bg_clickable_round_42dp">
+
+            <TextView
+                android:id="@+id/tv_word"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/dp_40"
+                android:text="@string/word_evaluation"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/sp_20" />
+
+            <View
+                android:layout_width="@dimen/dp_12"
+                android:layout_height="@dimen/dp_12"
+                android:layout_gravity="end|center_vertical"
+                android:layout_marginEnd="@dimen/dp_50"
+                android:background="@android:color/white" />
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/words_type"
+            android:layout_width="@dimen/dp_320"
+            android:layout_height="@dimen/dp_64"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_16"
+            android:background="@drawable/bg_green_round_42dp"
+            android:foreground="@drawable/bg_clickable_round_42dp">
+
+            <TextView
+                android:id="@+id/tv_words"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/dp_40"
+                android:text="@string/word_evaluation"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/sp_20" />
+
+           <ImageView
+               android:id="@+id/words_img"
+               android:layout_width="wrap_content"
+               android:layout_height="wrap_content"
+               android:layout_marginEnd="@dimen/dp_34"
+               android:layout_gravity="end|center_vertical"/>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/sentence_type"
+            android:layout_width="@dimen/dp_320"
+            android:layout_height="@dimen/dp_64"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_16"
+            android:background="@drawable/bg_blue_round_42dp"
+            android:foreground="@drawable/bg_clickable_round_42dp">
+
+            <TextView
+                android:id="@+id/tv_sentence"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:layout_marginStart="@dimen/dp_40"
+                android:text="@string/word_evaluation"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/sp_20" />
+
+            <ImageView
+                android:id="@+id/sentence_img"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/dp_34"
+                android:layout_gravity="end|center_vertical"/>
+
+        </FrameLayout>
+
+    </LinearLayout>
+
+</FrameLayout>

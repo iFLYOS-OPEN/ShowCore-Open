@@ -1,0 +1,229 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white">
+
+    <FrameLayout
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/white">
+
+        <LinearLayout
+            android:id="@+id/back"
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_56"
+            android:background="?selectableItemBackgroundBorderless"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/dp_32"
+            android:paddingEnd="@dimen/dp_16">
+
+            <ImageView
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:src="@drawable/ic_page_back_black_24dp" />
+
+        </LinearLayout>
+
+        <EditText
+            android:id="@+id/edt_query"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_56"
+            android:layout_marginStart="@dimen/dp_80"
+            android:layout_marginEnd="@dimen/dp_80"
+            android:background="@null"
+            android:hint="@string/search_hint"
+            android:imeOptions="flagNoExtractUi|actionSearch"
+            android:maxLines="1"
+            android:singleLine="true"
+            android:textColor="@color/semi_black"
+            android:textColorHint="@color/grey_300"
+            android:textSize="@dimen/sp_20" />
+
+        <ImageView
+            android:id="@+id/clear"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_gravity="end"
+            android:layout_marginTop="@dimen/dp_8"
+            android:layout_marginEnd="@dimen/dp_32"
+            android:background="?selectableItemBackgroundBorderless"
+            android:padding="@dimen/dp_8"
+            android:src="@drawable/ic_close_white_24dp"
+            android:tint="@color/grey"
+            android:visibility="gone" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_1"
+            android:layout_gravity="bottom"
+            android:layout_marginStart="@dimen/dp_80"
+            android:layout_marginEnd="@dimen/dp_40"
+            android:background="@color/dividerLight" />
+
+    </FrameLayout>
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_56">
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <TextView
+                android:id="@+id/tv_search_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_80"
+                android:layout_marginTop="@dimen/dp_18"
+                android:text="@string/search_history"
+                android:textColor="@color/grey"
+                android:textSize="@dimen/sp_14" />
+
+            <ImageView
+                android:id="@+id/delete"
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_alignParentEnd="true"
+                android:layout_marginTop="@dimen/dp_10"
+                android:layout_marginEnd="@dimen/dp_80"
+                android:background="?selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_delete"
+                android:tint="@color/grey" />
+
+            <com.zhy.view.flowlayout.TagFlowLayout
+                android:id="@+id/history_tag_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_search_tag"
+                android:layout_marginStart="@dimen/dp_76"
+                android:layout_marginTop="@dimen/dp_6"
+                android:layout_marginEnd="@dimen/dp_76"
+                app:itemSpacing="@dimen/dp_8"
+                app:lineSpacing="@dimen/dp_12"
+                app:max_select="1" />
+
+            <TextView
+                android:id="@+id/tv_recommend"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/history_tag_layout"
+                android:layout_marginStart="@dimen/dp_80"
+                android:layout_marginTop="@dimen/dp_18"
+                android:text="@string/search_recommend"
+                android:textColor="@color/grey"
+                android:textSize="@dimen/sp_14" />
+
+            <com.zhy.view.flowlayout.TagFlowLayout
+                android:id="@+id/recommend_tag_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_recommend"
+                android:layout_marginStart="@dimen/dp_76"
+                android:layout_marginTop="@dimen/dp_6"
+                android:layout_marginEnd="@dimen/dp_76"
+                app:itemSpacing="@dimen/dp_8"
+                app:lineSpacing="@dimen/dp_12"
+                app:max_select="1" />
+
+        </RelativeLayout>
+
+    </androidx.core.widget.NestedScrollView>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/result_list"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_56"
+        android:clipToPadding="false"
+        android:paddingTop="@dimen/dp_12"
+        android:paddingBottom="@dimen/dp_12"
+        android:visibility="gone"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    <TextView
+        android:id="@+id/tv_search_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:layout_marginTop="@dimen/dp_136"
+        android:text="搜索结果为空"
+        android:textColor="@color/grey_500"
+        android:textSize="@dimen/sp_16"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/retry_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_140"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:text="请检查网络后重试"
+            android:textColor="@color/grey_500"
+            android:textSize="@dimen/sp_16" />
+
+        <TextView
+            android:id="@+id/tv_retry"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_12"
+            android:paddingStart="@dimen/dp_12"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingEnd="@dimen/dp_12"
+            android:paddingBottom="@dimen/dp_8"
+            android:text="@string/retry"
+            android:textColor="@color/setup_primary"
+            android:textSize="@dimen/sp_14"
+            app:bl_corners_radius="@dimen/dp_18"
+            app:bl_solid_color="@android:color/white"
+            app:bl_stroke_color="#1784E9"
+            app:bl_stroke_width="@dimen/dp_1" />
+
+    </LinearLayout>
+
+    <!--<LinearLayout
+        android:id="@+id/hint_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_56"
+        android:background="@android:color/white"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_80"
+            android:layout_marginTop="@dimen/dp_16"
+            android:layout_marginEnd="@dimen/dp_80"
+            android:layout_marginBottom="@dimen/dp_10"
+            android:text="@string/search_tips"
+            android:textColor="@color/grey"
+            android:textSize="@dimen/sp_14" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/hint_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipToPadding="false"
+            android:paddingStart="@dimen/dp_80"
+            android:paddingEnd="@dimen/dp_80"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    </LinearLayout>
+-->
+</FrameLayout>

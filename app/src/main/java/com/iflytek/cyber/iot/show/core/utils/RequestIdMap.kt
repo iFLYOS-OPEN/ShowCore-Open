@@ -15,12 +15,26 @@ object RequestIdMap {
 
     fun putRequestTemplate(requestId: String, templateId: String) {
         synchronized(requestTemplateIdMap) {
+            requestTemplateIdMap.iterator().run {
+                while (hasNext()) {
+                    val next = next()
+                    if (next.value == templateId)
+                        remove()
+                }
+            }
             requestTemplateIdMap.put(requestId, templateId)
         }
     }
 
     fun putRequestTts(requestId: String, resourceId: String) {
         synchronized(requestTtsIdMap) {
+            requestTtsIdMap.iterator().run {
+                while (hasNext()) {
+                    val next = next()
+                    if (next.value == resourceId)
+                        remove()
+                }
+            }
             requestTtsIdMap.put(requestId, resourceId)
         }
     }

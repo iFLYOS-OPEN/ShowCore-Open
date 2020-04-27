@@ -83,6 +83,10 @@ class AlarmPlayerInstance(context: Context) {
         }
     }
 
+    fun isPlaying(): Boolean {
+        return player.playbackState == Player.STATE_READY && player.playWhenReady
+    }
+
     fun playLocalAlarm() {
         // todo
     }

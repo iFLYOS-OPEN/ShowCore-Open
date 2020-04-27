@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,6 +40,7 @@
         </LinearLayout>
 
         <LinearLayout
+            android:id="@+id/main_content"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="horizontal">
@@ -185,87 +188,130 @@
     </LinearLayout>
 
     <FrameLayout
-        android:id="@+id/dialog_container"
+        android:id="@+id/loading_container"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_64"
         android:visibility="gone">
 
-        <View
-            android:id="@+id/dialog_background"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:background="#5000"
-            android:clickable="true"
-            android:focusable="true" />
-
         <LinearLayout
-            android:layout_width="@dimen/dp_260"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@drawable/bg_styled_dialog"
-            android:clickable="true"
-            android:focusable="true"
+            android:layout_width="@dimen/dp_142"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/dp_30"
             android:orientation="vertical">
 
-            <FrameLayout
-                android:layout_width="@dimen/dp_120"
-                android:layout_height="@dimen/dp_120"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/dp_32"
-                tools:background="@android:color/white">
+            <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+                android:layout_width="@dimen/dp_142"
+                android:layout_height="@dimen/dp_142"
+                app:shadowColor="#0D000000"
+                app:shadowCornerRadius="@dimen/dp_6"
+                app:shadowDx="0dp"
+                app:shadowDy="@dimen/dp_2"
+                app:shadowPaddingBottom="@dimen/dp_3"
+                app:shadowPaddingLeft="@dimen/dp_3"
+                app:shadowPaddingRight="@dimen/dp_3"
+                app:shadowPaddingTop="@dimen/dp_3"
+                app:shadowRadius="@dimen/dp_6">
+
+                <FrameLayout
+                    android:layout_width="@dimen/dp_140"
+                    android:layout_height="@dimen/dp_140"
+                    android:layout_margin="@dimen/dp_2"
+                    android:background="@drawable/bg_white_border_shape_6dp"
+                    tools:ignore="ContentDescription" />
+
+            </com.iflytek.cyber.iot.show.core.widget.ShadowLayout>
+
+            <View
+                android:layout_width="@dimen/dp_124"
+                android:layout_height="@dimen/dp_24"
+                android:layout_marginTop="@dimen/dp_16"
+                android:background="@drawable/bg_grey_round_2dp" />
+
+            <View
+                android:layout_width="@dimen/dp_80"
+                android:layout_height="@dimen/dp_24"
+                android:layout_marginTop="@dimen/dp_8"
+                android:background="@drawable/bg_grey_round_2dp" />
+
+            <View
+                android:layout_width="@dimen/dp_96"
+                android:layout_height="@dimen/dp_16"
+                android:layout_marginTop="@dimen/dp_16"
+                android:background="@drawable/bg_grey_round_2dp" />
+
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_32"
+                android:layout_marginTop="@dimen/dp_24"
+                android:background="@drawable/bg_play_all"
+                android:gravity="center"
+                android:paddingStart="@dimen/dp_14"
+                android:paddingEnd="@dimen/dp_14">
 
                 <ImageView
-                    android:id="@+id/qrcode"
-                    android:layout_width="match_parent"
-                    android:layout_height="match_parent" />
+                    android:layout_width="@dimen/dp_20"
+                    android:layout_height="@dimen/dp_20"
+                    android:src="@drawable/ic_play_border"
+                    android:tint="@android:color/white" />
 
-                <ProgressBar
-                    android:id="@+id/progress_bar"
-                    android:layout_width="@dimen/dp_40"
-                    android:layout_height="@dimen/dp_40"
-                    android:layout_gravity="center" />
-            </FrameLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_4"
+                    android:text="@string/play_all"
+                    android:textColor="@android:color/white"
+                    android:textSize="@dimen/sp_14" />
 
-            <TextView
-                android:id="@+id/dialog_title"
-                style="@style/H5"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginStart="@dimen/dp_16"
-                android:layout_marginTop="@dimen/dp_16"
-                android:layout_marginEnd="@dimen/dp_16"
-                android:ellipsize="end"
-                android:gravity="center"
-                android:maxLines="2"
-                tools:text="未绑定酷狗音乐账号" />
-
-            <TextView
-                android:id="@+id/dialog_message"
-                style="@style/Body14.Grey"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center_horizontal"
-                android:layout_marginTop="@dimen/dp_4"
-                tools:text="请扫描二维码进行下一步操作" />
-
-            <TextView
-                android:id="@+id/dialog_button"
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/dp_36"
-                android:layout_gravity="bottom|center_horizontal"
-                android:layout_marginTop="@dimen/dp_23"
-                android:layout_marginBottom="@dimen/dp_24"
-                android:background="@drawable/bg_round_border_accent_36dp"
-                android:gravity="center"
-                android:paddingStart="@dimen/dp_20"
-                android:paddingEnd="@dimen/dp_20"
-                android:textColor="@color/text_color_accent"
-                android:textSize="@dimen/sp_14"
-                tools:text="button" />
-
+            </LinearLayout>
 
         </LinearLayout>
 
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/loading_image"
+            android:layout_width="@dimen/dp_48"
+            android:layout_height="@dimen/dp_48"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginStart="@dimen/dp_72"
+            android:layout_marginTop="@dimen/dp_8"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/animation_loading_l" />
+
     </FrameLayout>
+
+    <LinearLayout
+        android:id="@+id/error_container"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginTop="@dimen/dp_64"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingBottom="@dimen/dp_64"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/dp_32"
+            android:layout_height="@dimen/dp_32"
+            android:src="@drawable/ic_error" />
+
+        <TextView
+            android:id="@+id/error_text"
+            style="@style/Body14.Grey"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_21"
+            tools:text="加载失败，请重试" />
+
+        <TextView
+            android:id="@+id/refresh"
+            style="@style/Widget.AppCompat.Button.Borderless.Colored"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_16"
+            android:text="@string/refresh"
+            android:textSize="@dimen/sp_16" />
+
+    </LinearLayout>
+
 </FrameLayout>

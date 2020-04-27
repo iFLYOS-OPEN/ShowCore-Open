@@ -17,6 +17,9 @@
     <color name="campus_blue">#5280ff</color>
     <color name="semi_black">#262626</color>
     <color name="grey">#666666</color>
+    <color name="grey_300">#CAD0D6</color>
+    <color name="grey_100">#E2E7EB</color>
+    <color name="orange">#EEA422</color>
 
     <color name="windowBackground">#0f1722</color>
     <color name="setup_primary">#1784e9</color>
@@ -46,6 +49,7 @@
 
     <color name="grey_500">#9E9FA7</color>
     <color name="divider_line">#1a000000</color>
+    <color name="grey_line">#1AFFFFFF</color>
 
     <color name="slide_progress">#1E000000</color>
     <color name="slide_background">@color/tablet_grey_100</color>

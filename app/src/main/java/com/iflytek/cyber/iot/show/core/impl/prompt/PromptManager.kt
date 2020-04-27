@@ -47,6 +47,8 @@ object PromptManager {
     const val POWER_ON = 33
     const val TOKEN_EXPIRED = 34
     const val NETWORK_WAIT_RETRY = 35
+    const val CONNECTING_PLEASE_WAIT = 37
+    const val EVALUATION_WARN = 38
 
     private const val TAG = "PromptManager"
 
@@ -104,6 +106,8 @@ object PromptManager {
         mSoundIdMap.put(TOKEN_EXPIRED, R.raw.tts_token_expired)
         mSoundIdMap.put(NETWORK_LOST, R.raw.tts_network_lost)
         mSoundIdMap.put(NETWORK_WAIT_RETRY, R.raw.tts_network_wait_retry)
+        mSoundIdMap.put(CONNECTING_PLEASE_WAIT, R.raw.tts_connecting_please_wait)
+        mSoundIdMap.put(EVALUATION_WARN, R.raw.evaluation_warn)
     }
 
     fun init(context: Context) {

@@ -131,6 +131,10 @@
         <item name="android:textColor">@color/tablet_grey</item>
     </style>
 
+    <style name="Body16.Grey500">
+        <item name="android:textColor">@color/tablet_grey_500</item>
+    </style>
+
     <style name="Body20" parent="TextAppearance.AppCompat.Body1">
         <item name="android:textSize">@dimen/sp_20</item>
         <item name="android:textColor">@color/tablet_black</item>

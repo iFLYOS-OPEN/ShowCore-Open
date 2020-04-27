@@ -43,6 +43,7 @@ object VisualFocusManager {
     }
 
     fun requestActive(activeChannel: String, type: String) {
+        Log.d(TAG, "requestActive($activeChannel, $type)")
         if (statusMap[activeChannel] == FocusStatus.Foreground) {
             if (latestForegroundMap[activeChannel] != type) {
                 statusMap[activeChannel] = FocusStatus.Idle
@@ -123,6 +124,7 @@ object VisualFocusManager {
     }
 
     fun requestAbandon(abandonChannel: String, type: String) {
+        Log.d(TAG, "requestAbandon($abandonChannel, $type)")
         if (statusMap[abandonChannel] == FocusStatus.Idle) {
             if (latestForegroundMap[abandonChannel] == type) {
                 onInternalFocusChanged(abandonChannel)
@@ -131,28 +133,30 @@ object VisualFocusManager {
                 Log.w(TAG, "Target type: $type is already abandoned, ignore this operation.")
             }
         } else {
-            statusMap[abandonChannel] = FocusStatus.Idle
+            if (latestForegroundMap[abandonChannel] == type) {
+                statusMap[abandonChannel] = FocusStatus.Idle
 //            onInternalFocusChanged(abandonChannel)
-            latestForegroundMap.remove(abandonChannel)
+                latestForegroundMap.remove(abandonChannel)
 
-            when (abandonChannel) {
-                CHANNEL_OVERLAY -> {
-                    if (statusMap[CHANNEL_OVERLAY_TEMPLATE] == FocusStatus.Background) {
-                        statusMap[CHANNEL_OVERLAY_TEMPLATE] = FocusStatus.Foreground
-                        onInternalFocusChanged(CHANNEL_OVERLAY_TEMPLATE)
-                    } else if (statusMap[CHANNEL_APP] == FocusStatus.Background) {
-                        statusMap[CHANNEL_APP] = FocusStatus.Foreground
-                        onInternalFocusChanged(CHANNEL_APP)
+                when (abandonChannel) {
+                    CHANNEL_OVERLAY -> {
+                        if (statusMap[CHANNEL_OVERLAY_TEMPLATE] == FocusStatus.Background) {
+                            statusMap[CHANNEL_OVERLAY_TEMPLATE] = FocusStatus.Foreground
+                            onInternalFocusChanged(CHANNEL_OVERLAY_TEMPLATE)
+                        } else if (statusMap[CHANNEL_APP] == FocusStatus.Background) {
+                            statusMap[CHANNEL_APP] = FocusStatus.Foreground
+                            onInternalFocusChanged(CHANNEL_APP)
+                        }
                     }
-                }
-                CHANNEL_OVERLAY_TEMPLATE -> {
-                    if (statusMap[CHANNEL_APP] == FocusStatus.Background) {
-                        statusMap[CHANNEL_APP] = FocusStatus.Foreground
-                        onInternalFocusChanged(CHANNEL_APP)
+                    CHANNEL_OVERLAY_TEMPLATE -> {
+                        if (statusMap[CHANNEL_APP] == FocusStatus.Background) {
+                            statusMap[CHANNEL_APP] = FocusStatus.Foreground
+                            onInternalFocusChanged(CHANNEL_APP)
+                        }
                     }
-                }
-                CHANNEL_APP -> {
-                    // ignore
+                    CHANNEL_APP -> {
+                        // ignore
+                    }
                 }
             }
         }
@@ -162,6 +166,7 @@ object VisualFocusManager {
         try {
             val type = latestForegroundMap[channel] ?: return
             val status = statusMap[channel] ?: return
+            Log.d(TAG, "onInternalFocusChanged($channel, $type, $status)")
             visualFocusObserver?.let { observer ->
                 handler.post {
                     observer.onVisualFocusChanged(

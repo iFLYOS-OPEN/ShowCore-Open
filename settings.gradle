@@ -1,1 +1,1 @@
-include ':app', ':ota', ':evs_sdk', ':indicatorseekbar', ':keepalive'
+include ':app', ':ota', ':evs_sdk', ':indicatorseekbar', ':keepalive', ':showcoredemo'

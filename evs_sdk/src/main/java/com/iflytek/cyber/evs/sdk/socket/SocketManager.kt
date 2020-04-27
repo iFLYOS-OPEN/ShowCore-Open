@@ -47,7 +47,9 @@ internal object SocketManager {
         open fun onDisconnected(code: Int, reason: String?, remote: Boolean) {}
         open fun onMessage(message: String) {}
         open fun onSend(message: Any) {}
+        @Deprecated("")
         open fun onSendFailed(code: Int, reason: String?) {}
+        open fun onSendFailed(code: Int, reason: String?, sendFailedMessage:Any) {}
     }
 
     abstract class EvsWebSocket {
@@ -129,12 +131,27 @@ internal object SocketManager {
             }
         }
 
+        @Deprecated("")
         open fun onSendFailed(code: Int, reason: String?) {
             synchronized(onMessageListeners) {
                 onMessageListeners.map {
                     Thread {
                         try {
                             it.onSendFailed(code, reason)
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                        }
+                    }.start()
+                }
+            }
+        }
+
+        open fun onSendFailed(code: Int, reason: String?, sendFailedMessage: Any) {
+            synchronized(onMessageListeners) {
+                onMessageListeners.map {
+                    Thread {
+                        try {
+                            it.onSendFailed(code, reason, sendFailedMessage)
                         } catch (e: Exception) {
                             e.printStackTrace()
                         }

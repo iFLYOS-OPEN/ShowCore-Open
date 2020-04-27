@@ -34,7 +34,7 @@ class StyledQRCodeDialog : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val title = arguments?.getString("title")
+        val title = arguments?.getString("text")
         val message = arguments?.getString("message")
         val code = arguments?.getString("code")
 
@@ -152,7 +152,7 @@ class StyledQRCodeDialog : DialogFragment() {
         fun build(): StyledQRCodeDialog {
             val dialog = StyledQRCodeDialog()
             val arguments = Bundle()
-            arguments.putString("title", title)
+            arguments.putString("text", title)
             arguments.putString("message", message)
             arguments.putString("code", code)
             dialog.arguments = arguments

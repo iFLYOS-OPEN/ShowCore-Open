@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?selectableItemBackground">
+
+    <com.iflytek.cyber.iot.show.core.widget.GradientTextView
+        android:id="@+id/title"
+        style="@style/Body16.White"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginStart="@dimen/dp_12"
+        android:layout_marginEnd="@dimen/dp_12"
+        tools:text="运动" />
+
+    <View
+        android:id="@+id/indicator"
+        android:layout_width="@dimen/dp_20"
+        android:layout_height="@dimen/dp_3"
+        android:layout_gravity="bottom|center_horizontal"
+        android:background="@drawable/bg_app_tab_indicator" />
+
+</FrameLayout>

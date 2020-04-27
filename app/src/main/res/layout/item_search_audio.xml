@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:sl_cornerRadius="@dimen/dp_20"
+    app:sl_dx="0dp"
+    app:sl_dy="@dimen/dp_4"
+    app:sl_shadowColor="#0D000000"
+    app:sl_shadowRadius="@dimen/dp_8">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="@dimen/dp_16"
+        android:layout_marginEnd="@dimen/dp_16"
+        android:layout_marginBottom="@dimen/dp_16"
+        android:background="@drawable/bg_album_shape"
+        android:orientation="vertical">
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:id="@+id/category_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="@dimen/dp_24"
+            android:layout_marginTop="@dimen/dp_12"
+            android:gravity="center_vertical"
+            android:text="音频"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_20"
+            app:lineHeight="@dimen/dp_24" />
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/audio_list"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_12"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    </LinearLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>

@@ -5,17 +5,20 @@ import android.text.TextUtils
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import android.widget.TextView
+import androidx.core.os.bundleOf
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.viewpager2.adapter.FragmentStateAdapter
-import androidx.viewpager2.widget.ViewPager2
+import androidx.fragment.app.FragmentManager
+import androidx.fragment.app.FragmentPagerAdapter
+import androidx.viewpager.widget.ViewPager
 import com.google.android.material.tabs.TabLayout
-import com.google.android.material.tabs.TabLayoutMediator
 import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.api.MediaApi
 import com.iflytek.cyber.iot.show.core.model.Group
+import com.iflytek.cyber.iot.show.core.utils.dp2Px
 import retrofit2.Call
 import retrofit2.Callback
 import retrofit2.Response
@@ -24,12 +27,13 @@ import java.net.UnknownHostException
 class MediaFragment : BaseFragment(), PageScrollable {
 
     private lateinit var tabLayout: TabLayout
-    private lateinit var viewPager: ViewPager2
+    private lateinit var viewPager: ViewPager
     private var placeholderView: View? = null
 
     private var adapter: MediaPagerAdapter? = null
 
     private var backCount = 0
+    private var isSearchButtonClicked = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -42,11 +46,20 @@ class MediaFragment : BaseFragment(), PageScrollable {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
+        view.findViewById<View>(R.id.back_container).setOnClickListener {
+        }
         view.findViewById<View>(R.id.back).setOnClickListener {
             if (backCount != 0)
                 return@setOnClickListener
             backCount++
             pop()
+        }
+
+        view.findViewById<ImageView>(R.id.iv_search).setOnClickListener {
+            if (!isSearchButtonClicked) {
+                isSearchButtonClicked = true
+                start(SearchFragment())
+            }
         }
 
         tabLayout = view.findViewById(R.id.tab_layout)
@@ -60,6 +73,19 @@ class MediaFragment : BaseFragment(), PageScrollable {
             showPlaceholder()
             getMediaSections()
         }
+
+        try {
+            val field = viewPager.javaClass.getDeclaredField("mTouchSlop")
+            field.isAccessible = true
+            field.setInt(viewPager, 18.dp2Px()) // set ViewPager touch slop bigger than default value
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+
+    override fun onSupportVisible() {
+        super.onSupportVisible()
+        isSearchButtonClicked = false
     }
 
     private fun showPlaceholder() {
@@ -81,13 +107,17 @@ class MediaFragment : BaseFragment(), PageScrollable {
     }
 
     private fun setupTab(groups: List<Pair<String?, List<Group>>>) {
-        adapter = MediaPagerAdapter(this)
-        adapter?.addItems(groups)
+        adapter = MediaPagerAdapter(childFragmentManager)
+        groups.forEach { item ->
+            if (TextUtils.equals(item.first, "音乐")) {
+                adapter?.addItems(item.first, MusicFragment(), item.second)
+            } else {
+                adapter?.addItems(item.first, MediaSectionFragment(), item.second)
+            }
+        }
+        viewPager.offscreenPageLimit = 5
         viewPager.adapter = adapter
-
-        TabLayoutMediator(tabLayout, viewPager) { tab, position ->
-            tab.text = groups[position].first
-        }.attach()
+        tabLayout.setupWithViewPager(viewPager)
     }
 
     private fun getMediaSections() {
@@ -151,7 +181,7 @@ class MediaFragment : BaseFragment(), PageScrollable {
 
     override fun scrollToNext(): Boolean {
         val currentItem = viewPager.currentItem
-        if (currentItem < (adapter?.itemCount ?: 0) - 1 || currentItem < 0) {
+        if (currentItem < (adapter?.count ?: 0) - 1 || currentItem < 0) {
             viewPager.post {
                 viewPager.setCurrentItem(currentItem + 1, true)
             }
@@ -171,26 +201,40 @@ class MediaFragment : BaseFragment(), PageScrollable {
         return false
     }
 
-    inner class MediaPagerAdapter(fragment: Fragment) : FragmentStateAdapter(fragment) {
+    inner class MediaPagerAdapter(fragmentManager: FragmentManager) :
+        FragmentPagerAdapter(fragmentManager) {
 
-        private var items = ArrayList<Pair<String?, List<Group>>>()
+        private var titles = ArrayList<String?>()
+        private var fragments = ArrayList<Fragment>()
+        private var groups = ArrayList<List<Group>>()
 
-        fun addItems(groups: List<Pair<String?, List<Group>>>) {
-            items.clear()
-            items.addAll(groups)
+        fun addItems(title: String?, fragment: Fragment, group: List<Group>) {
+            titles.add(title)
+            fragments.add(fragment)
+            groups.add(group)
         }
 
-        override fun getItemCount(): Int {
-            return items.size
+        override fun getCount(): Int {
+            return fragments.size
         }
 
-        override fun createFragment(position: Int): Fragment {
-            val item = items[position]
-            return if (TextUtils.equals(item.first, "音乐")) {
-                MusicFragment.instance(item.second[0].id)
+        override fun getItem(position: Int): Fragment {
+            val fragment = fragments[position]
+            val title = titles[position]
+            val group = groups[position]
+            if (TextUtils.equals(title, "音乐")) {
+                fragment.arguments = bundleOf(Pair("id", group[0].id))
             } else {
-                MediaSectionFragment.newInstance(item.first, item.second)
+                fragment.arguments = bundleOf(
+                    Pair("name", title),
+                    Pair("groups", group)
+                )
             }
+            return fragment
+        }
+
+        override fun getPageTitle(position: Int): CharSequence? {
+            return titles[position]
         }
     }
 }

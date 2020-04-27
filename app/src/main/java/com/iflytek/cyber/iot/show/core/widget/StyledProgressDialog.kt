@@ -25,7 +25,7 @@ class StyledProgressDialog : DialogFragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        val title = arguments?.getString("title")
+        val title = arguments?.getString("text")
         val message = arguments?.getString("message")
         val isCancelable = arguments?.getBoolean("is_cancelable", true)
 
@@ -90,7 +90,7 @@ class StyledProgressDialog : DialogFragment() {
         fun build(): StyledProgressDialog {
             val dialog = StyledProgressDialog()
             val arguments = Bundle()
-            arguments.putString("title", title)
+            arguments.putString("text", title)
             arguments.putString("message", message)
             arguments.putBoolean("is_cancelable", isCancelable)
             dialog.arguments = arguments

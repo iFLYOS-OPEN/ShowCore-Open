@@ -3,16 +3,21 @@ package com.iflytek.cyber.iot.show.core
 import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.SoundPool
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import android.os.*
 import android.text.TextUtils
 import android.util.Log
+import android.webkit.CookieManager
 import androidx.core.app.NotificationCompat
+import com.google.gson.Gson
 import com.google.gson.JsonParser
 import com.iflytek.cyber.evs.sdk.EvsError
 import com.iflytek.cyber.evs.sdk.EvsService
@@ -25,6 +30,7 @@ import com.iflytek.cyber.iot.show.core.fragment.MainFragment2
 import com.iflytek.cyber.iot.show.core.impl.alarm.EvsAlarm
 import com.iflytek.cyber.iot.show.core.impl.appaction.EvsAppAction
 import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
+import com.iflytek.cyber.iot.show.core.impl.interceptor.EvsInterceptor
 import com.iflytek.cyber.iot.show.core.impl.launcher.EvsLauncher
 import com.iflytek.cyber.iot.show.core.impl.playback.EvsPlaybackController
 import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager
@@ -34,14 +40,21 @@ import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
 import com.iflytek.cyber.iot.show.core.impl.system.EvsSystem
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
 import com.iflytek.cyber.iot.show.core.impl.videoplayer.EvsVideoPlayer
+import com.iflytek.cyber.iot.show.core.model.ActionConstant
+import com.iflytek.cyber.iot.show.core.model.ContentStorage
+import com.iflytek.cyber.iot.show.core.model.PlayerInfoPayload
 import com.iflytek.cyber.iot.show.core.record.EvsIvwHandler
 import com.iflytek.cyber.iot.show.core.record.GlobalRecorder
+import com.iflytek.cyber.iot.show.core.record.RecordVolumeUtils
 import com.iflytek.cyber.iot.show.core.utils.ConfigUtils
 import com.iflytek.cyber.iot.show.core.utils.ConnectivityUtils
 import com.iflytek.cyber.iot.show.core.utils.RequestIdMap
 import com.iflytek.cyber.iot.show.core.utils.*
+import com.iflytek.cyber.iot.show.core.utils.ContextWrapper
 import org.json.JSONObject
+import java.lang.ref.SoftReference
 import java.net.UnknownHostException
+import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.roundToInt
 
@@ -53,8 +66,10 @@ class EngineService : EvsService() {
         private const val TAG = "EngineService"
 
         private const val ACTION_PREFIX = "com.iflytek.cyber.iot.show.core.action"
+        private const val PERMISSION_PREFIX = "com.iflytek.cyber.iot.show.core.permission"
 
         const val ACTION_EVS_CONNECTED = "$ACTION_PREFIX.EVS_CONNECTED"
+        const val ACTION_EVS_START_CONNECTING = "$ACTION_PREFIX.EVS_START_CONNECTING"
         const val ACTION_EVS_CONNECT_FAILED = "$ACTION_PREFIX.EVS_CONNECT_FAILED"
         const val ACTION_EVS_DISCONNECTED = "$ACTION_PREFIX.EVS_DISCONNECTED"
         const val ACTION_STOP_CAPTURE = "$ACTION_PREFIX.STOP_CAPTURE"
@@ -69,6 +84,11 @@ class EngineService : EvsService() {
         const val ACTION_AUTH_REVOKED = "$ACTION_PREFIX.AUTH_REVOKED"
         const val ACTION_CLEAR_TEMPLATE_FOCUS = "$ACTION_PREFIX.CLEAR_TEMPLATE_FOCUS"
         const val ACTION_INIT_VOLUME = "$ACTION_PREFIX.INIT_VOLUME"
+        const val ACTION_INTERCEPTOR_RESULT = "$ACTION_PREFIX.INTERCEPTOR_RESULT"
+        const val ACTION_PLAY_TTS = "$ACTION_PREFIX.PLAY_TTS"
+        const val ACTION_CANCEL_CURRENT_RESPONSE_EXECUTING = "$ACTION_PREFIX.END_REQUEST"
+
+        const val PERMISSION_RECEIVE_BROADCAST = "$PERMISSION_PREFIX.RECEIVE_BROADCAST"
 
         const val ACTION_DISCONNECT_EVS = "$ACTION_PREFIX.DISCONNECT_EVS"
 
@@ -92,6 +112,11 @@ class EngineService : EvsService() {
         const val EXTRA_QUERY = "query"
         const val EXTRA_WAKE_UP_JSON = "wake_up_json"
         const val EXTRA_RESULT = "result"
+        const val EXTRA_PAYLOAD = "payload"
+        const val EXTRA_TYPE = "type"
+        const val EXTRA_TTS_TEXT = "tts_text"
+        const val EXTRA_TTS_PATH = "tts_path"
+        const val EXTRA_WITH_TTS = "with_tts"
     }
 
     open inner class EngineServiceBinder : Binder() {
@@ -110,8 +135,14 @@ class EngineService : EvsService() {
     private var currentTtsResourceId: String? = null
     private var isShowingDaydream = false
     private var latestRecognizeTime = 0L
+    private var reconnectHandler = ReconnectHandler(this)
+
+    private var evsLauncherActivity: EvsLauncherActivity? = null
 
     private var hadInitVolume = false
+
+    private var currentConnectingId: UUID? = null
+    private var isConnecting = false
 
     private val handler = Handler()
 
@@ -208,100 +239,38 @@ class EngineService : EvsService() {
             }
         }
     }
-    //    private val mIvwListener = object : EvsIvwHandler.IvwHandlerListener {
-//        override fun onWakeUp(oriMsg: String) {
-//            if (isEvsConnected && !preventWakeUp) {
-//                EventBus.getDefault().post(ACTION_WAKE_UP)
-//
-//                PromptManager.playWakeSound()
-//
-//                try {
-//                    val json = JsonParser().parse(oriMsg).asJsonObject
-//                    val rlt = json.getAsJsonArray("rlt")
-//                    val result = rlt.get(0).asJsonObject
-//
-//                    val wakeUpJson = JsonObject()
-//
-//                    wakeUpJson.addProperty("score", result.get("nkeywordscore").asInt)
-//                    wakeUpJson.addProperty("word", result.get("keyword").asString)
-//
-//                    sendAudioIn(wakeUpJson.toString())
-//                } catch (e: Exception) {
-//                    e.printStackTrace()
-//
-//                    sendAudioIn()
-//                }
-//            } else if (!isEvsConnected) {
-//                ConnectivityUtils.checkNetworkAvailable({
-//                    // 网络可用但 EVS 断连
-//                    val disconnectNotification =
-//                        Intent(baseContext, FloatingService::class.java)
-//                    disconnectNotification.action =
-//                        FloatingService.ACTION_SHOW_NOTIFICATION
-//                    disconnectNotification.putExtra(
-//                        FloatingService.EXTRA_MESSAGE,
-//                        getString(R.string.message_evs_disconnected)
-//                    )
-//                    disconnectNotification.putExtra(
-//                        FloatingService.EXTRA_TAG,
-//                        "network_error"
-//                    )
-//                    disconnectNotification.putExtra(
-//                        FloatingService.EXTRA_ICON_RES,
-//                        R.drawable.ic_default_error_white_40dp
-//                    )
-//                    disconnectNotification.putExtra(
-//                        FloatingService.EXTRA_POSITIVE_BUTTON_TEXT,
-//                        getString(R.string.i_got_it)
-//                    )
-//                    disconnectNotification.putExtra(
-//                        FloatingService.EXTRA_KEEPING, true
-//                    )
-//                    startService(disconnectNotification)
-//                }, { _, _ ->
-//                    // 网络不可用
-//                    PromptManager.play(PromptManager.NETWORK_LOST)
-//
-//                    val networkErrorNotification =
-//                        Intent(baseContext, FloatingService::class.java)
-//                    networkErrorNotification.action =
-//                        FloatingService.ACTION_SHOW_NOTIFICATION
-//                    networkErrorNotification.putExtra(
-//                        FloatingService.EXTRA_MESSAGE, "网络连接异常，请重新设置"
-//                    )
-//                    networkErrorNotification.putExtra(
-//                        FloatingService.EXTRA_TAG, "network_error"
-//                    )
-//                    networkErrorNotification.putExtra(
-//                        FloatingService.EXTRA_POSITIVE_BUTTON_TEXT, "设置网络"
-//                    )
-//                    networkErrorNotification.putExtra(
-//                        FloatingService.EXTRA_POSITIVE_BUTTON_ACTION,
-//                        MainFragment2.ACTION_OPEN_WIFI
-//                    )
-//                    networkErrorNotification.putExtra(
-//                        FloatingService.EXTRA_ICON_RES,
-//                        R.drawable.ic_wifi_error_white_40dp
-//                    )
-//                    startService(networkErrorNotification)
-//                })
-//            }
-//        }
-//    }
-    private val recordObserver = object : GlobalRecorder.Observer {
-        override fun onAudioData(array: ByteArray, offset: Int, length: Int) {
-
+    private val tokenChangedListener =
+        SharedPreferences.OnSharedPreferenceChangeListener { _, _ ->
+            updateCookie()
         }
-
-        override fun onWakeUp(angle: Int, beam: Int, params: String?) {
-            this@EngineService.onWakeUp(angle, beam, params)
-        }
-    }
     private val innerTemplateCallback = object : EvsTemplate.RenderCallback {
+        override fun renderCustomTemplate(
+            type: String,
+            templateId: String,
+            showingDuration: String?,
+            htmlSourceCode: String
+        ) {
+            EvsSpeaker.get(baseContext).isVisualFocusGain = true
+
+            EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
+
+            templateRenderCallback?.renderCustomTemplate(
+                type,
+                templateId,
+                showingDuration,
+                htmlSourceCode
+            )
+        }
+
         override fun renderTemplate(payload: String) {
             EvsSpeaker.get(baseContext).isVisualFocusGain = true
 
             EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
+
+            val intent = Intent(baseContext, FloatingService::class.java)
+            intent.action = FloatingService.ACTION_RENDER_TEMPLATE
+            intent.putExtra(FloatingService.EXTRA_PAYLOAD, payload)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
 
             templateRenderCallback?.renderTemplate(payload)
         }
@@ -311,6 +280,22 @@ class EngineService : EvsService() {
         }
 
         override fun renderPlayerInfo(payload: String) {
+            val playerInfo = Gson().fromJson(payload, PlayerInfoPayload::class.java)
+            val intent = Intent(baseContext, FloatingService::class.java).apply {
+                action = FloatingService.ACTION_UPDATE_MUSIC
+            }
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
+            ContentStorage.get().savePlayInfo(playerInfo)
+            ContentStorage.get().isMusicPlaying = true
+
+            if (playerInfo.shouldPopup) {
+                val startPlayer = Intent(baseContext, EvsLauncherActivity::class.java)
+                startPlayer.action = EvsLauncherActivity.ACTION_START_PLAYER
+                startPlayer.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                startPlayer.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                applicationContext.startActivity(startPlayer)
+            }
+
             templateRenderCallback?.renderPlayerInfo(payload)
         }
 
@@ -318,6 +303,10 @@ class EngineService : EvsService() {
             EvsSpeaker.get(baseContext).isVisualFocusGain = true
 
             EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
+
+            val intent = Intent(baseContext, FloatingService::class.java)
+            intent.action = FloatingService.ACTION_CLEAR_TEMPLATE
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
 
             templateRenderCallback?.exitCustomTemplate()
         }
@@ -330,6 +319,11 @@ class EngineService : EvsService() {
             EvsSpeaker.get(baseContext).isVisualFocusGain = false
 
             EvsSpeaker.get(baseContext).refreshNativeAudioFocus(baseContext)
+
+            val intent = Intent(baseContext, FloatingService::class.java)
+            intent.action = FloatingService.ACTION_CLEAR_TEMPLATE
+            intent.putExtra(FloatingService.EXTRA_TYPE, type)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
 
             templateRenderCallback?.exitStaticTemplate(type)
         }
@@ -414,7 +408,35 @@ class EngineService : EvsService() {
         }
     }
     private val alarmStateChangedListener = object : Alarm.AlarmStateChangedListener {
+        @SuppressLint("InvalidWakeLockTag")
         override fun onAlarmStateChanged(alarmId: String, state: Alarm.AlarmState) {
+            if (state == Alarm.AlarmState.Started) {
+                val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
+                val screenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+                    pm.isInteractive
+                } else {
+                    pm.isScreenOn
+                }
+                if (!screenOn) {
+                    Thread {
+                        try {
+                            TerminalUtils.execute("input keyevent POWER")
+                        } catch (t: Throwable) {
+                            t.printStackTrace()
+                        }
+                    }.start()
+                } else {
+                    if (isShowingDaydream) {
+                        val wl = pm.newWakeLock(
+                            PowerManager.ACQUIRE_CAUSES_WAKEUP or PowerManager.SCREEN_BRIGHT_WAKE_LOCK,
+                            "bright"
+                        )
+                        wl.acquire(10000)
+                        wl.release()
+                    }
+                }
+            }
+
             val intent = Intent(ACTION_ALARM_STATE_CHANGED)
             intent.putExtra(EXTRA_ALARM_ID, alarmId)
             intent.putExtra(EXTRA_ALARM_STATE, state.toString())
@@ -486,9 +508,76 @@ class EngineService : EvsService() {
             }
         }
     }
+    private val connectStateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context, intent: Intent) {
+            @Suppress("DEPRECATION")
+            when (intent.action) {
+                ConnectivityManager.CONNECTIVITY_ACTION -> {
+                    // api 21 以上应使用 networkCallback
+                    val connectivityManager =
+                        context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+
+                    if (connectivityManager.activeNetworkInfo?.isConnected == true) {
+                        connectEvs(DeviceUtils.getDeviceId(baseContext))
+
+                        ContextWrapper.startServiceAsUser(
+                            baseContext,
+                            Intent(baseContext, TimeService::class.java),
+                            "CURRENT"
+                        )
+                    }
+                }
+            }
+        }
+    }
+    private var networkCallback: Any? = null
+
+    private val authReceiver = object : SelfBroadcastReceiver(
+        ActionConstant.ACTION_CLIENT_AUTH_REFRESHED
+    ) {
+        override fun onReceiveAction(action: String, intent: Intent) {
+            when (action) {
+                ActionConstant.ACTION_CLIENT_AUTH_REFRESHED -> {
+                    connectEvs(DeviceUtils.getDeviceId(baseContext))
+                }
+            }
+        }
+    }
+    private val recordObserver = object : GlobalRecorder.Observer {
+        override fun onAudioData(array: ByteArray, offset: Int, length: Int) {
+            val volume = RecordVolumeUtils.calculateVolume(array, length)
+
+            val intent = Intent(baseContext, FloatingService::class.java)
+            intent.action = FloatingService.ACTION_UPDATE_VOLUME
+            intent.putExtra(FloatingService.EXTRA_VOLUME, volume)
+            ContextWrapper.startServiceAsUser(baseContext, intent, "CURRENT")
+        }
+
+        override fun onWakeUp(angle: Int, beam: Int, params: String?) {
+            this@EngineService.onWakeUp(angle, beam, params)
+        }
+    }
+    private val onConfigChangedListener = object : ConfigUtils.OnConfigChangedListener {
+        override fun onConfigChanged(key: String, value: Any?) {
+            when (key) {
+                ConfigUtils.KEY_RECOGNIZER_PROFILE -> {
+                    if (value == Recognizer.Profile.CloseTalk.toString()) {
+                        getRecognizer().profile = Recognizer.Profile.CloseTalk
+                    } else if (value == Recognizer.Profile.FarField.toString()) {
+                        getRecognizer().profile = Recognizer.Profile.FarField
+                    }
+                }
+            }
+        }
+    }
 
     override fun onBind(intent: Intent?): IBinder? {
         return binder
+    }
+
+    fun setActivity(activity: EvsLauncherActivity) {
+        this.evsLauncherActivity = activity
+        EvsLauncher.get().setActivity(activity)
     }
 
     fun setTransmissionListener(listener: TransmissionListener?) {
@@ -509,7 +598,7 @@ class EngineService : EvsService() {
         super.onCreate()
 
 //        mIvwHandler = EvsIvwHandler(this, mIvwListener)
-        GlobalRecorder.registerObserver(recordObserver)
+//        GlobalRecorder.registerObserver(recordObserver)
         getRecognizer().setRecognizerCallback(internalRecordCallback)
         getAudioPlayer().addListener(audioPlayerListener)
         getAlarm()?.addListener(alarmStateChangedListener)
@@ -562,6 +651,36 @@ class EngineService : EvsService() {
         wakeLock = powerManager.newWakeLock(flag, "iflytek:evs_engine")
 
         acquireWakeLock()
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            val connectStateFilter = IntentFilter()
+            @Suppress("DEPRECATION")
+            connectStateFilter.addAction(ConnectivityManager.CONNECTIVITY_ACTION)
+            registerReceiver(connectStateReceiver, connectStateFilter)
+        } else {
+            val connectivityManager =
+                getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager
+
+            val networkCallback = object : ConnectivityManager.NetworkCallback() {
+                override fun onAvailable(network: Network?) {
+                    super.onAvailable(network)
+
+                    connectEvs(DeviceUtils.getDeviceId(baseContext))
+                }
+            }
+            val request = NetworkRequest.Builder()
+                .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET).build()
+            connectivityManager?.registerNetworkCallback(request, networkCallback)
+
+            this.networkCallback = networkCallback
+        }
+
+        authReceiver.register(this)
+
+        GlobalRecorder.registerObserver(recordObserver)
+
+        ConfigUtils.init(this)
+        ConfigUtils.registerOnConfigChangedListener(onConfigChangedListener)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -642,7 +761,7 @@ class EngineService : EvsService() {
         super.onDestroy()
 
         GlobalRecorder.stopRecording()
-        GlobalRecorder.unregisterObserver(recordObserver)
+//        GlobalRecorder.unregisterObserver(recordObserver)
 //        mIvwHandler.release()
         getRecognizer().removeRecognizerCallback()
         getAudioPlayer().removeListener(audioPlayerListener)
@@ -659,6 +778,28 @@ class EngineService : EvsService() {
         EvsSpeaker.get(this).removeOnVolumeChangedListener(volumeChangedListener)
 
         releaseWakeLock()
+
+        if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.LOLLIPOP) {
+            unregisterReceiver(connectStateReceiver)
+        } else {
+            (getSystemService(Context.CONNECTIVITY_SERVICE) as? ConnectivityManager)
+                ?.let { connectivityManager ->
+                    val networkCallback =
+                        (this.networkCallback as? ConnectivityManager.NetworkCallback)
+                            ?: return
+                    connectivityManager.unregisterNetworkCallback(networkCallback)
+                }
+        }
+
+        authReceiver.unregister(this)
+
+        GlobalRecorder.unregisterObserver(recordObserver)
+
+        ConfigUtils.unregisterOnConfigChangedListener(onConfigChangedListener)
+
+        ConfigUtils.destroy()
+
+        AuthDelegate.unregisterTokenChangedListener(baseContext, tokenChangedListener)
     }
 
     override fun onEvsConnected() {
@@ -795,7 +936,15 @@ class EngineService : EvsService() {
     }
 
     fun connectEvs(deviceId: String) {
-        connect("wss://ivs.iflyos.cn/embedded/v1", deviceId)
+        if (!isEvsConnected) {
+            isConnecting = true
+
+            connect("wss://ivs.iflyos.cn/embedded/v1", deviceId)
+
+            sendBroadcast(Intent(ACTION_EVS_START_CONNECTING))
+
+            reconnectHandler.postReconnectEvs() //比如路由器断电了，那么等路由器恢复后需要多次重连 EVS 服务才能连的上，只连一次是不行的
+        }
     }
 
     fun requestLauncherVisualFocus() {
@@ -818,9 +967,9 @@ class EngineService : EvsService() {
         })
     }
 
-    fun sendTextIn(query: String, replyKey: String? = null) {
+    fun sendTextIn(query: String, withTts: Boolean = true, replyKey: String? = null) {
         Log.d(TAG, "sendTextIn")
-        getRecognizer().sendTextIn(query, replyKey, object : RequestCallback {
+        getRecognizer().sendTextIn(query, withTts, replyKey, object : RequestCallback {
             override fun onResult(result: Result) {
                 Log.d(TAG, "sendTextIn result: $result")
                 if (!result.isSuccessful) {
@@ -918,6 +1067,20 @@ class EngineService : EvsService() {
         return EvsScreen.get(this)
     }
 
+    override fun overrideInterceptor(): Interceptor? {
+        return EvsInterceptor.get().transferSemantic { payload ->
+            val intent = Intent(ACTION_INTERCEPTOR_RESULT)
+            intent.putExtra(EXTRA_PAYLOAD, payload.toString())
+            intent.putExtra(EXTRA_TYPE, "TransferSemantic")
+            sendBroadcast(intent)
+        }.custom { payload ->
+            val intent = Intent(ACTION_INTERCEPTOR_RESULT)
+            intent.putExtra(EXTRA_PAYLOAD, payload.toString())
+            intent.putExtra(EXTRA_TYPE, "Custom")
+            sendBroadcast(intent)
+        }
+    }
+
     override fun onResponsesRaw(json: String) {
         super.onResponsesRaw(json)
 
@@ -936,6 +1099,8 @@ class EngineService : EvsService() {
                 val headerName = header.get("name")?.asString
                 val payload = item.getAsJsonObject("payload")
                 if (TextUtils.equals("template.static_template", headerName)) {
+                    hasTemplate = true
+                } else if ("template.custom_template" == headerName) {
                     hasTemplate = true
                 }
                 if (headerName?.startsWith("template.") == true) {
@@ -960,7 +1125,8 @@ class EngineService : EvsService() {
                 }
             }
 
-            if (!hasTemplate && hasTts) { //有 template 不显示 tts，没有则显示 tts
+            val currentAppType = EvsLauncher.get().getCurrentAppType()
+            if (!hasTemplate && hasTts && currentAppType != Launcher.TYPE_SKILL) { //有 template 不显示 tts，没有则显示 tts
                 handler.post {
                     val intent = Intent(baseContext, FloatingService::class.java)
                     intent.action = FloatingService.ACTION_SHOW_TTS
@@ -979,14 +1145,41 @@ class EngineService : EvsService() {
         transmissionListener?.onRequestRaw(obj)
     }
 
+    private fun updateCookie() {
+        AuthDelegate.getAuthResponseFromPref(baseContext)?.let { authResponse ->
+            val accessToken = authResponse.accessToken
+
+            val cookieManger = CookieManager.getInstance()
+            cookieManger.setAcceptCookie(true)
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                cookieManger.removeAllCookies {}
+            } else {
+                cookieManger.removeAllCookie()
+            }
+            cookieManger.setCookie(
+                "https://homev2.iflyos.cn",
+                "token=$accessToken"
+            )
+        }
+    }
+
     fun onWakeUp(angle: Int, beam: Int, params: String?) {
         if (preventWakeUp && angle != -1)
+            return
+        if (!ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true))
             return
         val shouldIgnore =
             java.lang.System.currentTimeMillis() - latestRecognizeTime > TimeUnit.MINUTES.toMillis(
                 30
             ) && getAudioPlayer().playbackState != AudioPlayer.PLAYBACK_STATE_PLAYING
                 && getVideoPlayer()?.state != VideoPlayer.STATE_PLAYING
+        val pm = applicationContext
+            .getSystemService(Context.POWER_SERVICE) as PowerManager
+        val screenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
+            pm.isInteractive
+        } else {
+            pm.isScreenOn
+        }
         try {
             Log.d(TAG, "wake up $params")
             val json = JSONObject(params)
@@ -995,7 +1188,7 @@ class EngineService : EvsService() {
             when (json.getString("keyword")) {
                 "zan4 ting2" -> {
                     // 暂停
-                    if (!isRecognizing && !shouldIgnore)
+                    if (!isRecognizing && !shouldIgnore && screenOn)
                         when {
                             getAudioPlayer().playbackState == AudioPlayer.PLAYBACK_STATE_PLAYING -> {
                                 getAudioPlayer().pause(AudioPlayer.TYPE_PLAYBACK)
@@ -1011,25 +1204,25 @@ class EngineService : EvsService() {
                 }
                 "ji4 xu4 bo1 fang4" -> {
                     // 继续播放
-                    if (!isRecognizing && !shouldIgnore)
+                    if (!isRecognizing && !shouldIgnore && screenOn)
                         sendTextIn("继续播放")
                     resolved = true
                 }
                 "xia4 yi1 ge4" -> {
                     // 下一个
-                    if (!isRecognizing && !shouldIgnore)
+                    if (!isRecognizing && !shouldIgnore && screenOn)
                         sendTextIn("下一个")
                     resolved = true
                 }
                 "shang4 yi1 ge4" -> {
                     // 上一个
-                    if (!isRecognizing && !shouldIgnore)
+                    if (!isRecognizing && !shouldIgnore && screenOn)
                         sendTextIn("上一个")
                     resolved = true
                 }
                 "sheng1 yin1 da4 yi1 dian3" -> {
                     // 声音大一点
-                    if (!isRecognizing && !shouldIgnore)
+                    if (!isRecognizing && !shouldIgnore && screenOn)
                         handler.post {
                             EvsSpeaker.get(this).raiseVolumeLocally(true)
                         }
@@ -1037,7 +1230,7 @@ class EngineService : EvsService() {
                 }
                 "sheng1 yin1 xiao3 yi1 dian3" -> {
                     // 声音小一点
-                    if (!isRecognizing && !shouldIgnore)
+                    if (!isRecognizing && !shouldIgnore && screenOn)
                         handler.post {
                             EvsSpeaker.get(this).lowerVolumeLocally(true)
                         }
@@ -1051,13 +1244,6 @@ class EngineService : EvsService() {
             }
         } catch (t: Throwable) {
             t.printStackTrace()
-        }
-        val pm = applicationContext
-            .getSystemService(Context.POWER_SERVICE) as PowerManager
-        val screenOn = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT_WATCH) {
-            pm.isInteractive
-        } else {
-            pm.isScreenOn
         }
         if (!screenOn || isShowingDaydream) {
             // 点亮屏幕
@@ -1073,36 +1259,18 @@ class EngineService : EvsService() {
 
 //            SleepWorker.get(baseContext).hideSleepView(baseContext)
 
-            PromptManager.playWakeSound()
+            if (ConfigUtils.getBoolean(ConfigUtils.KEY_WAKE_UP_SOUND, true))
+                PromptManager.playWakeSound()
 
             sendAudioIn()
         } else if (!isEvsConnected) {
             ConnectivityUtils.checkNetworkAvailable({
+                PromptManager.play(PromptManager.CONNECTING_PLEASE_WAIT)
+
                 // 网络可用但 EVS 断连
-                val disconnectNotification =
-                    Intent(baseContext, FloatingService::class.java)
-                disconnectNotification.action =
-                    FloatingService.ACTION_SHOW_NOTIFICATION
-                disconnectNotification.putExtra(
-                    FloatingService.EXTRA_MESSAGE,
-                    getString(R.string.message_evs_disconnected)
-                )
-                disconnectNotification.putExtra(
-                    FloatingService.EXTRA_TAG,
-                    "network_error"
-                )
-                disconnectNotification.putExtra(
-                    FloatingService.EXTRA_ICON_RES,
-                    R.drawable.ic_default_error_white_40dp
-                )
-                disconnectNotification.putExtra(
-                    FloatingService.EXTRA_POSITIVE_BUTTON_TEXT,
-                    getString(R.string.i_got_it)
-                )
-                disconnectNotification.putExtra(
-                    FloatingService.EXTRA_KEEPING, true
-                )
-                startService(disconnectNotification)
+                if (!isConnecting) {
+                    reconnectHandler.postReconnectEvs()
+                }
             }, { _, _ ->
                 // 网络不可用
                 PromptManager.play(PromptManager.NETWORK_LOST)
@@ -1200,5 +1368,55 @@ class EngineService : EvsService() {
     interface TransmissionListener {
         fun onResponsesRaw(json: String)
         fun onRequestRaw(obj: Any)
+    }
+
+    private class ReconnectHandler(engineService: EngineService) : Handler() {
+        var retryCount = -1
+            private set
+        private val serviceRef = SoftReference(engineService)
+
+        private val shortDelay = 3L * 1000
+        private val middleDelay = 6L * 1000
+        private val longDelay = 10L * 1000
+
+        fun isCounting() = retryCount >= 0
+
+        fun postReconnectEvs() {
+            removeCallbacksAndMessages(null)
+            retryCount = 0
+            sendEmptyMessageDelayed(0, shortDelay)
+        }
+
+        fun clearRetryCount() {
+            retryCount = -1
+        }
+
+        override fun handleMessage(msg: Message?) {
+            if (msg?.what == 0) {
+                serviceRef.get()?.let { service ->
+                    if (!service.isEvsConnected &&
+                        AuthDelegate.getAuthResponseFromPref(service) != null
+                    ) {
+                        service.connectEvs(DeviceUtils.getDeviceId(service))
+
+                        retryCount++
+                        val delay = when (retryCount) {
+                            in 0..20 -> {
+                                shortDelay
+                            }
+                            in 21..30 -> {
+                                middleDelay
+                            }
+                            else -> {
+                                longDelay
+                            }
+                        }
+                        sendEmptyMessageDelayed(0, delay)
+                    } else {
+                        clearRetryCount()
+                    }
+                }
+            }
+        }
     }
 }

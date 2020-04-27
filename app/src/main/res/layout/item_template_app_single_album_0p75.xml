@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingTop="@dimen/dp_5"
+    android:paddingBottom="@dimen/dp_15">
+
+    <com.makeramen.roundedimageview.RoundedImageView
+        android:id="@+id/album_media_0"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginStart="@dimen/dp_6"
+        android:layout_marginEnd="@dimen/dp_6"
+        android:scaleType="centerCrop"
+        app:riv_corner_radius="@dimen/dp_6"
+        app:layout_constraintDimensionRatio="0.75"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:background="@android:color/black" />
+
+    <TextView
+        android:id="@+id/title_media_0"
+        style="@style/Body16"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/dp_8"
+        android:ellipsize="end"
+        android:maxLines="2"
+        app:layout_constraintEnd_toEndOf="@id/album_media_0"
+        app:layout_constraintStart_toStartOf="@id/album_media_0"
+        app:layout_constraintTop_toBottomOf="@id/album_media_0"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/subtitle_media_0"
+        style="@style/Body14"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:alpha="0.7"
+        android:ellipsize="end"
+        android:maxLines="1"
+        app:layout_constraintEnd_toEndOf="@id/album_media_0"
+        app:layout_constraintStart_toStartOf="@id/title_media_0"
+        app:layout_constraintTop_toBottomOf="@id/title_media_0"
+        tools:text="疯狂人类进化史" />
+
+    <TextView
+        android:id="@+id/index_media_0"
+        android:layout_width="@dimen/dp_26"
+        android:layout_height="@dimen/dp_22"
+        android:background="@drawable/bg_index_template_app_2"
+        android:gravity="center"
+        android:textColor="@android:color/white"
+        app:layout_constraintStart_toStartOf="@id/album_media_0"
+        app:layout_constraintTop_toTopOf="@id/album_media_0"
+        tools:text="1" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -8,6 +8,7 @@
     android:orientation="vertical">
 
     <FrameLayout
+        android:id="@+id/back_container"
         android:layout_width="match_parent"
         android:layout_height="@dimen/dp_56">
 
@@ -33,14 +34,26 @@
             android:layout_width="match_parent"
             android:layout_height="@dimen/dp_40"
             android:layout_gravity="center"
-            android:layout_marginStart="@dimen/dp_72"
-            android:layout_marginEnd="@dimen/dp_60"
+            android:layout_marginStart="@dimen/dp_92"
+            android:layout_marginEnd="@dimen/dp_100"
             app:tabGravity="fill"
             app:tabIndicator="@drawable/indicator_shape"
             app:tabMode="fixed"
             app:tabSelectedTextColor="@color/semi_black"
             app:tabTextAppearance="@style/MyTabLayoutTextAppearance"
             app:tabTextColor="@color/grey" />
+
+        <ImageView
+            android:id="@+id/iv_search"
+            android:layout_width="@dimen/dp_40"
+            android:layout_height="@dimen/dp_40"
+            android:layout_gravity="end|center_vertical"
+            android:layout_marginEnd="@dimen/dp_40"
+            android:background="?selectableItemBackgroundBorderless"
+            android:paddingStart="@dimen/dp_8"
+            android:paddingTop="@dimen/dp_4"
+            android:paddingEnd="@dimen/dp_8"
+            android:src="@drawable/ic_search" />
 
     </FrameLayout>
 
@@ -49,7 +62,7 @@
         android:layout_height="match_parent"
         android:layout_marginTop="@dimen/dp_56">
 
-        <androidx.viewpager2.widget.ViewPager2
+        <androidx.viewpager.widget.ViewPager
             android:id="@+id/view_pager"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

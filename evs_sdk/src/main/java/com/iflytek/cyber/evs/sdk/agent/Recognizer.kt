@@ -42,6 +42,7 @@ abstract class Recognizer {
         const val NAME_EXPECT_REPLY = "${Constant.NAMESPACE_RECOGNIZER}.expect_reply"
         const val NAME_STOP_CAPTURE = "${Constant.NAMESPACE_RECOGNIZER}.stop_capture"
         const val NAME_INTERMEDIATE_TEXT = "${Constant.NAMESPACE_RECOGNIZER}.intermediate_text"
+        const val NAME_EVALUATE_RESULT = "${Constant.NAMESPACE_RECOGNIZER}.evaluate_result"
 
         internal const val KEY_QUERY = "query"
         internal const val KEY_TEXT = "text"
@@ -51,7 +52,42 @@ abstract class Recognizer {
         internal const val KEY_ENABLE_VAD = "enable_vad"
         internal const val KEY_WAKE_UP = "iflyos_wake_up"
         internal const val KEY_BACKGROUND_RECOGNIZE = "background_recognize"
+        internal const val KEY_EVALUATE = "evaluate"
+        internal const val KEY_LANGUAGE = "language"
+        internal const val KEY_CATEGORY = "category"
         internal const val KEY_TIMEOUT = "timeout"
+        internal const val KEY_WITH_TTS = "with_tts"
+
+        /**
+         * 评测模式 Profile
+         */
+        internal const val PROFILE_EVALUATE = "EVALUATE"
+
+        /**
+         * 美式英语
+         */
+        const val LANGUAGE_EN_US = "en_us"
+        /**
+         * 中文
+         */
+        const val LANGUAGE_ZH_CN = "zh_cn"
+
+        /**
+         * 篇章朗读，仅英文可用，300 个英文字符以内
+         */
+        const val EVALUATE_CATEGORY_READ_CHAPTER = "read_chapter"
+        /**
+         * 句子朗读，中英文可用，不支持标点符号
+         */
+        const val EVALUATE_CATEGORY_READ_SENTENCE = "read_sentence"
+        /**
+         * 词语朗读，中英文可用，不支持标点符号
+         */
+        const val EVALUATE_CATEGORY_READ_WORD = "read_word"
+        /**
+         * 单字朗读，仅中文可用，不支持标点符号
+         */
+        const val EVALUATE_CATEGORY_READ_SYLLABLE = "read_syllable"
 
         /**
          * 获取EVS支持的SampleRate，当前只支持16000Hz。
@@ -78,6 +114,8 @@ abstract class Recognizer {
     @Suppress("MemberVisibilityCanBePrivate")
     var isLocalVad = false
     var isPreventExpectReply = false
+
+    var latestExpectReplyKey: String? = null
 
     // 音频编码格式
     var audioCodecFormat = AudioCodecFormat.AUDIO_L16_RATE_16000_CHANNELS_1
@@ -281,6 +319,8 @@ abstract class Recognizer {
         }
 
         if (!isPreventExpectReply) {
+            latestExpectReplyKey = replyKey
+
             val payload = generatePayload(replyKey)
 
             RequestManager.sendRequest(NAME_AUDIO_IN, payload, object : RequestCallback {
@@ -359,17 +399,24 @@ abstract class Recognizer {
     /**
      * 发送文本进行语义理解。
      * @param query 文本内容
+     * @param withTts 是否需要语音回复，如果你希望用户点击按钮的时候，不要出现提示音，那么可以设置为 false，默认为：true
      * @param replyKey 关联追问上下文的key
      * @param requestCallback 结果回调
      */
     fun sendTextIn(
         query: String,
+        withTts: Boolean = true,
         replyKey: String? = null,
         requestCallback: RequestCallback? = null
     ) {
+        if (isRecording()) {
+            requestCancel()
+        }
+
         if (query.isNotEmpty()) {
             val payload = JSONObject()
             payload[KEY_QUERY] = query
+            payload[KEY_WITH_TTS] = withTts
 
             if (!replyKey.isNullOrEmpty()) {
                 payload[KEY_REPLY_KEY] = replyKey
@@ -377,6 +424,63 @@ abstract class Recognizer {
 
             RequestManager.sendRequest(NAME_TEXT_IN, payload, requestCallback, true)
         }
+    }
+
+    /**
+     * 开始评测
+     * @param language 语言，可以是 [LANGUAGE_EN_US] 或 [LANGUAGE_ZH_CN]
+     * @param category 评测题型，可以是 [EVALUATE_CATEGORY_READ_CHAPTER], [EVALUATE_CATEGORY_READ_SENTENCE], [EVALUATE_CATEGORY_READ_SYLLABLE], [EVALUATE_CATEGORY_READ_WORD] 中的一个
+     * @param text 评测文本，符合 category 要求的文本
+     * @param requestCallback 请求结果回调
+     */
+    fun sendEvaluate(
+        language: String,
+        category: String,
+        text: String,
+        enableVad: Boolean = true,
+        requestCallback: RequestCallback? = null
+    ) {
+        if (isRecording()) {
+            requestCancel()
+        }
+
+        val payload = generatePayload()
+        payload[KEY_PROFILE] = PROFILE_EVALUATE
+        payload[KEY_ENABLE_VAD] = enableVad
+
+        val evaluateJson = JSONObject()
+        evaluateJson[KEY_LANGUAGE] = language
+        evaluateJson[KEY_CATEGORY] = category
+        evaluateJson[KEY_TEXT] = text
+
+        payload[KEY_EVALUATE] = evaluateJson
+
+        RequestManager.sendRequest(NAME_AUDIO_IN, payload, object : RequestCallback {
+            override fun onResult(result: Result) {
+                Log.d("Recognizer", "sendAudioIn result: $result")
+                if (result.isSuccessful) {
+                    recorderThread?.stopNow()
+
+                    recorderThread = RecorderThread(this@Recognizer, false)
+                    recorderThread?.start()
+
+                    startRecording()
+
+                    AudioFocusManager.requestActive(
+                        AudioFocusManager.CHANNEL_INPUT,
+                        AudioFocusManager.TYPE_RECOGNIZE
+                    )
+                }
+
+                requestCallback?.onResult(result)
+            }
+
+        }, true)
+    }
+
+    @CallSuper
+    open fun onEvaluateResult(payload: String) {
+
     }
 
     /**
@@ -508,16 +612,21 @@ abstract class Recognizer {
      * 交互类型。
      */
     enum class Profile(val value: String) {
-        CloseTalk("CLOSE_TALK"),      // 近场
-        FarField("FAR_FIELD")        // 远场
+        /** 近场识别 */
+        CloseTalk("CLOSE_TALK"),
+        /** 远场识别 */
+        FarField("FAR_FIELD")
     }
 
     /**
      * 音频编码格式。
      */
     enum class AudioCodecFormat {
-        AUDIO_L16_RATE_16000_CHANNELS_1,        // 原始音频，不压缩
-        SPEEX_WB_QUALITY_9,                     // speex双字节编码质量为9，1280字节PCM压缩到212字节
-        OPUS                                    // opus 32000码率，固定编码，1280字节PCM压缩到160字节
+        /** 原始音频，不压缩 */
+        AUDIO_L16_RATE_16000_CHANNELS_1,
+        /** speex 双字节编码质量为 9，1280 字节 PCM 压缩到 212 字节 */
+        SPEEX_WB_QUALITY_9,
+        /** opus 32000 码率，固定编码，1280 字节 PCM 压缩到 160 字节 */
+        OPUS
     }
 }

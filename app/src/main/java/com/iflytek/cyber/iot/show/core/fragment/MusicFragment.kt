@@ -63,13 +63,16 @@ class MusicFragment : BaseFragment() {
         tvError = view.findViewById(R.id.error_text)
         placeholderView = view.findViewById(R.id.placeholder)
 
-        groupId = arguments?.getString("id")
-        groupId?.let { getMediaSection(it) }
-
         view.findViewById<View>(R.id.refresh)?.setOnClickListener {
             showPlaceholder()
             groupId?.let { getMediaSection(it) }
         }
+    }
+
+    override fun onLazyInitView(savedInstanceState: Bundle?) {
+        super.onLazyInitView(savedInstanceState)
+        groupId = arguments?.getString("id")
+        groupId?.let { getMediaSection(it) }
     }
 
     private fun setupRecyclerView(items: List<Pair<String?, List<GroupItem>>>) {

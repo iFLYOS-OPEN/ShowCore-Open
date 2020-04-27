@@ -27,6 +27,7 @@ object ConfigUtils {
     const val KEY_WAKE_WORD_SUCCEED = "wake_word_succeed"
     const val KEY_SLEEP_TIME = "sleep_time"
     const val KEY_RESPONSE_SOUND = "response_sound"
+    const val KEY_WAKE_UP_SOUND = "wake_up_sound"
 
     private var pref: SharedPreferences? = null
 
@@ -44,6 +45,8 @@ object ConfigUtils {
         }
 
     fun init(context: Context) {
+        if (pref != null)
+            return
         pref = context.getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
 
         pref?.registerOnSharedPreferenceChangeListener(onSharedPreferenceChangeListener)

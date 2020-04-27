@@ -1,0 +1,440 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/line0"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.333" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/line1"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.667" />
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+        android:id="@+id/top_container"
+        android:layout_width="wrap_content"
+        android:layout_height="0dp"
+        android:paddingStart="@dimen/dp_12"
+        android:paddingEnd="@dimen/dp_12"
+        android:paddingBottom="@dimen/dp_10"
+        app:layout_constraintBottom_toTopOf="@+id/item_container_4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:shadowColor="#1F000000"
+        app:shadowRadius="@dimen/dp_12">
+
+        <FrameLayout
+            android:id="@+id/container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_white_round_12dp">
+
+            <ImageView
+                android:id="@+id/background"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_56"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:id="@+id/title"
+                    style="@style/H5.White"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/dp_24"
+                    android:layout_weight="1"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    tools:text="热播电视剧" />
+
+                <ImageView
+                    android:id="@+id/refresh"
+                    android:layout_width="@dimen/dp_32"
+                    android:layout_height="@dimen/dp_32"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:padding="@dimen/dp_4"
+                    android:background="?selectableItemBackgroundBorderless"
+                    android:src="@drawable/ic_reload_24dp"
+                    android:tint="@android:color/white" />
+
+                <FrameLayout
+                    android:id="@+id/more"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginEnd="@dimen/dp_16"
+                    android:paddingStart="@dimen/dp_8"
+                    android:paddingEnd="@dimen/dp_8">
+
+                    <TextView
+                        android:id="@+id/tv_more"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_round_border_white_16dp"
+                        android:paddingStart="@dimen/dp_9"
+                        android:layout_gravity="center"
+                        android:paddingTop="@dimen/dp_3"
+                        android:paddingEnd="@dimen/dp_9"
+                        android:paddingBottom="@dimen/dp_3"
+                        android:text="@string/more"
+                        android:textSize="@dimen/sp_14"
+                        tools:textColor="@android:color/black" />
+
+                </FrameLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_marginStart="@dimen/dp_18"
+                android:layout_marginTop="@dimen/dp_56"
+                android:layout_marginEnd="@dimen/dp_18"
+                android:layout_marginBottom="@dimen/dp_24">
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingStart="@dimen/dp_6"
+                    android:paddingEnd="@dimen/dp_6">
+
+                    <TextView
+                        android:id="@+id/tv_title_0"
+                        style="@style/Body16"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="@id/item_clickable_0"
+                        app:layout_constraintStart_toStartOf="@id/item_clickable_0"
+                        tools:text="标题" />
+
+                    <FrameLayout
+                        android:id="@+id/item_clickable_0"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginBottom="@dimen/dp_6"
+                        android:foreground="@drawable/bg_clickable_round_12dp"
+                        app:layout_constraintBottom_toTopOf="@id/tv_title_0"
+                        app:layout_constraintDimensionRatio="1"
+                        app:layout_constraintHeight_max="@dimen/dp_150"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <ImageView
+                            android:id="@+id/iv_image_0"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:layout_marginBottom="@dimen/dp_6"
+                            app:layout_constraintBottom_toTopOf="@id/tv_title_0"
+                            app:layout_constraintDimensionRatio="1"
+                            app:layout_constraintHeight_max="@dimen/dp_150"
+                            app:layout_constraintStart_toStartOf="parent"
+                            app:layout_constraintTop_toTopOf="parent"
+                            tools:src="@android:color/white" />
+                    </FrameLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingStart="@dimen/dp_6"
+                    android:paddingEnd="@dimen/dp_6">
+
+                    <TextView
+                        android:id="@+id/tv_title_1"
+                        style="@style/Body16"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="@id/item_clickable_1"
+                        app:layout_constraintStart_toStartOf="@id/item_clickable_1"
+                        tools:text="标题" />
+
+                    <FrameLayout
+                        android:id="@+id/item_clickable_1"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginBottom="@dimen/dp_6"
+                        android:foreground="@drawable/bg_clickable_round_12dp"
+                        app:layout_constraintBottom_toTopOf="@id/tv_title_1"
+                        app:layout_constraintDimensionRatio="1"
+                        app:layout_constraintHeight_max="@dimen/dp_150"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <ImageView
+                            android:id="@+id/iv_image_1"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            tools:src="@android:color/white" />
+                    </FrameLayout>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingStart="@dimen/dp_6"
+                    android:paddingEnd="@dimen/dp_6">
+
+                    <TextView
+                        android:id="@+id/tv_title_2"
+                        style="@style/Body16"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="@id/item_clickable_2"
+                        app:layout_constraintStart_toStartOf="@id/item_clickable_2"
+                        tools:text="标题" />
+
+                    <FrameLayout
+                        android:id="@+id/item_clickable_2"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginBottom="@dimen/dp_6"
+                        android:foreground="@drawable/bg_clickable_round_12dp"
+                        app:layout_constraintBottom_toTopOf="@id/tv_title_2"
+                        app:layout_constraintDimensionRatio="1"
+                        app:layout_constraintHeight_max="@dimen/dp_150"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <ImageView
+                            android:id="@+id/iv_image_2"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            tools:src="@android:color/white" />
+                    </FrameLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:paddingStart="@dimen/dp_6"
+                    android:paddingEnd="@dimen/dp_6">
+
+                    <TextView
+                        android:id="@+id/tv_title_3"
+                        style="@style/Body16"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        app:layout_constraintBottom_toBottomOf="parent"
+                        app:layout_constraintEnd_toEndOf="@id/item_clickable_3"
+                        app:layout_constraintStart_toStartOf="@id/item_clickable_3"
+                        tools:text="标题" />
+
+                    <FrameLayout
+                        android:id="@+id/item_clickable_3"
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_marginBottom="@dimen/dp_6"
+                        android:foreground="@drawable/bg_clickable_round_12dp"
+                        app:layout_constraintBottom_toTopOf="@id/tv_title_3"
+                        app:layout_constraintDimensionRatio="1"
+                        app:layout_constraintHeight_max="@dimen/dp_150"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent">
+
+                        <ImageView
+                            android:id="@+id/iv_image_3"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            tools:src="@android:color/white" />
+                    </FrameLayout>
+                </androidx.constraintlayout.widget.ConstraintLayout>
+            </LinearLayout>
+
+        </FrameLayout>
+    </com.iflytek.cyber.iot.show.core.widget.ShadowLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+        android:id="@+id/item_container_4"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:paddingStart="@dimen/dp_12"
+        android:paddingTop="@dimen/dp_6"
+        android:paddingEnd="@dimen/dp_8"
+        android:paddingBottom="@dimen/dp_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="@id/line0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:shadowColor="#1F000000"
+        app:shadowRadius="@dimen/dp_12">
+
+        <FrameLayout
+            android:id="@+id/item_clickable_4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_white_round_12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="@drawable/bg_clickable_round_12dp">
+
+            <LinearLayout
+                android:id="@+id/item_4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/dp_20"
+                android:paddingEnd="@dimen/dp_20">
+
+                <TextView
+                    android:id="@+id/tv_subtitle_4"
+                    style="@style/Body12"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_10"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    tools:text="次标题" />
+
+                <TextView
+                    android:id="@+id/tv_title_4"
+                    style="@style/Body16"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_3"
+                    android:layout_marginBottom="@dimen/dp_12"
+                    android:ellipsize="end"
+                    android:lines="2"
+                    tools:text="主标题" />
+
+            </LinearLayout>
+        </FrameLayout>
+
+    </com.iflytek.cyber.iot.show.core.widget.ShadowLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+        android:id="@+id/item_container_5"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingStart="@dimen/dp_8"
+        android:paddingTop="@dimen/dp_6"
+        android:paddingEnd="@dimen/dp_8"
+        android:paddingBottom="@dimen/dp_24"
+        app:layout_constraintBottom_toBottomOf="@id/item_container_4"
+        app:layout_constraintEnd_toEndOf="@id/line1"
+        app:layout_constraintStart_toStartOf="@id/line0"
+        app:layout_constraintTop_toTopOf="@id/item_container_4"
+        app:shadowColor="#1F000000"
+        app:shadowRadius="@dimen/dp_12">
+
+        <FrameLayout
+            android:id="@+id/item_clickable_5"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_white_round_12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="@drawable/bg_clickable_round_12dp">
+
+            <LinearLayout
+                android:id="@+id/item_5"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/dp_20"
+                android:paddingEnd="@dimen/dp_20">
+
+                <TextView
+                    android:id="@+id/tv_subtitle_5"
+                    style="@style/Body12"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_10"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    tools:text="次标题" />
+
+                <TextView
+                    android:id="@+id/tv_title_5"
+                    style="@style/Body16"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_3"
+                    android:layout_marginBottom="@dimen/dp_12"
+                    android:ellipsize="end"
+                    android:lines="2"
+                    tools:text="主标题" />
+
+            </LinearLayout>
+        </FrameLayout>
+
+    </com.iflytek.cyber.iot.show.core.widget.ShadowLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+        android:id="@+id/item_container_6"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:paddingStart="@dimen/dp_8"
+        android:paddingTop="@dimen/dp_6"
+        android:paddingEnd="@dimen/dp_12"
+        android:paddingBottom="@dimen/dp_24"
+        app:layout_constraintBottom_toBottomOf="@id/item_container_4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="@id/line1"
+        app:layout_constraintTop_toTopOf="@id/item_container_4"
+        app:shadowColor="#1F000000"
+        app:shadowRadius="@dimen/dp_12">
+
+        <FrameLayout
+            android:id="@+id/item_clickable_6"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_white_round_12dp"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="@drawable/bg_clickable_round_12dp">
+
+            <LinearLayout
+                android:id="@+id/item_6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:paddingStart="@dimen/dp_20"
+                android:paddingEnd="@dimen/dp_20">
+
+                <TextView
+                    android:id="@+id/tv_subtitle_6"
+                    style="@style/Body12"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_10"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    tools:text="次标题" />
+
+                <TextView
+                    android:id="@+id/tv_title_6"
+                    style="@style/Body16"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/dp_3"
+                    android:layout_marginBottom="@dimen/dp_12"
+                    android:ellipsize="end"
+                    android:lines="2"
+                    tools:text="主标题为什么为什么为色的的" />
+
+            </LinearLayout>
+        </FrameLayout>
+    </com.iflytek.cyber.iot.show.core.widget.ShadowLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

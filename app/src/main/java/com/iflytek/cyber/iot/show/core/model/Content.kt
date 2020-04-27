@@ -37,7 +37,7 @@ class Content {
     var imageUrl: String? = null
 
     override fun toString(): String {
-        return "Content(title=$title, titleSubtext1=$titleSubtext1, titleSubtext2=$titleSubtext2, header=$header, headerSubtext1=$headerSubtext1, mediaLengthInMilliseconds=$mediaLengthInMilliseconds, art=$art, provider=$provider, musicArtist=$musicArtist, musicTitle=$musicTitle, imageUrl=$imageUrl)"
+        return "Content(text=$title, titleSubtext1=$titleSubtext1, titleSubtext2=$titleSubtext2, header=$header, headerSubtext1=$headerSubtext1, mediaLengthInMilliseconds=$mediaLengthInMilliseconds, art=$art, provider=$provider, musicArtist=$musicArtist, musicTitle=$musicTitle, imageUrl=$imageUrl)"
     }
 }
 

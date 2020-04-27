@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:sl_cornerRadius="@dimen/dp_12"
+    app:sl_dx="0dp"
+    app:sl_dy="@dimen/dp_4"
+    app:sl_shadowColor="#0D000000"
+    app:sl_shadowRadius="@dimen/dp_12">
+
+    <LinearLayout
+        android:id="@+id/clickable"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_8"
+        android:background="@drawable/bg_white_round_12dp"
+        android:foreground="@drawable/bg_clickable_round_12dp"
+        android:orientation="vertical">
+
+        <FrameLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal">
+
+            <FrameLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_16">
+
+                <ImageView
+                    android:layout_width="@dimen/dp_57"
+                    android:layout_height="@dimen/dp_57"
+                    android:layout_gravity="center"
+                    android:background="@drawable/bg_grey_stroke_oval" />
+
+                <com.makeramen.roundedimageview.RoundedImageView
+                    android:id="@+id/iv_brand_icon"
+                    android:layout_width="@dimen/dp_56"
+                    android:layout_height="@dimen/dp_56"
+                    android:layout_gravity="center"
+                    app:riv_oval="true" />
+
+
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/tv_auth_state"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom|center_horizontal"
+                android:background="@drawable/bg_text_grey_round_10dp"
+                android:paddingStart="@dimen/dp_4"
+                android:paddingEnd="@dimen/dp_4"
+                android:textColor="@android:color/white"
+                android:textSize="@dimen/sp_14"
+                tools:text="已绑定" />
+
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/tv_brand"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="@dimen/dp_16"
+            android:layout_marginBottom="@dimen/dp_20"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_16"
+            tools:text="大猫智能" />
+
+    </LinearLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>

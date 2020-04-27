@@ -254,6 +254,25 @@ abstract class AudioPlayer {
     }
 
     /**
+     * 停止播放，并重置playbackState 为 IDLE 状态
+     * @param type 音频类型
+     * @param resourceId 资源id
+     */
+    fun onQuit(type: String, resourceId: String) {
+        Log.d("AudioPlayer", "onQuit($type, $resourceId)")
+        if (type == TYPE_PLAYBACK) {
+            playbackState = PLAYBACK_STATE_IDLE
+        }
+        listeners.map {
+            try {
+                it.onStopped(this, type, resourceId)
+            } catch (_: Exception) {
+
+            }
+        }
+    }
+
+    /**
      * 播放完成回调。
      * @param type 音频类型
      * @param resourceId 资源id

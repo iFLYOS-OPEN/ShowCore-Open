@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:theme="@style/AppTheme"
+    tools:layout_gravity="bottom">
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="@dimen/dp_20"
+        android:paddingLeft="@dimen/dp_16"
+        android:paddingTop="@dimen/dp_16"
+        android:paddingRight="@dimen/dp_16"
+        android:paddingBottom="@dimen/dp_20"
+        app:shadowColor="#33000000"
+        app:shadowDy="@dimen/dp_4"
+        app:shadowRadius="@dimen/dp_16">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="@dimen/dp_44"
+            android:background="@drawable/bg_white_round_12dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ProgressBar
+                android:id="@+id/progress_bar"
+                android:layout_width="@dimen/dp_24"
+                android:layout_height="@dimen/dp_24"
+                android:layout_marginStart="@dimen/dp_14" />
+
+            <TextView
+                android:id="@+id/tv_connecting"
+                style="@style/Body14.Grey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_10"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:text="@string/connecting_voice_service_please_wait" />
+
+            <TextView
+                android:id="@+id/i_got_it"
+                style="@style/Body14"
+                android:layout_width="@dimen/dp_64"
+                android:layout_height="@dimen/dp_36"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:background="?selectableItemBackground"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:text="@string/i_got_it"
+                android:textColor="@color/text_color_accent" />
+
+            <TextView
+                android:id="@+id/tv_reconnect_succeed"
+                style="@style/Body14.Grey"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_16"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:text="@string/connect_succeed"
+                android:visibility="gone" />
+
+        </LinearLayout>
+
+    </com.iflytek.cyber.iot.show.core.widget.ShadowLayout>
+</FrameLayout>

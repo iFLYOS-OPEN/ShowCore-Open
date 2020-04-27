@@ -62,16 +62,13 @@
 
     </RelativeLayout>
 
-    <LinearLayout
-        android:layout_width="wrap_content"
+    <FrameLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_gravity="end"
-        android:layout_marginStart="@dimen/dp_52"
-        android:layout_marginEnd="@dimen/dp_8"
         android:orientation="horizontal">
 
         <TextView
-            android:id="@+id/dialog_negative"
+            android:id="@+id/dialog_negative_2"
             android:layout_width="wrap_content"
             android:layout_height="@dimen/dp_32"
             android:background="@drawable/bg_round_border_accent_48dp"
@@ -82,20 +79,42 @@
             android:textSize="@dimen/sp_14"
             tools:text="button" />
 
-        <TextView
-            android:id="@+id/dialog_positive"
+        <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="@dimen/dp_32"
-            android:layout_marginStart="@dimen/dp_12"
-            android:background="@drawable/bg_round_accent_32dp"
-            android:gravity="center"
-            android:paddingStart="@dimen/dp_20"
-            android:paddingEnd="@dimen/dp_20"
-            android:textColor="@color/text_color_light"
-            android:textSize="@dimen/sp_14"
-            android:theme="@style/AppTheme.Dark"
-            tools:text="button" />
+            android:layout_height="wrap_content"
+            android:layout_gravity="end"
+            android:layout_marginStart="@dimen/dp_52"
+            android:layout_marginEnd="@dimen/dp_8"
+            android:orientation="horizontal">
 
-    </LinearLayout>
+            <TextView
+                android:id="@+id/dialog_negative"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_32"
+                android:background="@drawable/bg_round_border_accent_48dp"
+                android:gravity="center"
+                android:paddingStart="@dimen/dp_20"
+                android:paddingEnd="@dimen/dp_20"
+                android:textColor="@color/text_color_accent"
+                android:textSize="@dimen/sp_14"
+                tools:text="button" />
+
+            <TextView
+                android:id="@+id/dialog_positive"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_32"
+                android:layout_marginStart="@dimen/dp_12"
+                android:background="@drawable/bg_round_accent_32dp"
+                android:gravity="center"
+                android:paddingStart="@dimen/dp_20"
+                android:paddingEnd="@dimen/dp_20"
+                android:textColor="@color/text_color_light"
+                android:textSize="@dimen/sp_14"
+                android:theme="@style/AppTheme.Dark"
+                tools:text="button" />
+
+        </LinearLayout>
+
+    </FrameLayout>
 
 </LinearLayout>

@@ -93,7 +93,7 @@ internal class OkHttpWebSocket : SocketManager.EvsWebSocket() {
             Result(Result.CODE_SUCCEED, null)
         } else {
             Log.e(TAG, "send $message failed, socket is null.")
-            onSendFailed(EvsError.Code.ERROR_CLIENT_DISCONNECTED, null)
+            onSendFailed(EvsError.Code.ERROR_CLIENT_DISCONNECTED, null, message)
             Result(Result.CODE_DISCONNECTED, null)
         }
     }
@@ -105,7 +105,7 @@ internal class OkHttpWebSocket : SocketManager.EvsWebSocket() {
             Result(Result.CODE_SUCCEED, null)
         } else {
             Log.e(TAG, "send failed, socket is null.")
-            onSendFailed(EvsError.Code.ERROR_CLIENT_DISCONNECTED, null)
+            onSendFailed(EvsError.Code.ERROR_CLIENT_DISCONNECTED, null, message)
             Result(Result.CODE_DISCONNECTED, null)
         }
     }
@@ -117,7 +117,7 @@ internal class OkHttpWebSocket : SocketManager.EvsWebSocket() {
             Result(Result.CODE_SUCCEED, null)
         } else {
             Log.e(TAG, "send failed, socket is null.")
-            onSendFailed(EvsError.Code.ERROR_CLIENT_DISCONNECTED, null)
+            onSendFailed(EvsError.Code.ERROR_CLIENT_DISCONNECTED, null, message)
             Result(Result.CODE_DISCONNECTED, null)
         }
     }

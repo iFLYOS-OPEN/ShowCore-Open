@@ -46,6 +46,7 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
     private var backgroundRecognizeCover: View? = null
     private var backgroundRecognizeSwitch: StyledSwitch? = null
     private var responseSoundSwitch: StyledSwitch? = null
+    private var wakeUpSoundSwitch: StyledSwitch? = null
 
     private var tvRecognizerProfile: TextView? = null
 
@@ -109,12 +110,13 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
 
         continousView = view.findViewById(R.id.continous_mode)
         continousSwitch = view.findViewById(R.id.continous_switch)
-        speakerView = view.findViewById(R.id.speaker)
+       // speakerView = view.findViewById(R.id.speaker)
         languageAndSpeakerView = view.findViewById(R.id.language_and_speaker)
         languageAndSpeakerValueView = view.findViewById(R.id.language_and_speaker_value)
         backgroundRecognizeCover = view.findViewById(R.id.background_recognize_cover)
         backgroundRecognizeSwitch = view.findViewById(R.id.background_recognize_switch)
         responseSoundSwitch = view.findViewById(R.id.response_sound_switch)
+        wakeUpSoundSwitch = view.findViewById(R.id.wake_up_sound_switch)
 
         tvRecognizerProfile = view.findViewById(R.id.recognize_profile_value)
 
@@ -171,6 +173,9 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
         view.findViewById<View>(R.id.response_sound_clickable).setOnClickListener {
             responseSoundSwitch?.isChecked = responseSoundSwitch?.isChecked != true
         }
+        view.findViewById<View>(R.id.wake_up_sound_clickable).setOnClickListener {
+            wakeUpSoundSwitch?.isChecked = wakeUpSoundSwitch?.isChecked != true
+        }
         responseSoundSwitch?.setOnCheckedChangeListener(object :
             StyledSwitch.OnCheckedChangeListener {
             override fun onCheckedChange(switch: StyledSwitch, isChecked: Boolean) {
@@ -187,8 +192,26 @@ class MicrophoneFragment : BaseFragment(), PageScrollable {
                 }
             }
         })
+        wakeUpSoundSwitch?.setOnCheckedChangeListener(object :
+            StyledSwitch.OnCheckedChangeListener {
+            override fun onCheckedChange(switch: StyledSwitch, isChecked: Boolean) {
+                val responseSoundEnabled =
+                    ConfigUtils.getBoolean(ConfigUtils.KEY_WAKE_UP_SOUND, true)
+                if (isChecked) {
+                    if (!responseSoundEnabled) {
+                        ConfigUtils.putBoolean(ConfigUtils.KEY_WAKE_UP_SOUND, true)
+                    }
+                } else {
+                    if (responseSoundEnabled) {
+                        ConfigUtils.putBoolean(ConfigUtils.KEY_WAKE_UP_SOUND, false)
+                    }
+                }
+            }
+        })
         responseSoundSwitch?.isChecked =
             ConfigUtils.getBoolean(ConfigUtils.KEY_RESPONSE_SOUND, true)
+        wakeUpSoundSwitch?.isChecked =
+            ConfigUtils.getBoolean(ConfigUtils.KEY_WAKE_UP_SOUND, true)
         microphoneSwitch?.setOnCheckedChangeListener(object : StyledSwitch.OnCheckedChangeListener {
             override fun onCheckedChange(switch: StyledSwitch, isChecked: Boolean) {
                 val microphoneEnabled =

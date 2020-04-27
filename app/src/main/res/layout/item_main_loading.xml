@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/dp_12"
+    android:paddingEnd="@dimen/dp_12"
+    android:paddingBottom="@dimen/dp_24"
+    app:shadowColor="#1F000000"
+    app:shadowRadius="@dimen/dp_12">
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="@dimen/dp_472"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_white_round_16dp"
+        android:backgroundTint="#E4E9EE">
+
+        <View
+            android:layout_width="@dimen/dp_108"
+            android:layout_height="@dimen/dp_27"
+            android:layout_marginStart="@dimen/dp_24"
+            android:layout_marginTop="@dimen/dp_13"
+            android:background="@drawable/bg_grey_round_dp4" />
+
+        <View
+            android:layout_width="@dimen/dp_34"
+            android:layout_height="@dimen/dp_20"
+            android:layout_gravity="end"
+            android:layout_marginTop="@dimen/dp_16"
+            android:layout_marginEnd="@dimen/dp_24"
+            android:background="@drawable/bg_grey_round_dp4" />
+
+        <View
+            android:layout_width="@dimen/dp_34"
+            android:layout_height="@dimen/dp_20"
+            android:layout_gravity="end"
+            android:layout_marginTop="@dimen/dp_16"
+            android:layout_marginEnd="@dimen/dp_68"
+            android:background="@drawable/bg_grey_round_dp4" />
+
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/dp_56">
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginBottom="@dimen/dp_16"
+                android:layout_above="@id/space">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="@dimen/dp_24"
+                    android:layout_marginEnd="@dimen/dp_8"
+                    android:layout_toStartOf="@id/space_2"
+                    android:background="@drawable/bg_grey_round_dp8" />
+
+                <Space
+                    android:id="@+id/space_2"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="@dimen/dp_8"
+                    android:layout_marginEnd="@dimen/dp_24"
+                    android:layout_toEndOf="@id/space_2"
+                    android:background="@drawable/bg_grey_round_dp8" />
+
+            </RelativeLayout>
+
+            <Space
+                android:id="@+id/space"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/dp_1"
+                android:layout_centerVertical="true" />
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_below="@id/space"
+                android:layout_marginBottom="@dimen/dp_24">
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="@dimen/dp_24"
+                    android:layout_marginEnd="@dimen/dp_8"
+                    android:layout_toStartOf="@id/space_1"
+                    android:background="@drawable/bg_grey_round_dp8" />
+
+                <Space
+                    android:id="@+id/space_1"
+                    android:layout_width="1dp"
+                    android:layout_height="match_parent"
+                    android:layout_centerHorizontal="true" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_marginStart="@dimen/dp_8"
+                    android:layout_marginEnd="@dimen/dp_24"
+                    android:layout_toEndOf="@id/space_1"
+                    android:background="@drawable/bg_grey_round_dp8" />
+
+            </RelativeLayout>
+
+        </RelativeLayout>
+
+    </FrameLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowLayout>

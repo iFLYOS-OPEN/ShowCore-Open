@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.text.TextUtils
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -14,6 +15,7 @@ import androidx.core.os.bundleOf
 import androidx.core.os.postDelayed
 import androidx.core.view.GravityCompat
 import androidx.core.view.isVisible
+import androidx.core.view.postDelayed
 import androidx.drawerlayout.widget.DrawerLayout
 import androidx.recyclerview.widget.RecyclerView
 import com.google.gson.Gson
@@ -111,6 +113,8 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
 
         alert = arguments?.getParcelable("alert")
 
+        setFragmentResult(0, bundleOf())
+
         currentDesc = alert?.content
 
         hourWheel.data = getHourList()
@@ -133,7 +137,11 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
             if (alert?.content.isNullOrEmpty()) {
                 tvAlarmDesc.text = "无"
             } else {
-                tvAlarmDesc.text = alert!!.content
+                tvAlarmDesc.text = if (alert?.content?.length ?: 0 > 10) {
+                    alert?.content?.substring(0, 10) + "···"
+                } else {
+                    alert?.content
+                }
             }
             setDateWheel(alert!!.repeatType)
         }
@@ -290,12 +298,17 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
         launcher?.setImmersiveFlags()
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onFragmentResult(requestCode: Int, resultCode: Int, data: Bundle) {
         if (requestCode == REQUEST_EDIT_CODE) {
             val isEdited = data.getBoolean("isEdited")
             if (isEdited) {
                 val desc = data.getString("desc")
-                tvAlarmDesc.text = desc
+                if (desc?.length ?: 0 > 10) {
+                    tvAlarmDesc.text = desc.substring(0, 10) + "···"
+                } else {
+                    tvAlarmDesc.text = desc
+                }
                 alert?.content = desc
                 currentDesc = desc
             }
@@ -317,7 +330,7 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
             hour = "0$hour"
         }
         if (minute.toInt() < 10) {
-            minute = "0$minute"
+            minute = "$minute"
         }
         if (TextUtils.equals(currentRepeatType, Alert.TYPE_NONE)) {
             body.alertType = "single"
@@ -353,6 +366,7 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
             override fun onResponse(call: Call<Message>, response: Response<Message>) {
                 if (response.isSuccessful) {
                     Toast.makeText(tvAlarmDesc.context, "更新成功", Toast.LENGTH_SHORT).show()
+                    setFragmentResult(0, bundleOf())
                     pop()
                 } else {
                     showError(response.errorBody()?.string())
@@ -380,7 +394,7 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
             hour = "0$hour"
         }
         if (minute.toInt() < 10) {
-            minute = "0$minute"
+            minute = "$minute"
         }
         if (TextUtils.equals(currentRepeatType, Alert.TYPE_NONE)) {
             body.alertType = "single"
@@ -416,6 +430,7 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
             override fun onResponse(call: Call<Message>, response: Response<Message>) {
                 if (response.isSuccessful) {
                     Toast.makeText(tvAlarmDesc.context, "添加成功", Toast.LENGTH_SHORT).show()
+                    setFragmentResult(0, bundleOf())
                     pop()
                 } else {
                     showError(response.errorBody()?.string())
@@ -437,21 +452,28 @@ class EditAlarmFragment : BaseFragment(), View.OnClickListener {
                 }
             }
             R.id.alarm_desc_content -> {
-                val desc = if (alert?.content.isNullOrEmpty()) {
+                var desc = ""
+                /*if (alert?.content.isNullOrEmpty()) {
                     ""
-                } else {
-                    tvAlarmDesc.text.toString()
+                } else if (alert != null) {
+                    alert.content
+                }*/
+                if (alert != null && alert!!.content != null) {
+                    desc = alert!!.content!!
                 }
+
                 startForResult(
                     EditAlarmDescFragment.instance(desc),
                     REQUEST_EDIT_CODE
                 )
             }
             R.id.done -> {
-                if (alert != null) {
-                    updateAlert()
-                } else { //add new alarm
-                    addNewAlarm()
+                drawer.postDelayed(300) {
+                    if (alert != null) {
+                        updateAlert()
+                    } else { //add new alarm
+                        addNewAlarm()
+                    }
                 }
             }
         }

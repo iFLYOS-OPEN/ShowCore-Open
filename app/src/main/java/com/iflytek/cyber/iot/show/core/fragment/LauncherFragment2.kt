@@ -6,21 +6,35 @@ import android.content.Intent
 import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.coordinatorlayout.widget.CoordinatorLayout
+import android.widget.Toast
+import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.iflytek.cyber.iot.show.core.CoreApplication
+import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.R
 import com.iflytek.cyber.iot.show.core.adapter.AppAdapter
+import com.iflytek.cyber.iot.show.core.api.AppApi
 import com.iflytek.cyber.iot.show.core.launcher.AppData
 import com.iflytek.cyber.iot.show.core.launcher.LauncherDataHelper
 import com.iflytek.cyber.iot.show.core.launcher.LauncherMemory
+import com.iflytek.cyber.iot.show.core.launcher.TemplateAppData
+import com.iflytek.cyber.iot.show.core.model.TemplateApp
 import com.iflytek.cyber.iot.show.core.utils.OnItemClickListener
+import kotlinx.android.synthetic.main.fragment_skill.*
 import me.yokeyword.fragmentation.ISupportFragment
+import okhttp3.MediaType
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
+import org.json.JSONObject
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class LauncherFragment2 : BaseFragment(), PageScrollable {
     companion object {
@@ -30,6 +44,8 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
         private const val PAGE_SETTINGS = "Launcher.Settings"
         private const val PAGE_SKILLS = "Launcher.Skills"
         private const val PAGE_CONTENTS = "Launcher.Contents"
+        private const val PAGE_SPEAK_EVALUATION = "Launcher.Speak.Evaluation"
+        private const val PAGE_SMART_HOME = "Launcher.Smart.Home"
 
         /** 位于黑名单中的包名不予显示 **/
         private val blackPartyAppArray = arrayOf(
@@ -148,6 +164,24 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
                 AppData.TYPE_INTERNAL
             )
         )
+        internalApps.add(
+            AppData(
+                getString(R.string.smart_home),
+                PAGE_SMART_HOME,
+                resources.getDrawable(R.drawable.app_iot),
+                null,
+                AppData.TYPE_INTERNAL
+            )
+        )
+        internalApps.add(
+            AppData(
+                getString(R.string.speak_evaluation),
+                PAGE_SPEAK_EVALUATION,
+                resources.getDrawable(R.drawable.app_speak_evaluation),
+                null,
+                AppData.TYPE_INTERNAL
+            )
+        )
 
         adapter.setInternalAppData(internalApps)
 
@@ -175,7 +209,30 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
                 adapter.getAppData(position)?.let {
                     when (it.appType) {
                         AppData.TYPE_TEMPLATE -> {
-
+                            if (it is TemplateAppData) {
+                                val templateApp = it.toTemplateApp()
+                                when (templateApp.type) {
+                                    TemplateAppData.TYPE_TEMPLATE -> {
+                                        setTemplate(templateApp)
+                                    }
+                                    TemplateAppData.TYPE_H5_APP -> {
+                                        val webViewFragment = WebViewFragment().apply {
+                                            arguments = bundleOf(Pair(WebViewFragment.EXTRA_URL, templateApp.url))
+                                        }
+                                        start(webViewFragment)
+                                    }
+                                    TemplateAppData.TYPE_SKILL -> {
+                                        val textIn = Intent(context, EngineService::class.java)
+                                        textIn.action = EngineService.ACTION_SEND_TEXT_IN
+                                        textIn.putExtra(EngineService.EXTRA_QUERY, templateApp.textIn)
+                                        context?.startService(textIn)
+                                    }
+                                    else -> {
+                                    }
+                                }
+                            } else {
+                                // ignore
+                            }
                         }
                         AppData.TYPE_PARTY -> {
                             val packageManager = context.packageManager
@@ -211,6 +268,18 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
                                         ISupportFragment.SINGLETOP
                                     )
                                 }
+                                PAGE_SPEAK_EVALUATION -> {
+                                    extraTransaction().startDontHideSelf(
+                                        SpeakEvaluationFragment(),
+                                        ISupportFragment.SINGLETOP
+                                    )
+                                }
+                                PAGE_SMART_HOME -> {
+                                    extraTransaction().startDontHideSelf(
+                                        SmartHomeFragment(),
+                                        ISupportFragment.SINGLETOP
+                                    )
+                                }
                                 else -> {
                                     // ignore
                                 }
@@ -226,47 +295,104 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
 
         recyclerView?.itemAnimator = DefaultItemAnimator()
         recyclerView?.adapter = adapter
+    }
 
-        ((view.findViewById<View>(R.id.container)?.layoutParams
-            as? CoordinatorLayout.LayoutParams)?.behavior as? BottomSheetBehavior)?.let { bottomSheetBehavior ->
-            bottomSheetBehavior.skipCollapsed = true
-            bottomSheetBehavior.setBottomSheetCallback(object :
-                BottomSheetBehavior.BottomSheetCallback() {
-                override fun onSlide(bottomSheet: View, slideOffset: Float) {
+    private fun setTemplate(templateApp: TemplateApp) {
+        when (templateApp.template) {
+            TemplateApp.TEMPLATE_TEMPLATE_1 -> {
+                start(TemplateApp1Fragment.newInstance(templateApp))
+            }
+            TemplateApp.TEMPLATE_TEMPLATE_2 -> {
+                start(TemplateApp2Fragment.newInstance(templateApp))
+            }
+            TemplateApp.TEMPLATE_XMLR -> {
+                start(TemplateAppXmlyFragment.newInstance(templateApp))
+            }
+            TemplateApp.TEMPLATE_TEMPLATE_3 -> {
+                playTemplate3(templateApp)
+            }
+            else -> {
+                // ignore
+            }
+        }
+    }
+
+    private fun playTemplate3(templateApp: TemplateApp) {
+        val json = com.alibaba.fastjson.JSONObject()
+        json["appName"] = templateApp.name
+        val requestBody = RequestBody.create(
+            MediaType.parse("application/json"),
+            json.toString()
+        )
+        getAppApi()?.playTemplate3(requestBody)?.enqueue(object : Callback<ResponseBody> {
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
+                if (!isAdded || context == null) {
+                    return
                 }
 
-                override fun onStateChanged(bottomSheet: View, newState: Int) {
-                    if (newState == BottomSheetBehavior.STATE_HIDDEN
-                        || newState == BottomSheetBehavior.STATE_COLLAPSED
-                    ) {
-                        pop()
+                if (response.isSuccessful) {
+                    Toast.makeText(context, "开始播放", Toast.LENGTH_SHORT).show()
+                } else {
+                    response.errorBody()?.let { errorBody ->
+                        val errorString = errorBody.string()
+
+                        val errorJson = JSONObject(errorString)
+
+                        if (errorJson.has("message")) {
+                            Toast.makeText(
+                                context,
+                                errorJson.optString("message"),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            Toast.makeText(context, "播放失败", Toast.LENGTH_SHORT).show()
+                        }
+                        errorBody.close()
+                    } ?: run {
+                        Toast.makeText(context, "播放失败", Toast.LENGTH_SHORT).show()
                     }
                 }
-            })
-        }
+            }
+
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                t.printStackTrace()
+            }
+        })
     }
 
     override fun onStart() {
         super.onStart()
-
-        ((view?.findViewById<View>(R.id.container)?.layoutParams
-            as? CoordinatorLayout.LayoutParams)?.behavior as? BottomSheetBehavior)?.state =
-            BottomSheetBehavior.STATE_EXPANDED
 
         Thread {
             val context = context ?: return@Thread
 
             launcherDataHelper = LauncherDataHelper(context)
 
-            val appsForDb = launcherDataHelper?.queryPartyApps()
+            if (LauncherMemory.partyApps == null && LauncherMemory.privateApps == null) {
+                val appsForDb = launcherDataHelper?.queryPartyApps()
 
-            if (!appsForDb.isNullOrEmpty()) {
-                recyclerView?.post {
-                    setAppDataToAdapter(appsForDb)
+                if (!appsForDb.isNullOrEmpty()) {
+                    recyclerView?.post {
+                        setAppDataToAdapter(appsForDb)
+                    }
+                }
+            }
+
+            if (LauncherMemory.templateApps == null) {
+                val templateAppsForDb = launcherDataHelper?.queryTemplateApps()
+
+                if (!templateAppsForDb.isNullOrEmpty()) {
+                    recyclerView?.post {
+                        setTemplateAppToAdapter(templateAppsForDb)
+
+                        LauncherMemory.templateApps = templateAppsForDb
+                    }
                 }
             }
 
             postAppUpdated()
+
+            getTemplateApp()
         }.start()
     }
 
@@ -392,6 +518,85 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
         adapter.setPartyAppData(partyApps)
     }
 
+    private fun setTemplateAppToAdapter(apps: List<TemplateAppData>) {
+        apps.distinctBy { it.name } //去重
+
+        adapter.setTemplateAppData(apps)
+
+        val memoryTemplateApps = LauncherMemory.templateApps
+        if (memoryTemplateApps.isNullOrEmpty()) {
+            adapter.notifyItemRangeInserted(6, apps.size)
+        } else {
+            val oldSize = memoryTemplateApps.size
+            val newSize = apps.size
+            if (oldSize <= newSize) {
+                adapter.notifyItemRangeChanged(6, oldSize)
+                if (oldSize != newSize)
+                    adapter.notifyItemRangeInserted(
+                        6 + oldSize,
+                        newSize - oldSize
+                    )
+            } else {
+                adapter.notifyItemRangeChanged(6, newSize)
+                adapter.notifyItemRangeRemoved(6 + newSize, oldSize - newSize)
+            }
+        }
+    }
+
+    private fun getTemplateApp() {
+        getAppApi()?.getAppList()?.enqueue(object : Callback<List<TemplateApp>> {
+            override fun onFailure(call: Call<List<TemplateApp>>, t: Throwable) {
+                t.printStackTrace()
+                if (isRemoving || isDetached) {
+                    return
+                }
+                context ?: return
+
+                // 请求失败则忽略
+            }
+
+            override fun onResponse(
+                call: Call<List<TemplateApp>>,
+                response: Response<List<TemplateApp>>
+            ) {
+                if (isRemoving || isDetached) {
+                    return
+                }
+                context ?: return
+
+                if (response.isSuccessful) {
+                    response.body()?.let { appList ->
+                        if (appList.isNotEmpty()) {
+                            Thread {
+                                val appData = mutableListOf<TemplateAppData>()
+
+                                @Suppress("IMPLICIT_CAST_TO_ANY")
+                                appList.map {
+                                    if (it.name.isNullOrEmpty()) {
+                                        Log.w(TAG, "App name or source is null or empty")
+                                    } else {
+                                        appData.add(TemplateAppData.fromTemplateApp(it))
+                                    }
+                                }
+
+                                launcherDataHelper?.updateTemplateAppData(appData)
+
+                                recyclerView?.post {
+                                    setTemplateAppToAdapter(appData)
+
+                                    LauncherMemory.templateApps = appData
+                                }
+                            }.start()
+                        }
+                    }
+                } else {
+                    Log.e(TAG, "Get template app list failed.")
+                }
+            }
+
+        })
+    }
+
     private fun postAppUpdated() {
         val context = context ?: return
         val packageManager = context.packageManager
@@ -421,5 +626,10 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
         }
 
         launcherDataHelper?.updatePartyApps(apps)
+    }
+
+    private fun getAppApi(): AppApi? {
+        val context = context ?: return null
+        return CoreApplication.from(context).createApi(AppApi::class.java)
     }
 }

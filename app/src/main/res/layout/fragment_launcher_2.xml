@@ -1,43 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/transparent"
-    android:orientation="vertical">
+    android:background="@drawable/img_bg_app_central">
 
-    <FrameLayout
-        android:id="@+id/container"
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@android:color/white"
-        app:behavior_hideable="true"
-        app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior">
+        android:clipToPadding="false"
+        android:paddingStart="@dimen/dp_36"
+        android:paddingTop="@dimen/dp_20"
+        android:paddingEnd="@dimen/dp_36"
+        android:paddingBottom="@dimen/dp_36"
+        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+        app:spanCount="4"
+        tools:listitem="@layout/item_app" />
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/recycler_view"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_marginTop="@dimen/dp_60"
-            android:clipToPadding="false"
-            android:paddingStart="@dimen/dp_40"
-            android:paddingEnd="@dimen/dp_40"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-            app:spanCount="5"
-            tools:listitem="@layout/item_app" />
-
-        <ImageView
-            android:id="@+id/back"
-            android:layout_width="@dimen/dp_80"
-            android:layout_height="@dimen/dp_40"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="@dimen/dp_12"
-            android:paddingStart="@dimen/dp_20"
-            android:paddingTop="@dimen/dp_8"
-            android:paddingEnd="@dimen/dp_20"
-            android:paddingBottom="@dimen/dp_8"
-            android:src="@drawable/ic_page_down" />
-    </FrameLayout>
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <ImageView
+        android:id="@+id/back"
+        android:layout_width="@dimen/dp_32"
+        android:layout_height="@dimen/dp_60"
+        android:layout_gravity="center_vertical"
+        android:paddingStart="@dimen/dp_14"
+        android:paddingTop="@dimen/dp_12"
+        android:paddingEnd="@dimen/dp_14"
+        android:paddingBottom="@dimen/dp_12"
+        android:src="@drawable/ic_page_indicator" />
+</FrameLayout>

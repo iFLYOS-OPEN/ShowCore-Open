@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:shadowColor="#1A000000"
+    app:shadowCornerRadius="@dimen/dp_6"
+    app:shadowDx="@dimen/dp_0"
+    app:shadowDy="@dimen/dp_8"
+    app:shadowPaddingBottom="@dimen/dp_13"
+    app:shadowPaddingLeft="@dimen/dp_13"
+    app:shadowPaddingRight="@dimen/dp_13"
+    app:shadowPaddingTop="@dimen/dp_13"
+    app:shadowRadius="@dimen/dp_16"
+    app:useShadowColor="true">
+
+    <FrameLayout
+        android:layout_width="@dimen/dp_120"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_8"
+        android:background="@drawable/bg_popup_round_6dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:overScrollMode="never"
+            android:paddingStart="@dimen/dp_1"
+            android:paddingTop="@dimen/dp_8"
+            android:paddingEnd="@dimen/dp_1"
+            android:paddingBottom="@dimen/dp_8"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    </FrameLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowLayout>

@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="match_parent"
+    android:paddingStart="@dimen/dp_12"
+    android:paddingEnd="@dimen/dp_12"
+    android:paddingBottom="@dimen/dp_24"
+    app:shadowColor="#1F000000"
+    app:shadowRadius="@dimen/dp_12">
+
+    <FrameLayout
+        android:id="@+id/container"
+        android:layout_width="@dimen/dp_244"
+        android:layout_height="match_parent"
+        android:background="@drawable/bg_white_round_16dp"
+        tools:backgroundTint="#8C9DD0">
+
+        <ImageView
+            android:id="@+id/background"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <FrameLayout
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_56"
+            android:paddingBottom="@dimen/dp_4">
+
+            <TextView
+                android:id="@+id/title"
+                style="@style/H5.White"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/dp_24"
+                android:layout_gravity="center_vertical"
+                android:layout_marginEnd="@dimen/dp_64"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:text="热播电视剧" />
+
+            <ImageView
+                android:id="@+id/refresh"
+                android:layout_width="@dimen/dp_32"
+                android:layout_height="@dimen/dp_32"
+                android:layout_marginEnd="@dimen/dp_24"
+                android:layout_gravity="end|center_vertical"
+                android:padding="@dimen/dp_4"
+                android:background="?selectableItemBackgroundBorderless"
+                android:src="@drawable/ic_reload_24dp"
+                android:tint="@android:color/white" />
+
+        </FrameLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler_view"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginTop="@dimen/dp_56"
+            android:paddingStart="@dimen/dp_18"
+            android:paddingEnd="@dimen/dp_18"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:itemCount="4"
+            tools:listitem="@layout/item_text_bubble" />
+    </FrameLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowLayout>

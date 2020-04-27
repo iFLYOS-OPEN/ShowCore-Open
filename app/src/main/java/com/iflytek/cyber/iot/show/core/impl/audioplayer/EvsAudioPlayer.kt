@@ -32,6 +32,9 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
     private var ringPlayer: AudioPlayerInstance? = null
 
     private var currentResourceMediaType = C.TYPE_OTHER
+    private var currenntPlaybackType: String? = null
+    private var currentPlayingUrl: String? = null
+    private var currentPlayResourceId: String? = null
 
     private inner class ImplListener : AudioPlayerInstance.Listener {
         override fun onPlayerPositionUpdated(
@@ -163,6 +166,9 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
         if (type == TYPE_PLAYBACK) {
             val uri = Uri.parse(url)
             currentResourceMediaType = Util.inferContentType(uri.lastPathSegment ?: "")
+            currentPlayResourceId = resourceId
+            currenntPlaybackType = type
+            currentPlayingUrl = url
         }
         player?.let {
             it.resourceId = resourceId
@@ -178,8 +184,27 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
 
     override fun resume(type: String): Boolean {
         val player = getPlayer(type)
-        player?.resume() ?: run {
-            return false
+
+        /**
+         * 如果之前播放的是流媒体资源(.m3u8)，则重新播放，而不是恢复播放
+         */
+        if (currentResourceMediaType == C.TYPE_HLS && currentPlayResourceId != null &&
+            currentPlayingUrl != null && currenntPlaybackType != null
+        ) {
+            player?.let {
+                it.resourceId = currentPlayResourceId
+                it.play(currentPlayingUrl!!)
+                it.isStarted = false
+                onStarted(type, currentPlayResourceId!!)
+                onPositionUpdated(type, currentPlayResourceId!!, 0)
+                return true
+            } ?: run {
+                return false
+            }
+        } else {
+            player?.resume() ?: run {
+                return false
+            }
         }
         return true
     }
@@ -204,9 +229,26 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
         return true
     }
 
+    fun quit(type: String): Boolean {
+        val player = getPlayer(type)
+        player?.stop()?.let {
+            onQuit(type, player.resourceId ?: "")
+        } ?: run {
+            return false
+        }
+        return true
+    }
+
+    fun playTtsFile(path: String) {
+        ttsPlayer?.playTtsFile(path)
+    }
+
     override fun seekTo(type: String, offset: Long): Boolean {
         super.seekTo(type, offset)
         val player = getPlayer(type)
+        if (type == TYPE_PLAYBACK && currentResourceMediaType == C.TYPE_HLS) { //如果是流媒体资源（.m3u8），则不用设置进度
+            return true
+        }
         player?.let {
             it.seekTo(offset)
             return true

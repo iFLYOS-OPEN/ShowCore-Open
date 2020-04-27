@@ -25,16 +25,19 @@ import android.util.DisplayMetrics
 import android.util.Log
 import android.view.*
 import android.view.accessibility.AccessibilityManager
+import android.webkit.WebView
 import android.widget.*
 import androidx.core.animation.doOnEnd
 import androidx.core.content.ContextCompat
 import androidx.core.content.getSystemService
+import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.interpolator.view.animation.FastOutSlowInInterpolator
 import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat
 import com.airbnb.lottie.LottieAnimationView
 import com.bumptech.glide.Glide
 import com.google.gson.JsonParser
+import com.iflytek.cyber.evs.sdk.EvsError
 import com.iflytek.cyber.evs.sdk.RequestCallback
 import com.iflytek.cyber.evs.sdk.agent.Alarm
 import com.iflytek.cyber.evs.sdk.agent.AudioPlayer
@@ -43,6 +46,7 @@ import com.iflytek.cyber.evs.sdk.agent.Template
 import com.iflytek.cyber.evs.sdk.socket.Result
 import com.iflytek.cyber.iot.show.core.EvsLauncherActivity.Companion.ACTION_START_PLAYER
 import com.iflytek.cyber.iot.show.core.accessibility.TouchAccessibility
+import com.iflytek.cyber.iot.show.core.fragment.SpeakEvaluatingFragment
 import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
 import com.iflytek.cyber.iot.show.core.impl.playback.EvsPlaybackController
 import com.iflytek.cyber.iot.show.core.impl.prompt.PromptManager
@@ -51,14 +55,16 @@ import com.iflytek.cyber.iot.show.core.impl.speaker.EvsSpeaker
 import com.iflytek.cyber.iot.show.core.impl.template.EvsTemplate
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.model.PlayerInfoPayload
+import com.iflytek.cyber.iot.show.core.skillapp.SkillAppView
 import com.iflytek.cyber.iot.show.core.template.BodyTemplateView1
 import com.iflytek.cyber.iot.show.core.template.BodyTemplateView3
+import com.iflytek.cyber.iot.show.core.template.CustomTemplateView
 import com.iflytek.cyber.iot.show.core.template.TemplateViewBuilder
 import com.iflytek.cyber.iot.show.core.utils.*
 import com.iflytek.cyber.iot.show.core.widget.*
-import org.greenrobot.eventbus.Subscribe
-import org.greenrobot.eventbus.ThreadMode
+import org.greenrobot.eventbus.EventBus
 import java.lang.ref.SoftReference
+import java.net.UnknownHostException
 import java.util.*
 import java.util.concurrent.TimeUnit
 import kotlin.math.*
@@ -76,6 +82,7 @@ class FloatingService : Service() {
     private var musicCover: ImageView? = null
     private var tvQuit: TextView? = null
     private var templateContainer: FrameLayout? = null
+    private var skillAppView: FrameLayout? = null
     private var alarmView: View? = null
     private var volumeAnimator: Animator? = null
     private var animatingVolumeTo = 0f
@@ -87,9 +94,26 @@ class FloatingService : Service() {
     private var isControlPanelEnabled = false
     private var isBackgroundRecognize = false
     private var currentTemplateId: String? = null
+    private var currentTemplateType: String? = null
     private var microphoneAnimator: Animator? = null
+    private var connectingView: View? = null
+    private var connectSucceed = false
+    private var micErrorView: View? = null
 
     private var isShowTtsView = false
+
+    /**
+     * 是否正在评测中，如果在评测的话，不显示tts view，不可手动点击唤醒按钮唤醒
+     */
+    private var isEvaluating = false
+
+    /**
+     * 开启翻译技能应用后，不允许唤醒按钮出现
+     */
+    private var shouldShowVoiceButton = true
+
+    private var templateCloseTime: Long = 5 * 1000
+    private var customTemplateShowingDuration = -1L
 
     private var isShowRecognize = false
         set(value) {
@@ -229,7 +253,7 @@ class FloatingService : Service() {
                         Alarm.AlarmState.Stopped -> {
                             isAlarmPlaying = false
                             templateContainer?.getChildAt(0)?.let { templateView ->
-                                clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
+                                clearCardHandler.startCount(templateView, templateCloseTime)
                             }
 
                             clearAlarmActiveView()
@@ -286,9 +310,15 @@ class FloatingService : Service() {
                     slidePanel?.let { panel ->
                         if (value == true) {
                             enableMicrophoneAnimation()
+                            if (!isEvaluating) {
+                                dismissMicErrorView()
+                            }
                             VoiceButtonUtils.isMicrophoneEnabled = true
                         } else {
                             disableMicrophoneAnimation()
+                            if (!isEvaluating) {
+                                showMicErrorView()
+                            }
                             VoiceButtonUtils.isMicrophoneEnabled = false
                         }
                     }
@@ -350,8 +380,17 @@ class FloatingService : Service() {
                     if (requestId != templateRequest)
                         return
                     templateContainer?.getChildAt(0)?.let { templateView ->
+                        if (currentTemplateType == Template.TYPE_CUSTOM) {
+                            if (customTemplateShowingDuration != NEVER_CLOSE_CUSTOM_TEMPLATE) {
+                                clearCardHandler.startCount(
+                                    templateView,
+                                    customTemplateShowingDuration
+                                )
+                            }
+                            return@let
+                        }
                         (templateView as? BodyTemplateView1)?.stopBodyAnimation()
-                        clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
+                        clearCardHandler.startCount(templateView, templateCloseTime)
                     }
                 }
                 AudioPlayer.TYPE_RING -> {
@@ -363,7 +402,7 @@ class FloatingService : Service() {
                         return
                     isAlarmPlaying = false
                     templateContainer?.getChildAt(0)?.let { templateView ->
-                        clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
+                        clearCardHandler.startCount(templateView, templateCloseTime)
                     }
                 }
                 AudioPlayer.TYPE_PLAYBACK -> {
@@ -382,8 +421,17 @@ class FloatingService : Service() {
                     if (requestId != templateRequest)
                         return
                     templateContainer?.getChildAt(0)?.let { templateView ->
+                        if (currentTemplateType == Template.TYPE_CUSTOM) {
+                            if (customTemplateShowingDuration != NEVER_CLOSE_CUSTOM_TEMPLATE) {
+                                clearCardHandler.startCount(
+                                    templateView,
+                                    customTemplateShowingDuration
+                                )
+                            }
+                            return@let
+                        }
                         (templateView as? BodyTemplateView1)?.stopBodyAnimation()
-                        clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
+                        clearCardHandler.startCount(templateView, templateCloseTime)
                     }
                 }
                 AudioPlayer.TYPE_RING -> {
@@ -395,7 +443,7 @@ class FloatingService : Service() {
                         return
                     isAlarmPlaying = false
                     templateContainer?.getChildAt(0)?.let { templateView ->
-                        clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
+                        clearCardHandler.startCount(templateView, templateCloseTime)
                     }
                 }
                 AudioPlayer.TYPE_PLAYBACK -> {
@@ -414,12 +462,20 @@ class FloatingService : Service() {
                     if (requestId != templateRequest)
                         return
                     templateContainer?.getChildAt(0)?.let { templateView ->
+                        if (currentTemplateType == Template.TYPE_CUSTOM) {
+                            if (customTemplateShowingDuration != NEVER_CLOSE_CUSTOM_TEMPLATE) {
+                                clearCardHandler.startCount(
+                                    templateView,
+                                    customTemplateShowingDuration
+                                )
+                            }
+                            return@let
+                        }
                         (templateView as? BodyTemplateView1)?.stopBodyAnimation()
-                        clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
+                        clearCardHandler.startCount(templateView, templateCloseTime)
                     }
                 }
                 AudioPlayer.TYPE_RING -> {
-
                     val currentTemplateId = currentTemplateId ?: return
                     val requestId = RequestIdMap.findRequestByTts(resourceId)
                     val templateRequest =
@@ -428,10 +484,11 @@ class FloatingService : Service() {
                         return
                     isAlarmPlaying = false
                     templateContainer?.getChildAt(0)?.let { templateView ->
-                        clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
+                        clearCardHandler.startCount(templateView, templateCloseTime)
                     }
                 }
                 AudioPlayer.TYPE_PLAYBACK -> {
+                    updateMusicPanel(ContentStorage.get().playerInfo)
                 }
             }
         }
@@ -466,6 +523,43 @@ class FloatingService : Service() {
         }
 
     }
+    private val engineServiceReceiver = object : SelfBroadcastReceiver(
+        EngineService.ACTION_EVS_CONNECTED,
+        EngineService.ACTION_EVS_START_CONNECTING,
+        EngineService.ACTION_EVS_CONNECT_FAILED
+    ) {
+        override fun onReceiveAction(action: String, intent: Intent) {
+            when (action) {
+                EngineService.ACTION_EVS_CONNECTED -> {
+                    connectSucceed = true
+
+                    showConnectSucceedView()
+                }
+                EngineService.ACTION_EVS_CONNECT_FAILED -> {
+                    (intent.getSerializableExtra("throwable") as? Throwable)?.let { throwable ->
+                        when (throwable) {
+                            is UnknownHostException -> {
+                                if (WifiUtils.getConnectedSsid(baseContext).isNullOrEmpty()) {
+                                    dismissConnectingView()
+                                }
+                            }
+                            is EvsError.AuthorizationExpiredException -> {
+                                dismissConnectingView()
+                            }
+                        }
+                    }
+                }
+                EngineService.ACTION_EVS_START_CONNECTING -> {
+                    if (connectSucceed) {
+                        connectSucceed = false
+
+                        if (!WifiUtils.getConnectedSsid(baseContext).isNullOrEmpty())
+                            showConnectingView()
+                    }
+                }
+            }
+        }
+    }
 
     companion object {
         private const val ACTION_PREFIX = "com.iflytek.cyber.iot.show.core"
@@ -478,6 +572,7 @@ class FloatingService : Service() {
         const val ACTION_INIT_OVERLAY = "$ACTION_PREFIX.INIT_CONTROL_PANEL"
         const val ACTION_INIT_CONFIG = "$ACTION_PREFIX.INIT_CONFIG"
         const val ACTION_RENDER_TEMPLATE = "$ACTION_PREFIX.RENDER_TEMPLATE"
+        const val ACTION_RENDER_CUSTOM_TEMPLATE = "$ACTION_PREFIX.RENDER_CUSTOM_TEMPLATE"
         const val ACTION_CLEAR_TEMPLATE = "$ACTION_PREFIX.CLEAR_TEMPLATE"
         const val ACTION_SET_CONTROL_PANEL_ENABLED = "$ACTION_PREFIX.SET_CONTROL_PANEL_ENABLED"
         const val ACTION_UPDATE_MUSIC = "$ACTION_PREFIX.UPDATE_MUSIC"
@@ -485,12 +580,25 @@ class FloatingService : Service() {
         const val ACTION_SHOW_NOTIFICATION = "$ACTION_PREFIX.SHOW_NOTIFICATION"
         const val ACTION_DISMISS_NOTIFICATION = "$ACTION_PREFIX.DISMISS_NOTIFICATION"
         const val ACTION_SET_BACKGROUND_RECOGNIZE = "$ACTION_PREFIX.SET_BACKGROUND_RECOGNIZE"
+        const val ACTION_EVALUATING = "$ACTION_PREFIX.EVALUATING"
+        const val ACTION_DISMISS_MIC_ERROR = "$ACTION_PREFIX.DISMISS_MIC_ERROR"
+        const val ACTION_SHOW_MISC_ERROR = "$ACTION_PREFIX._MIC_ERROR"
+        const val ACTION_HIDE_VOICE_BUTTON = "$ACTION_PREFIX.HIDE_VOICE_BUTTON"
+        const val ACTION_SHOW_VOICE_BUTTON = "$ACTION_PREFIX.SHOW_VOICE_BUTTON"
+        const val ACTION_RENDER_SKILL_APP = "$ACTION_PREFIX.RENDER_SKILL_APP"
+        const val ACTION_SET_SEMANTIC_DATA = "$ACTION_PREFIX.SET_SEMANTIC_DATA"
+        const val ACTION_CLOSE_SKILL_APP = "$ACTION_PREFIX.CLOSE_SKILL_APP"
 
         const val EXTRA_TEXT = "text"
         const val EXTRA_ENABLED = "enabled"
         const val EXTRA_VOLUME = "volume"
         const val EXTRA_PAYLOAD = "payload"
         const val EXTRA_EXPECT_REPLY = "expect_reply"
+        const val EXTRA_TEMPLATE_ID = "template_id"
+        const val EXTRA_TEMPLATE_TYPE = "template_type"
+        const val EXTRA_TEMPLATE_HTML = "template_html"
+        const val EXTRA_CUSTOM_TEMPLATE_SHOWING_DURATION = "showing_duration"
+        const val EXTRA_TEMPLATE_CLOSE_TIME = "close_time"
 
         const val EXTRA_MESSAGE = "message"
         const val EXTRA_TAG = "tag"
@@ -499,7 +607,7 @@ class FloatingService : Service() {
         const val EXTRA_POSITIVE_BUTTON_TEXT = "positive_button_text"
         const val EXTRA_POSITIVE_BUTTON_ACTION = "positive_button_action"
         const val EXTRA_NEGATIVE_BUTTON_TEXT = "negative_button_text"
-        const val EXTRA_NEGATIVE_BUTTON_ACTION = "negative_button_text"
+        const val EXTRA_NEGATIVE_BUTTON_ACTION = "negative_button_action"
         const val EXTRA_KEEPING = "keeping"
 
         private val BRIGHTNESS_MODE_URI =
@@ -520,6 +628,8 @@ class FloatingService : Service() {
 
         private const val STATIC_TEMPLATE_TIMEOUT = 20 * 1000L
         private const val ALARM_TEMPLATE_TIMEOUT = 20 * 1000L
+
+        private const val NEVER_CLOSE_CUSTOM_TEMPLATE = -1L
     }
 
     override fun onBind(intent: Intent?): IBinder? {
@@ -620,22 +730,30 @@ class FloatingService : Service() {
         VoiceButtonUtils.onVoiceButtonVisibleCallback =
             object : VoiceButtonUtils.OnVoiceButtonVisibleCallback {
                 override fun onShow() {
-                    showVoiceButton()
+                    if (shouldShowVoiceButton) {
+                        showVoiceButton()
+                    }
                 }
 
                 override fun onDisappear() {
-                    hideVoiceButton()
+                    if (shouldShowVoiceButton) {
+                        hideVoiceButton()
+                    }
                 }
 
                 override fun onScreenTouched() {
-                    strongVoiceButton()
+                    if (shouldShowVoiceButton) {
+                        strongVoiceButton()
 
-                    if (isServiceEnabled())
-                        hideVoiceButtonHandler.postScrollEvent()
+                        if (isServiceEnabled())
+                            hideVoiceButtonHandler.postScrollEvent()
+                    }
                 }
             }
 
         EvsAudioPlayer.get(this).addListener(audioPlayerStateListener)
+
+        engineServiceReceiver.register(this)
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -667,16 +785,18 @@ class FloatingService : Service() {
                 }
             }
             ACTION_SHOW_RECOGNIZE -> {
-                val isExpectReply = intent.getBooleanExtra(EXTRA_EXPECT_REPLY, false)
-                if (isPanelOpened) {
-                    dismissPanel()
+                if (!isEvaluating) {
+                    val isExpectReply = intent.getBooleanExtra(EXTRA_EXPECT_REPLY, false)
+                    if (isPanelOpened) {
+                        dismissPanel()
+                    }
+                    if (isAlarmPlaying) {
+                        clearCurrentTemplate()
+                        clearAlarmActiveView()
+                    }
+                    if (!isBackgroundRecognize)
+                        showRecognizeView()
                 }
-                if (isAlarmPlaying) {
-                    clearCurrentTemplate()
-                    clearAlarmActiveView()
-                }
-                if (!isBackgroundRecognize)
-                    showRecognizeView()
             }
             ACTION_SHOW_TTS -> {
                 val text = intent.getStringExtra(EXTRA_TEXT)
@@ -684,6 +804,7 @@ class FloatingService : Service() {
             }
             ACTION_DISMISS_TTS_VIEW -> {
                 if (isShowTtsView) {
+                    templateCloseTime = intent.getLongExtra(EXTRA_TEMPLATE_CLOSE_TIME, 0L)
                     dismissTtsView()
                 }
             }
@@ -700,6 +821,16 @@ class FloatingService : Service() {
             ACTION_RENDER_TEMPLATE -> {
                 val payload = intent.getStringExtra(EXTRA_PAYLOAD)
                 renderTemplate(payload)
+            }
+            ACTION_RENDER_CUSTOM_TEMPLATE -> {
+                val templateId = intent.getStringExtra(EXTRA_TEMPLATE_ID)
+                val templateType = intent.getStringExtra(EXTRA_TEMPLATE_TYPE)
+                val templateHtml = intent.getStringExtra(EXTRA_TEMPLATE_HTML)
+                customTemplateShowingDuration = intent.getLongExtra(
+                    EXTRA_CUSTOM_TEMPLATE_SHOWING_DURATION,
+                    NEVER_CLOSE_CUSTOM_TEMPLATE
+                )
+                renderCustomTemplate(templateId, templateType, templateHtml)
             }
             ACTION_CLEAR_TEMPLATE -> {
                 clearCurrentTemplate()
@@ -786,6 +917,37 @@ class FloatingService : Service() {
                     dismissBackgroundRecognizeView()
                 }
             }
+            ACTION_EVALUATING -> {
+                val show = intent.getBooleanExtra("isEvaluating", true)
+                isEvaluating = show
+            }
+            ACTION_DISMISS_MIC_ERROR -> {
+                dismissMicErrorView()
+            }
+            ACTION_SHOW_MISC_ERROR -> {
+                showMicErrorView()
+            }
+            ACTION_HIDE_VOICE_BUTTON -> {
+                shouldShowVoiceButton = false
+                hideVoiceButton()
+            }
+            ACTION_SHOW_VOICE_BUTTON -> {
+                shouldShowVoiceButton = true
+                showVoiceButton()
+            }
+            ACTION_RENDER_SKILL_APP -> {
+                val url = intent.getStringExtra("url")
+                val timeout = intent.getIntExtra("timeout", 120)
+                renderSkillApp(url, timeout)
+            }
+            ACTION_SET_SEMANTIC_DATA -> {
+                val semanticData = intent.getStringExtra("semanticData")
+                val skillAppView = skillAppView?.get(0) as? SkillAppView
+                skillAppView?.setSemanticData(semanticData)
+            }
+            ACTION_CLOSE_SKILL_APP -> {
+                closeSkillApp()
+            }
         }
         return super.onStartCommand(intent, flags, startId)
     }
@@ -822,6 +984,8 @@ class FloatingService : Service() {
         ConfigUtils.unregisterOnConfigChangedListener(configChangedListener)
 
         ConfigUtils.unregisterOnConfigChangedListener(VoiceButtonUtils)
+
+        engineServiceReceiver.unregister(this)
     }
 
     private fun showSideIndicator(animatorRes: Int, value: Int) {
@@ -901,14 +1065,80 @@ class FloatingService : Service() {
         }
     }
 
+    private fun renderSkillApp(url: String, timeout: Int) {
+        skillAppView?.let { skillAppView ->
+            val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+
+            val child = SkillAppView(this, this, url, timeout)
+            skillAppView.removeAllViews()
+
+            skillAppView.addView(
+                child,
+                FrameLayout.LayoutParams(
+                    FrameLayout.LayoutParams.MATCH_PARENT,
+                    FrameLayout.LayoutParams.MATCH_PARENT
+                )
+            )
+            val point = Point()
+            windowManager.defaultDisplay.getSize(point)
+            skillAppView.isVisible = true
+            skillAppView.translationY = point.y.toFloat()
+            skillAppView.alpha = 0f
+
+            skillAppView.animate()
+                .alpha(1f)
+                .translationY(0f)
+                .setDuration(350)
+                .start()
+
+            val layoutParams =
+                skillAppView.layoutParams as WindowManager.LayoutParams
+            layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+            layoutParams.height = WindowManager.LayoutParams.MATCH_PARENT
+            windowManager.updateViewLayout(skillAppView, layoutParams)
+        }
+    }
+
+    fun closeSkillApp() {
+        skillAppView?.let { skillAppView ->
+            val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            skillAppView.animate()
+                .alpha(0f)
+                .translationY(skillAppView.height.toFloat())
+                .setDuration(250)
+                .withEndAction {
+                    skillAppView.isVisible = false
+                    skillAppView.removeAllViews()
+
+                    val layoutParams =
+                        skillAppView.layoutParams as WindowManager.LayoutParams
+                    layoutParams.width = 0
+                    layoutParams.height = 0
+                    windowManager.updateViewLayout(templateContainer, layoutParams)
+                }
+                .start()
+        }
+    }
+
     private fun clearCurrentTemplate() {
         TouchAccessibility.isBodyTemplate = false
+
+        alarmView?.let { alarmView ->
+            if (alarmView.alpha == 1f) {
+                alarmView.findViewById<View>(R.id.alarm_placeholder)?.visibility = View.VISIBLE
+            }
+        }
 
         isShowTemplate = false
 
         EvsTemplate.get().isOtherTemplateFocused = false
 
         EvsTemplate.get().templateType = null
+
+        if (currentTemplateType != Template.TYPE_CUSTOM)
+            EvsTemplate.get().requestClearFocus()
+        else
+            EvsTemplate.get().requestClearFocus(Template.TYPE_CUSTOM)
 
         currentTemplateId = null
 
@@ -925,6 +1155,13 @@ class FloatingService : Service() {
                 .withEndAction {
                     templateContainer.isVisible = false
 
+                    if (templateContainer.childCount > 0) {
+                        val childView = templateContainer.getChildAt(0)
+                        if (childView is CustomTemplateView) {
+                            childView.destroy()
+                        }
+                    }
+
                     templateContainer.removeAllViews()
 
                     val containerLayoutParams =
@@ -936,6 +1173,74 @@ class FloatingService : Service() {
                     windowManager.updateViewLayout(templateContainer, containerLayoutParams)
                 }
                 .start()
+        }
+    }
+
+    private fun renderCustomTemplate(
+        templateId: String,
+        templateType: String,
+        templateHtml: String
+    ) {
+        EvsTemplate.get().isOtherTemplateFocused = true
+
+        clearCardHandler.clearCount()
+
+        EvsTemplate.get().templateType = templateType
+
+        currentTemplateId = templateId
+
+        currentTemplateType = templateType
+
+        val templateView =
+            TemplateViewBuilder.buildCustom(baseContext, templateHtml, View.OnClickListener {
+                clearCardHandler.clearCount()
+
+                // close template
+                clearCurrentTemplate()
+            }, object : CustomTemplateView.OverrideUrlLoadingCallback {
+                override fun shouldOverrideUrlLoading(view: WebView?, url: String?): Boolean {
+                    clearCurrentTemplate()
+
+                    val intent = Intent(baseContext, EvsLauncherActivity::class.java)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.action = EvsLauncherActivity.ACTION_OPEN_WEB_PAGE
+                    intent.putExtra(EvsLauncherActivity.EXTRA_URL, url)
+                    applicationContext.startActivity(intent)
+                    return true
+                }
+            })
+        templateView?.let { childView ->
+            val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
+            templateContainer?.let { templateContainer ->
+                templateContainer.removeAllViews()
+
+                templateContainer.addView(
+                    childView,
+                    FrameLayout.LayoutParams(
+                        FrameLayout.LayoutParams.MATCH_PARENT,
+                        FrameLayout.LayoutParams.MATCH_PARENT
+                    )
+                )
+                val point = Point()
+                windowManager.defaultDisplay.getSize(point)
+                templateContainer.isVisible = true
+                templateContainer.translationY = if (isAlarmPlaying) 0f else point.y.toFloat()
+                templateContainer.alpha = 0f
+
+                templateContainer.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(350)
+                    .start()
+
+                val containerLayoutParams =
+                    templateContainer.layoutParams as WindowManager.LayoutParams
+
+                containerLayoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+                containerLayoutParams.height = WindowManager.LayoutParams.MATCH_PARENT
+
+                windowManager.updateViewLayout(templateContainer, containerLayoutParams)
+            }
         }
     }
 
@@ -956,10 +1261,11 @@ class FloatingService : Service() {
 
         currentTemplateId = templateId
 
+        currentTemplateType = type
+
         TemplateViewBuilder.build(baseContext, payload, View.OnClickListener {
             val stopAudioPlayer = Intent(this, EngineService::class.java)
-            stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
-            stopAudioPlayer.putExtra(EngineService.EXTRA_PLAYER_TYPE, AudioPlayer.TYPE_TTS)
+            stopAudioPlayer.action = EngineService.ACTION_CANCEL_CURRENT_RESPONSE_EXECUTING
             ContextWrapper.startServiceAsUser(baseContext, stopAudioPlayer, "CURRENT")
 
             val stopAlarm = Intent(this, EngineService::class.java)
@@ -1095,29 +1401,65 @@ class FloatingService : Service() {
                 layoutParams.width = 0
                 layoutParams.height = 0
 
-                view.onInterceptTouchListener = View.OnTouchListener { _, _ ->
+                view.onInterceptTouchListener = View.OnTouchListener { _, event ->
                     VoiceButtonUtils.lastTouchTime = System.currentTimeMillis()
-                    templateContainer?.getChildAt(0)?.let { templateView ->
-                        val stopAudioPlayer = Intent(this, EngineService::class.java)
-                        stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
-                        stopAudioPlayer.putExtra(
-                            EngineService.EXTRA_PLAYER_TYPE,
-                            AudioPlayer.TYPE_TTS
-                        )
-                        startService(stopAudioPlayer)
 
-                        if (templateView is BodyTemplateView1) {
-                            templateView.stopBodyAnimation()
+                    val templateView = templateContainer?.getChildAt(0)
+
+                    when (event.action) {
+                        MotionEvent.ACTION_DOWN -> {
+                            clearCardHandler.clearCount()
+                            templateView?.let {
+                                val stopAudioPlayer = Intent(this, EngineService::class.java)
+                                stopAudioPlayer.action =
+                                    EngineService.ACTION_CANCEL_CURRENT_RESPONSE_EXECUTING
+                                ContextWrapper.startServiceAsUser(
+                                    baseContext,
+                                    stopAudioPlayer,
+                                    "CURRENT"
+                                )
+
+                                if (currentTemplateType != Template.TYPE_CUSTOM) {
+                                    if (templateView is BodyTemplateView1) {
+                                        templateView.stopBodyAnimation()
+                                    }
+
+                                    val stopAlarm = Intent(this, EngineService::class.java)
+                                    stopAlarm.action = EngineService.ACTION_REQUEST_STOP_ALARM
+                                    ContextWrapper.startServiceAsUser(
+                                        baseContext,
+                                        stopAlarm,
+                                        "CURRENT"
+                                    )
+                                }
+                            }
                         }
-
-                        val stopAlarm = Intent(this, EngineService::class.java)
-                        stopAlarm.action = EngineService.ACTION_REQUEST_STOP_ALARM
-                        ContextWrapper.startServiceAsUser(baseContext, stopAlarm, "CURRENT")
-
-                        if (isAlarmPlaying) {
-                            clearCardHandler.startCount(templateView, ALARM_TEMPLATE_TIMEOUT)
-                        } else {
-                            clearCardHandler.startCount(templateView, STATIC_TEMPLATE_TIMEOUT)
+                        MotionEvent.ACTION_MOVE -> {
+                            clearCardHandler.clearCount()
+                        }
+                        MotionEvent.ACTION_CANCEL, MotionEvent.ACTION_UP -> {
+                            templateView?.let {
+                                if (currentTemplateType == Template.TYPE_CUSTOM) {
+                                    if (customTemplateShowingDuration != NEVER_CLOSE_CUSTOM_TEMPLATE) {
+                                        clearCardHandler.startCount(
+                                            templateView,
+                                            customTemplateShowingDuration
+                                        )
+                                    }
+                                } else {
+                                    if (isAlarmPlaying) {
+                                        clearCardHandler.startCount(
+                                            templateView,
+                                            templateCloseTime
+                                        )
+                                    } else {
+                                        clearCardHandler.startCount(
+                                            templateView,
+                                            templateCloseTime
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
                     false
@@ -1126,7 +1468,8 @@ class FloatingService : Service() {
                     if (keyCode == KeyEvent.KEYCODE_BACK) {
                         if (templateContainer?.isVisible == true) {
                             val stopAudioPlayer = Intent(this, EngineService::class.java)
-                            stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
+                            stopAudioPlayer.action =
+                                EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
                             stopAudioPlayer.putExtra(
                                 EngineService.EXTRA_PLAYER_TYPE,
                                 AudioPlayer.TYPE_TTS
@@ -1161,6 +1504,36 @@ class FloatingService : Service() {
                 }
 
                 templateContainer = view
+            }
+
+            run {
+                val view = FrameLayout(baseContext)
+
+                val layoutParams = WindowManager.LayoutParams()
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                } else {
+                    @Suppress("DEPRECATION")
+                    layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE
+                }
+                layoutParams.format = PixelFormat.TRANSPARENT
+                layoutParams.flags =
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
+                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+
+                // 初始化时置空即可，显示 Template 才填入 childView
+                layoutParams.width = 0
+                layoutParams.height = 0
+
+                windowManager.addView(view, layoutParams)
+
+                view.alpha = 0f
+                view.post {
+                    view.isVisible = false
+                }
+
+                skillAppView = view
             }
 
             // 闹钟关闭 UI
@@ -1208,9 +1581,13 @@ class FloatingService : Service() {
                 view.isFocusable = true
 
                 val onClickListener = View.OnClickListener {
-                    val intent = Intent(this, EngineService::class.java)
-                    intent.action = EngineService.ACTION_SEND_AUDIO_IN
-                    startService(intent)
+                    if (!isEvaluating) { //正在评测中，不能唤醒
+                        val intent = Intent(this, EngineService::class.java)
+                        intent.action = EngineService.ACTION_SEND_AUDIO_IN
+                        startService(intent)
+                    } else {
+                        EventBus.getDefault().post(SpeakEvaluatingFragment.EvaluationAction(0))
+                    }
                 }
                 view.setOnTouchListener(object : View.OnTouchListener {
                     private var touchX = 0f
@@ -1236,6 +1613,8 @@ class FloatingService : Service() {
                                 }
                             }
                             MotionEvent.ACTION_MOVE -> {
+                                val screenWidth = ScreenUtils.getWidth(baseContext)
+                                val screenHeight = ScreenUtils.getHeight(baseContext)
                                 val moveX = event.rawX
                                 val moveY = event.rawY
                                 (v?.layoutParams as? WindowManager.LayoutParams)?.let {
@@ -1245,7 +1624,7 @@ class FloatingService : Service() {
                                     val targetX = max(
                                         0f,
                                         min(
-                                            resources.displayMetrics.widthPixels.toFloat() - v.width,
+                                            screenWidth.toFloat() - v.width,
                                             positionX + offsetX
                                         )
                                     )
@@ -1254,7 +1633,7 @@ class FloatingService : Service() {
                                     val targetY = max(
                                         0f,
                                         min(
-                                            resources.displayMetrics.heightPixels.toFloat() - v.height,
+                                            screenHeight.toFloat() - v.height,
                                             positionY - offsetY
                                         )
                                     )
@@ -1432,13 +1811,14 @@ class FloatingService : Service() {
 
                     })
                 }
-                view.findViewById<ImageView>(R.id.background_recognize_img)?.setOnClickListener {
-                    dismissBackgroundRecognizeView()
+                view.findViewById<ImageView>(R.id.background_recognize_img)
+                    ?.setOnClickListener {
+                        dismissBackgroundRecognizeView()
 
-                    val intent = Intent(this, EngineService::class.java)
-                    intent.action = EngineService.ACTION_REQUEST_CANCEL
-                    startService(intent)
-                }
+                        val intent = Intent(this, EngineService::class.java)
+                        intent.action = EngineService.ACTION_REQUEST_CANCEL
+                        startService(intent)
+                    }
 
                 view.alpha = 0f
                 view.isVisible = false
@@ -1500,7 +1880,8 @@ class FloatingService : Service() {
 
                 view.visibility = View.GONE
 
-                view.findViewById<BoxedVertical>(R.id.indicator_slide_bar)?.isPreventTouch = true
+                view.findViewById<BoxedVertical>(R.id.indicator_slide_bar)?.isPreventTouch =
+                    true
 
                 windowManager.addView(view, layoutParams)
 
@@ -1624,7 +2005,8 @@ class FloatingService : Service() {
                         }
                         templateContainer?.alpha == 1f -> {
                             val stopAudioPlayer = Intent(this, EngineService::class.java)
-                            stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
+                            stopAudioPlayer.action =
+                                EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
                             stopAudioPlayer.putExtra(
                                 EngineService.EXTRA_PLAYER_TYPE,
                                 AudioPlayer.TYPE_TTS
@@ -1666,7 +2048,8 @@ class FloatingService : Service() {
                         }
                         templateContainer?.alpha == 1f -> {
                             val stopAudioPlayer = Intent(this, EngineService::class.java)
-                            stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
+                            stopAudioPlayer.action =
+                                EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
                             stopAudioPlayer.putExtra(
                                 EngineService.EXTRA_PLAYER_TYPE,
                                 AudioPlayer.TYPE_TTS
@@ -1708,7 +2091,8 @@ class FloatingService : Service() {
                         }
                         templateContainer?.alpha == 1f -> {
                             val stopAudioPlayer = Intent(this, EngineService::class.java)
-                            stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
+                            stopAudioPlayer.action =
+                                EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
                             stopAudioPlayer.putExtra(
                                 EngineService.EXTRA_PLAYER_TYPE,
                                 AudioPlayer.TYPE_TTS
@@ -1740,6 +2124,11 @@ class FloatingService : Service() {
                     }
                 }
                 view.findViewById<View>(R.id.panel_microphone)?.setOnClickListener {
+                    if (isEvaluating) {
+                        EventBus.getDefault().post(SpeakEvaluatingFragment.EvaluationAction(0))
+                        return@setOnClickListener
+                    }
+
                     val isMicrophoneEnabled =
                         ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)
                     ConfigUtils.putBoolean(
@@ -1758,7 +2147,8 @@ class FloatingService : Service() {
                         }
                         templateContainer?.alpha == 1f -> {
                             val stopAudioPlayer = Intent(this, EngineService::class.java)
-                            stopAudioPlayer.action = EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
+                            stopAudioPlayer.action =
+                                EngineService.ACTION_REQUEST_STOP_AUDIO_PLAYER
                             stopAudioPlayer.putExtra(
                                 EngineService.EXTRA_PLAYER_TYPE,
                                 AudioPlayer.TYPE_TTS
@@ -1789,6 +2179,28 @@ class FloatingService : Service() {
                         e.printStackTrace()
                     }
                 }
+                view.findViewById<View>(R.id.panel_search)?.setOnClickListener {
+                    try {
+                        val intent = Intent(this, EvsLauncherActivity::class.java)
+                        intent.action = EvsLauncherActivity.ACTION_OPEN_SEARCH
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        applicationContext.startActivity(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
+                view.findViewById<View>(R.id.panel_smart_home)?.setOnClickListener {
+                    try {
+                        val intent = Intent(this, EvsLauncherActivity::class.java)
+                        intent.action = EvsLauncherActivity.ACTION_OPEN_SMART_HOME
+                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        applicationContext.startActivity(intent)
+                    } catch (e: Exception) {
+                        e.printStackTrace()
+                    }
+                }
 
                 musicPanel = view.findViewById(R.id.music_panel)
                 musicCover = view.findViewById(R.id.iv_cover)
@@ -1812,7 +2224,8 @@ class FloatingService : Service() {
                             RequestCallback {
                             override fun onResult(result: Result) {
                                 if (!result.isSuccessful) {
-                                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                                    val intent =
+                                        Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
                                     intent.putExtra(EngineService.EXTRA_RESULT, result)
                                     sendBroadcast(intent)
                                 }
@@ -1825,7 +2238,8 @@ class FloatingService : Service() {
                             RequestCallback {
                             override fun onResult(result: Result) {
                                 if (!result.isSuccessful) {
-                                    val intent = Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
+                                    val intent =
+                                        Intent(EngineService.ACTION_SEND_REQUEST_FAILED)
                                     intent.putExtra(EngineService.EXTRA_RESULT, result)
                                     sendBroadcast(intent)
                                 }
@@ -1858,12 +2272,17 @@ class FloatingService : Service() {
                     }
                 }
                 tvQuit?.setOnClickListener {
-                    EvsAudioPlayer.get(this).stop(AudioPlayer.TYPE_PLAYBACK)
+                    dismissPanel()
+
+                    EvsAudioPlayer.get(this).quit(AudioPlayer.TYPE_PLAYBACK)
 
                     val storage = ContentStorage.get()
+                    storage.savePlayInfo(null)
                     storage.isMusicPlaying = false
 
                     updateMusicPanel(null)
+
+                    EventBus.getDefault().post(EvsLauncherActivity.ACTION_CLOSE_PLAYER_INFO)
                 }
 
                 updateMusicPanel(ContentStorage.get().playerInfo)
@@ -1887,9 +2306,11 @@ class FloatingService : Service() {
                         ConfigUtils.getBoolean(ConfigUtils.KEY_VOICE_WAKEUP_ENABLED, true)
                     if (isMicrophoneEnabled) {
                         enableMicrophoneAnimation()
+                        dismissMicErrorView()
                         VoiceButtonUtils.isMicrophoneEnabled = true
                     } else {
                         disableMicrophoneAnimation()
+                        showMicErrorView()
                         VoiceButtonUtils.isMicrophoneEnabled = false
                     }
 
@@ -1978,8 +2399,7 @@ class FloatingService : Service() {
             run {
                 val view = LottieAnimationView(this)
 
-                view.alpha = 0f
-                view.setAnimation(R.raw.animation_gesture_back)
+                view.setAnimation(R.raw.animation_back_light)
                 view.scaleType = ImageView.ScaleType.CENTER_CROP
 
                 val layoutParams = WindowManager.LayoutParams()
@@ -1993,8 +2413,8 @@ class FloatingService : Service() {
                 layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
                 layoutParams.gravity = Gravity.START or Gravity.CENTER_VERTICAL
-                layoutParams.width = resources.getDimensionPixelSize(R.dimen.dp_28)
-                layoutParams.height = resources.getDimensionPixelSize(R.dimen.dp_64)
+                layoutParams.width = resources.getDimensionPixelSize(R.dimen.dp_32)
+                layoutParams.height = resources.getDimensionPixelSize(R.dimen.dp_160)
 
                 windowManager.addView(view, layoutParams)
 
@@ -2040,7 +2460,6 @@ class FloatingService : Service() {
                                     backAnimationView?.isVisible = true
                                 }
 
-                                backAnimationView?.alpha = percent
                                 backAnimationView?.progress = percent
                             }
                             MotionEvent.ACTION_UP -> {
@@ -2049,7 +2468,7 @@ class FloatingService : Service() {
                                     ?.setDuration(200)
                                     ?.withEndAction {
                                         backAnimationView?.isVisible = false
-                                        backAnimationView?.progress = 0f
+                                        backAnimationView?.alpha = 1f
                                     }
                                     ?.start()
                                 val distance = event.x - touchX
@@ -2059,7 +2478,8 @@ class FloatingService : Service() {
                                             dismissPanel()
                                         }
                                         alarmView?.alpha == 1f -> {
-                                            val stopAlarm = Intent(this, EngineService::class.java)
+                                            val stopAlarm =
+                                                Intent(this, EngineService::class.java)
                                             stopAlarm.action =
                                                 EngineService.ACTION_REQUEST_STOP_ALARM
                                             ContextWrapper.startServiceAsUser(
@@ -2085,7 +2505,8 @@ class FloatingService : Service() {
                                                 "CURRENT"
                                             )
 
-                                            val stopAlarm = Intent(this, EngineService::class.java)
+                                            val stopAlarm =
+                                                Intent(this, EngineService::class.java)
                                             stopAlarm.action =
                                                 EngineService.ACTION_REQUEST_STOP_ALARM
                                             ContextWrapper.startServiceAsUser(
@@ -2097,6 +2518,9 @@ class FloatingService : Service() {
                                             clearCardHandler.clearCount()
 
                                             clearCurrentTemplate()
+                                        }
+                                        skillAppView?.alpha == 1f -> {
+                                            closeSkillApp()
                                         }
                                         else -> {
                                             NavigationUtils.clickBack()
@@ -2110,6 +2534,69 @@ class FloatingService : Service() {
                 }
 
                 windowManager.addView(view, layoutParams)
+            }
+
+            // 连接中控件
+            run {
+                val view = View.inflate(this, R.layout.layout_evs_connecting, null)
+
+                val layoutParams =
+                    WindowManager.LayoutParams()
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                } else {
+                    @Suppress("DEPRECATION")
+                    layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE
+                }
+                layoutParams.format = PixelFormat.TRANSPARENT
+                layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                layoutParams.width = WindowManager.LayoutParams.WRAP_CONTENT
+                layoutParams.height = WindowManager.LayoutParams.WRAP_CONTENT
+                layoutParams.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+
+                windowManager.addView(view, layoutParams)
+
+                view.findViewById<View>(R.id.i_got_it)?.setOnClickListener {
+                    dismissConnectingView()
+                }
+
+                view.alpha = 0f
+                view.isVisible = false
+
+                connectingView = view
+            }
+
+            // 麦克风禁用提示控件
+            run {
+                val view = View(this)
+
+                view.setBackgroundResource(R.drawable.bg_mic_error)
+
+                val layoutParams =
+                    WindowManager.LayoutParams()
+
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    layoutParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY
+                } else {
+                    @Suppress("DEPRECATION")
+                    layoutParams.type = WindowManager.LayoutParams.TYPE_PHONE
+                }
+                layoutParams.format = PixelFormat.TRANSPARENT
+                layoutParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                    WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL
+                layoutParams.width = WindowManager.LayoutParams.MATCH_PARENT
+                layoutParams.height = resources.getDimensionPixelSize(R.dimen.dp_6)
+                layoutParams.gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+
+                view.isVisible = false
+                view.alpha = 0f
+
+                windowManager.addView(view, layoutParams)
+
+                micErrorView = view
             }
         }
     }
@@ -2396,6 +2883,80 @@ class FloatingService : Service() {
             }
     }
 
+    private fun showMicErrorView() {
+        val micErrorView = micErrorView ?: return
+        if (!micErrorView.isVisible)
+            micErrorView.isVisible = true
+        micErrorView.animate()
+            .alpha(1f)
+            .setDuration(800)
+            .start()
+    }
+
+    private fun dismissMicErrorView() {
+        val micErrorView = micErrorView ?: return
+        if (micErrorView.isVisible) {
+            micErrorView.animate()
+                .alpha(0f)
+                .setDuration(600)
+                .withEndAction {
+                    micErrorView.isVisible = false
+                }
+                .start()
+        }
+    }
+
+    private fun showConnectingView() {
+        val connectingView = connectingView ?: return
+
+        if (!connectingView.isVisible) {
+            connectingView.isVisible = true
+
+            connectingView.alpha = 0f
+
+            connectingView.findViewById<View>(R.id.tv_connecting)?.isVisible = true
+            connectingView.findViewById<View>(R.id.progress_bar)?.isVisible = true
+            connectingView.findViewById<View>(R.id.i_got_it)?.isVisible = true
+            connectingView.findViewById<View>(R.id.tv_reconnect_succeed)?.isVisible = false
+
+            connectingView.animate()
+                .alpha(1f)
+                .setDuration(300)
+                .start()
+        }
+    }
+
+    private fun showConnectSucceedView() {
+        val connectingView = connectingView ?: return
+
+        if (connectingView.isVisible) {
+            connectingView.isVisible = true
+
+            connectingView.findViewById<View>(R.id.tv_connecting)?.isVisible = false
+            connectingView.findViewById<View>(R.id.progress_bar)?.isVisible = false
+            connectingView.findViewById<View>(R.id.i_got_it)?.isVisible = false
+            connectingView.findViewById<View>(R.id.tv_reconnect_succeed)?.isVisible = true
+
+            connectingView.postDelayed({
+                dismissConnectingView()
+            }, 2000)
+        }
+    }
+
+    private fun dismissConnectingView() {
+        val connectingView = connectingView ?: return
+
+        if (connectingView.isVisible) {
+            connectingView.animate()
+                .alpha(0f)
+                .setDuration(250)
+                .withEndAction {
+                    connectingView.isVisible = false
+                }
+                .start()
+        }
+    }
+
     private fun startTimer() {
         if (timerHandler == null) {
             timerHandler = TimerHandler(this)
@@ -2422,8 +2983,6 @@ class FloatingService : Service() {
         }
     }
 
-    @SuppressLint("SetTextI18n")
-    @Subscribe(threadMode = ThreadMode.MAIN)
     fun updateMusicPanel(playerInfo: PlayerInfoPayload?) {
         if (playerInfo == null) {
             musicPanel?.isVisible = false
@@ -2593,7 +3152,8 @@ class FloatingService : Service() {
             animatingVolumeTo = progress
             animator.addUpdateListener {
                 val value = it.animatedValue as Float
-                slidePanel?.findViewById<LottieAnimationView>(R.id.volume_icon)?.progress = value
+                slidePanel?.findViewById<LottieAnimationView>(R.id.volume_icon)?.progress =
+                    value
             }
             animator.duration = (500 * abs(from - progress)).toLong()
             animator.start()
@@ -2876,7 +3436,7 @@ class FloatingService : Service() {
         private var flag = -1
 
         fun startCount(currentTemplateView: View, delay: Long) {
-            Log.d("ClearCardHandler", "startCount")
+            Log.d("ClearCardHandler", "startCount, delay: " + delay)
             flag = UUID.randomUUID().hashCode()
             val msg = Message.obtain()
             msg.what = 1

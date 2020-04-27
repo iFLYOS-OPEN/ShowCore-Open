@@ -149,6 +149,42 @@
                     android:layout_height="0dp" />
 
                 <LinearLayout
+                    android:id="@+id/panel_smart_home"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/dp_108"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_panel_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:id="@+id/iv_smart_home"
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
+                        android:alpha="0.7"
+                        android:src="@drawable/ic_smart_home_40dp" />
+
+                    <TextView
+                        style="@style/Body14.Grey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/dp_12"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_4"
+                        android:paddingEnd="@dimen/dp_4"
+                        android:text="@string/panel_smart_home" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="@dimen/dp_12"
+                    android:layout_height="0dp" />
+
+                <LinearLayout
                     android:id="@+id/panel_microphone"
                     android:layout_width="0dp"
                     android:layout_height="@dimen/dp_108"
@@ -177,6 +213,42 @@
                         android:paddingStart="@dimen/dp_4"
                         android:paddingEnd="@dimen/dp_4"
                         android:text="@string/voice_wakeup" />
+
+                </LinearLayout>
+
+                <View
+                    android:layout_width="@dimen/dp_12"
+                    android:layout_height="0dp" />
+
+                <LinearLayout
+                    android:id="@+id/panel_search"
+                    android:layout_width="0dp"
+                    android:layout_height="@dimen/dp_108"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_panel_item"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:gravity="center"
+                    android:orientation="vertical">
+
+                    <ImageView
+                        android:layout_width="@dimen/dp_40"
+                        android:layout_height="@dimen/dp_40"
+                        android:alpha="0.7"
+                        android:padding="@dimen/dp_4"
+                        android:src="@drawable/ic_search" />
+
+                    <TextView
+                        style="@style/Body14.Grey"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/dp_12"
+                        android:ellipsize="end"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:paddingStart="@dimen/dp_4"
+                        android:paddingEnd="@dimen/dp_4"
+                        android:text="@string/search" />
 
                 </LinearLayout>
 
@@ -253,63 +325,62 @@
 
                 </LinearLayout>
 
-                <View
-                    android:layout_width="@dimen/dp_12"
-                    android:layout_height="0dp" />
-
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="@dimen/dp_108"
-                    android:layout_weight="1.2"
-                    android:orientation="vertical">
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/dp_48">
-
-                        <com.iflytek.cyber.iot.show.core.widget.BoxedHorizontal
-                            android:id="@+id/brightness_slider"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            app:bh_cornerRadius="@dimen/dp_12" />
-
-                        <com.airbnb.lottie.LottieAnimationView
-                            android:id="@+id/brightness_icon"
-                            android:layout_width="@dimen/dp_24"
-                            android:layout_height="@dimen/dp_24"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginStart="@dimen/dp_12"
-                            android:alpha="0.6"
-                            app:lottie_rawRes="@raw/animation_brightness_level" />
-                    </FrameLayout>
-
-                    <View
-                        android:layout_width="0dp"
-                        android:layout_height="@dimen/dp_12" />
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="@dimen/dp_48">
-
-                        <com.iflytek.cyber.iot.show.core.widget.BoxedHorizontal
-                            android:id="@+id/volume_slider"
-                            android:layout_width="match_parent"
-                            android:layout_height="match_parent"
-                            app:bh_cornerRadius="@dimen/dp_12" />
-
-                        <com.airbnb.lottie.LottieAnimationView
-                            android:id="@+id/volume_icon"
-                            android:layout_width="@dimen/dp_24"
-                            android:layout_height="@dimen/dp_24"
-                            android:layout_gravity="center_vertical"
-                            android:layout_marginStart="@dimen/dp_12"
-                            android:alpha="0.6"
-                            app:lottie_rawRes="@raw/animation_volume_level" />
-                    </FrameLayout>
-
-                </LinearLayout>
-
             </LinearLayout>
+
+            <RelativeLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/dp_12">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_56"
+                    android:layout_toStartOf="@id/center_divider">
+
+                    <com.iflytek.cyber.iot.show.core.widget.BoxedHorizontal
+                        android:id="@+id/brightness_slider"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:bh_cornerRadius="@dimen/dp_12" />
+
+                    <com.airbnb.lottie.LottieAnimationView
+                        android:id="@+id/brightness_icon"
+                        android:layout_width="@dimen/dp_24"
+                        android:layout_height="@dimen/dp_24"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/dp_12"
+                        android:alpha="0.6"
+                        app:lottie_rawRes="@raw/animation_brightness_level" />
+                </FrameLayout>
+
+                <View
+                    android:id="@+id/center_divider"
+                    android:layout_centerInParent="true"
+                    android:layout_width="@dimen/dp_12"
+                    android:layout_height="@dimen/dp_12" />
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="@dimen/dp_56"
+                    android:layout_toEndOf="@id/center_divider">
+
+                    <com.iflytek.cyber.iot.show.core.widget.BoxedHorizontal
+                        android:id="@+id/volume_slider"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        app:bh_cornerRadius="@dimen/dp_12" />
+
+                    <com.airbnb.lottie.LottieAnimationView
+                        android:id="@+id/volume_icon"
+                        android:layout_width="@dimen/dp_24"
+                        android:layout_height="@dimen/dp_24"
+                        android:layout_gravity="center_vertical"
+                        android:layout_marginStart="@dimen/dp_12"
+                        android:alpha="0.6"
+                        app:lottie_rawRes="@raw/animation_volume_level" />
+                </FrameLayout>
+
+            </RelativeLayout>
 
             <RelativeLayout
                 android:id="@+id/music_panel"

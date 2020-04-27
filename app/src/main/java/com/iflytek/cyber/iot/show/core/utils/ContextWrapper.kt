@@ -5,6 +5,7 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import android.os.Process
 import android.os.UserHandle
 import java.lang.reflect.InvocationTargetException
 
@@ -13,11 +14,15 @@ object ContextWrapper {
 
     fun startServiceAsUser(context: Context, intent: Intent, userHandle: String) {
         try {
-            val clz = context::class.java
-            val method =
-                clz.getMethod("startServiceAsUser", Intent::class.java, UserHandle::class.java)
-            method.isAccessible = true
-            method.invoke(context, intent, newUserHandle(userHandle))
+            if (Process.myUid() == Process.SYSTEM_UID) {
+                val clz = context::class.java
+                val method =
+                    clz.getMethod("startServiceAsUser", Intent::class.java, UserHandle::class.java)
+                method.isAccessible = true
+                method.invoke(context, intent, newUserHandle(userHandle))
+            } else {
+                context.startService(intent)
+            }
         } catch (t: Throwable) {
             if (t is InvocationTargetException) {
                 context.startService(intent)
@@ -29,11 +34,13 @@ object ContextWrapper {
 
     fun startActivityAsUser(activity: Activity, intent: Intent, userHandle: String) {
         try {
-            val clz = activity::class.java
-            val method =
-                clz.getMethod("startActivityAsUser", Intent::class.java, UserHandle::class.java)
-            method.isAccessible = true
-            method.invoke(activity, intent, newUserHandle(userHandle))
+            if (Process.myUid() == Process.SYSTEM_UID) {
+                val clz = activity::class.java
+                val method =
+                    clz.getMethod("startActivityAsUser", Intent::class.java, UserHandle::class.java)
+                method.isAccessible = true
+                method.invoke(activity, intent, newUserHandle(userHandle))
+            }
         } catch (t: Throwable) {
             if (t is InvocationTargetException) {
                 activity.startActivity(intent)
@@ -51,25 +58,29 @@ object ContextWrapper {
         userHandle: String
     ): PendingIntent? {
         try {
-            val clz = PendingIntent::class.java
-            val method =
-                clz.getMethod(
-                    "getBroadcastAsUser",
-                    Context::class.java,
-                    Int::class.java,
-                    Intent::class.java,
-                    Int::class.java,
-                    UserHandle::class.java
-                )
-            method.isAccessible = true
-            return method.invoke(
-                null,
-                context,
-                requestCode,
-                intent,
-                flags,
-                newUserHandle(userHandle)
-            ) as? PendingIntent
+            if (Process.myUid() == Process.SYSTEM_UID) {
+                val clz = PendingIntent::class.java
+                val method =
+                    clz.getMethod(
+                        "getBroadcastAsUser",
+                        Context::class.java,
+                        Int::class.java,
+                        Intent::class.java,
+                        Int::class.java,
+                        UserHandle::class.java
+                    )
+                method.isAccessible = true
+                return method.invoke(
+                    null,
+                    context,
+                    requestCode,
+                    intent,
+                    flags,
+                    newUserHandle(userHandle)
+                ) as? PendingIntent
+            } else {
+                PendingIntent.getBroadcast(context, requestCode, intent, flags)
+            }
         } catch (t: Throwable) {
             if (t is InvocationTargetException) {
                 return PendingIntent.getBroadcast(context, requestCode, intent, flags)
@@ -82,15 +93,21 @@ object ContextWrapper {
 
     fun startForegroundServiceAsUser(context: Context, intent: Intent, userHandle: String) {
         try {
-            val clz = context::class.java
-            val method =
-                clz.getMethod(
-                    "startForegroundServiceAsUser",
-                    Intent::class.java,
-                    UserHandle::class.java
-                )
-            method.isAccessible = true
-            method.invoke(context, intent, newUserHandle(userHandle))
+            if (Process.myUid() == Process.SYSTEM_UID) {
+                val clz = context::class.java
+                val method =
+                    clz.getMethod(
+                        "startForegroundServiceAsUser",
+                        Intent::class.java,
+                        UserHandle::class.java
+                    )
+                method.isAccessible = true
+                method.invoke(context, intent, newUserHandle(userHandle))
+            } else {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                    context.startForegroundService(intent)
+                }
+            }
         } catch (t: Throwable) {
             if (t is InvocationTargetException) {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {

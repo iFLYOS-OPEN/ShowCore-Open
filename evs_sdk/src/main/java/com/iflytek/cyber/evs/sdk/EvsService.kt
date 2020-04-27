@@ -78,10 +78,12 @@ abstract class EvsService : Service() {
         }
 
         override fun onDisconnected(code: Int, reason: String?, remote: Boolean) {
-            isEvsConnected = false
-            recognizer.stopCapture()
+            if (isEvsConnected) {
+                isEvsConnected = false
+                recognizer.stopCapture()
 
-            onEvsDisconnected(code, reason, remote)
+                onEvsDisconnected(code, reason, remote)
+            }
         }
 
         override fun onMessage(message: String) {
@@ -308,7 +310,12 @@ abstract class EvsService : Service() {
 
     }
 
+    @Deprecated("")
     open fun onSendFailed(code: Int, reason: String?) {
+
+    }
+
+    open fun onSendFailed(code: Int, reason: String?, sendFailedMessage: Any) {
 
     }
 
@@ -359,7 +366,8 @@ abstract class EvsService : Service() {
             system,
             template,
             videoPlayer,
-            wakeWord
+            wakeWord,
+            this
         )
 
         ResponseProcessor.initHandler(handler)
@@ -449,6 +457,8 @@ abstract class EvsService : Service() {
         SocketManager.removeListener(socketListener)
         SocketManager.disconnect()
 
+        getAlarm()?.destroy()
+
         AudioFocusManager.removeFocusObserver()
         VisualFocusManager.removeFocusObserver()
 
@@ -472,8 +482,9 @@ abstract class EvsService : Service() {
      * 连接到指定url的iFLYOS云端服务。
      * @param serverUrl 服务端url
      * @param deviceId 设备id
+     * @param preventRefresh 是否阻止触发刷新 token
      */
-    fun connect(serverUrl: String?, deviceId: String) {
+    fun connect(serverUrl: String?, deviceId: String, preventRefresh: Boolean = false) {
         getAuthResponse()?.let {
             val token = it.accessToken
             if (deviceId.isEmpty() || token.isEmpty()) {
@@ -484,7 +495,7 @@ abstract class EvsService : Service() {
                 )
             } else {
                 val current = java.lang.System.currentTimeMillis() / 1000
-                if (current - it.createdAt >= it.expiresIn) {
+                if (current - it.createdAt >= it.expiresIn && !preventRefresh) {
                     Log.w(
                         TAG, "Access token {$token} is expired, " +
                             "try to refresh. {refreshToken: ${it.refreshToken}}"
@@ -520,6 +531,12 @@ abstract class EvsService : Service() {
             Log.w(TAG, "Auth response is null. Ignore WebSocket Connection Action.")
         }
 
+    }
+
+    fun cancelCurrentResponseExecuting() {
+        ResponseProcessor.clearPendingManualExecuting()
+
+        getAudioPlayer().stop(AudioPlayer.TYPE_TTS)
     }
 
     fun setCustomIflyosContext(customContext: String?) {
@@ -795,6 +812,10 @@ abstract class EvsService : Service() {
                 1f
             )
         }
+    }
+
+    open fun getLocation(): DeviceLocation? {
+        return null
     }
 
     /**
