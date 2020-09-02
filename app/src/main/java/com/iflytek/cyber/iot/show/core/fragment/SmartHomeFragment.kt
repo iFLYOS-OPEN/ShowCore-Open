@@ -122,6 +122,11 @@ class SmartHomeFragment : BaseFragment() {
         }
     }
 
+    override fun onSupportInvisible() {
+        super.onSupportInvisible()
+        popupWindow?.dismiss()
+    }
+
     private fun createPopupMenu(items: List<Pair<String?, List<Device>>>) {
         if (!isAdded || context == null) {
             return
@@ -401,7 +406,13 @@ class SmartHomeFragment : BaseFragment() {
 
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MenuHolder {
             val view = createItem(parent.context)
-            return MenuHolder(view)
+            val holder = MenuHolder(view)
+            holder.itemView.setOnClickListener {
+                selectedPosition = holder.adapterPosition
+                val item = items[holder.adapterPosition]
+                onItemClickListener.invoke(item.first, item.second)
+            }
+            return holder
         }
 
         private fun createItem(context: Context): TextView {
@@ -433,10 +444,6 @@ class SmartHomeFragment : BaseFragment() {
                 textView.setBackgroundColor(Color.parseColor("#80E2E7EB"))
             } else {
                 textView.setBackgroundColor(Color.WHITE)
-            }
-            holder.itemView.setOnClickListener {
-                selectedPosition = holder.adapterPosition
-                onItemClickListener.invoke(item.first, item.second)
             }
         }
 

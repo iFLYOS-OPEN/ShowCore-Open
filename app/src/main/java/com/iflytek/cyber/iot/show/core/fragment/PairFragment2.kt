@@ -53,7 +53,7 @@ class PairFragment2 : BaseFragment() {
         enableWakeUp.putExtra(EngineService.EXTRA_ENABLED, false)
         context?.startService(enableWakeUp)
 
-        AuthDelegate.setAuthUrl("https://auth.iflyos.cn")
+        AuthDelegate.setAuthUrl("https://${BuildConfig.PREFIX}auth.iflyos.cn")
     }
 
     override fun onCreateView(

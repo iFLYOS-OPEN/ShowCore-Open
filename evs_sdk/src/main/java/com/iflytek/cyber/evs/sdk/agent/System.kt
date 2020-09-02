@@ -175,6 +175,9 @@ abstract class System {
                 EvsError.Code.ERROR_AUTH_FAILED -> {
                     SocketManager.onConnectFailed(EvsError.AuthorizationExpiredException())
                 }
+                EvsError.Code.ERROR_SERVER_INTERNAL -> {
+                    SocketManager.onSendFailed(code, payload.getString(KEY_MESSAGE))
+                }
             }
         }
     }

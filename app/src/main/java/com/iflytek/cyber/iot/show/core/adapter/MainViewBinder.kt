@@ -39,7 +39,7 @@ class MainViewBinder : ItemViewBinder<MainTemplate, MainViewBinder.MainViewHolde
     data class ScrollAction(val action: Int)
 
     interface MainViewItemClickListener {
-        fun onIqiyiFrameClick()
+        fun onLatestFrameClick()
 
         fun onFavFrameClick()
 
@@ -208,8 +208,8 @@ class MainViewBinder : ItemViewBinder<MainTemplate, MainViewBinder.MainViewHolde
     }
 
     override fun onBindViewHolder(holder: MainViewHolder, item: MainTemplate) {
-        holder.videoFrame.setOnClickListener {
-            mainViewItemClickListener?.onIqiyiFrameClick()
+        holder.latestFrame.setOnClickListener {
+            mainViewItemClickListener?.onLatestFrameClick()
         }
 
         holder.favImage.setOnClickListener {
@@ -237,16 +237,6 @@ class MainViewBinder : ItemViewBinder<MainTemplate, MainViewBinder.MainViewHolde
 
     override fun onViewAttachedToWindow(holder: MainViewHolder) {
         super.onViewAttachedToWindow(holder)
-        val context = holder.itemView.context
-        Glide.with(context)
-            .load(R.drawable.img_bg_card_iqiyi)
-            .transform(holder.transformer)
-            .into(holder.iqiyiImage)
-
-        Glide.with(context)
-            .load(R.drawable.img_bg_card_my_collection)
-            .transform(holder.transformer)
-            .into(holder.favImage)
 
         isViewDetached = false
         EventBus.getDefault().post(ScrollAction(2))
@@ -260,14 +250,14 @@ class MainViewBinder : ItemViewBinder<MainTemplate, MainViewBinder.MainViewHolde
     inner class MainViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
         val viewPager = itemView.findViewById<ViewPager2>(R.id.view_pager)
-        val iqiyiImage = itemView.findViewById<ImageView>(R.id.iqiyi_image)
+        val latestImage = itemView.findViewById<ImageView>(R.id.latest_image)
         val favImage = itemView.findViewById<ImageView>(R.id.fav_image)
         val musicImage = itemView.findViewById<ImageView>(R.id.music_image)
         val artistTextView = itemView.findViewById<AppCompatTextView>(R.id.artist_text)
         val currentPageTextView = itemView.findViewById<AppCompatTextView>(R.id.current_page_text)
         val pageCountTextView = itemView.findViewById<AppCompatTextView>(R.id.page_count_text)
         val playingImage = itemView.findViewById<LottieAnimationView>(R.id.playing_image)
-        val videoFrame = itemView.findViewById<ShadowFrameLayout>(R.id.video_frame)
+        val latestFrame = itemView.findViewById<ShadowFrameLayout>(R.id.latest_frame)
         val favFrame = itemView.findViewById<ShadowFrameLayout>(R.id.fav_frame)
 
         val adapter = BannerAdapter()

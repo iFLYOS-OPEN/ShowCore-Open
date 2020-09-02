@@ -12,7 +12,7 @@ interface DeskApi {
         const val MODEL_CHILD = 0
     }
 
-    @GET("https://api.iflyos.cn/showcore/api/v2/desk")
+    @GET("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/desk")
     fun getRecommend(@Query("model") model: Int): Call<List<DeskRecommend>>
 
     @GET("v2/desk/recommend")

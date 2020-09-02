@@ -125,9 +125,10 @@ class VideoSearchResultAdapter(val onItemClick: (Result) -> Unit) :
                 .into(holder.ivAlbum)
 
             if (keyword.isNotEmpty()) {
-                var titleRes = StringBuffer("")
+               /* var titleRes = StringBuffer("")
                 titleRes = HighLightUtils.highLightText(item.title, getKeyList(keyword), titleRes)
-                holder.albumTitle.text = Html.fromHtml(titleRes.toString())
+                holder.albumTitle.text = Html.fromHtml(titleRes.toString())*/
+                holder.albumTitle.text = HighLightUtils.hightLightText(item.title, keyword)
             } else {
                 holder.albumTitle.text = item.title
             }

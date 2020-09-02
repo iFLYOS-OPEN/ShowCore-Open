@@ -9,12 +9,12 @@
     android:paddingBottom="@dimen/dp_18"
     android:background="?selectableItemBackground">
 
-    <View
+    <ImageView
         android:id="@+id/indicator_view"
         android:layout_width="@dimen/dp_3"
         android:layout_height="@dimen/dp_16"
         android:layout_marginEnd="@dimen/dp_8"
-        android:background="@drawable/horizontal_indicator_shape" />
+        android:src="@drawable/horizontal_indicator_shape" />
 
     <TextView
         android:id="@+id/name_text"

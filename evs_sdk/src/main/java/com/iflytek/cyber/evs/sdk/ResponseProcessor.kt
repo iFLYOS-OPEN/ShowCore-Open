@@ -41,6 +41,7 @@ internal object ResponseProcessor {
     private var template: Template? = null
     private var videoPlayer: VideoPlayer? = null
     private var wakeWord: WakeWord? = null
+    private var externalPlayer: ExternalPlayer? = null
 
     private val currentManualRequestId: String?
         get() = RequestManager.currentManualRequestId
@@ -550,7 +551,8 @@ internal object ResponseProcessor {
         system: System,
         template: Template?,
         videoPlayer: VideoPlayer?,
-        wakeWord: WakeWord?
+        wakeWord: WakeWord?,
+        externalPlayer: ExternalPlayer?
     ) {
         this.contextRef = SoftReference(evsService)
 
@@ -570,6 +572,7 @@ internal object ResponseProcessor {
         this.template = template
         this.videoPlayer = videoPlayer
         this.wakeWord = wakeWord
+        this.externalPlayer = externalPlayer
 
         this.videoPlayer?.addListener(videoPlayerListener)
         this.audioPlayer?.addListener(audioPlayerListener)
@@ -1131,7 +1134,8 @@ internal object ResponseProcessor {
                         when (name) {
                             Recognizer.NAME_INTERMEDIATE_TEXT -> {
                                 val text = payload.getString(Recognizer.KEY_TEXT)
-                                it.onIntermediateText(text)
+                                val isLast = payload.getBoolean(Recognizer.KEY_IS_LAST)
+                                it.onIntermediateText(text, isLast)
                             }
                             Recognizer.NAME_STOP_CAPTURE -> {
                                 it.stopCapture()
@@ -1376,6 +1380,11 @@ internal object ResponseProcessor {
                             val wakeWordId = payload.getString(WakeWord.PAYLOAD_WAKE_WORD_ID)
                             it.resetWakeWord(wakeWordId)
                         }
+                    }
+                }
+                name.startsWith(Constant.NAMESPACE_EXTERNAL_PLAYER) -> {
+                    externalPlayer?.let {
+                        it.execCommand(payload)
                     }
                 }
                 else -> {

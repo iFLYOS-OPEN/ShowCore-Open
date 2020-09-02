@@ -12,10 +12,10 @@ import retrofit2.http.Query
 
 interface AppApi {
 
-    @GET("https://api.iflyos.cn/showcore/api/v2/app/list?version=v2")
-    fun getAppList(): Call<List<TemplateApp>>
+    @GET("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/list?version=v2")
+    fun getAppList(@Query("client_version") clientVersion: String): Call<List<TemplateApp>>
 
-    @GET("https://api.iflyos.cn/showcore/api/v2/app/index")
+    @GET("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/index")
     fun getIndex(
         @Query("source") source: String,
         @Query("business") business: String,
@@ -24,26 +24,26 @@ interface AppApi {
         @Query("limit") limit: Int = 10
     ): Call<ResponseBody>
 
-    @GET("https://api.iflyos.cn/showcore/api/v2/app/home")
+    @GET("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/home")
     fun getHome(@Query("source") source: String): Call<List<TemplateApp2>>
 
-    @GET("https://api.iflyos.cn/showcore/api/v2/app/xmly/index")
+    @GET("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/xmly/index")
     fun getXmlyIndex(
         @Query("section") section: String? = null,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 10
     ): Call<ResponseBody>
 
-    @POST("https://api.iflyos.cn/showcore/api/v2/app/show")
+    @POST("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/show")
     fun getAlbumShow(@Body body: RequestBody): Call<AppShowResult>
 
-    @POST("https://api.iflyos.cn/showcore/api/v2/app/xmly/show")
+    @POST("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/xmly/show")
     fun getXmlyShow(@Body body: RequestBody): Call<ResponseBody>
 
-    @POST("https://api.iflyos.cn/showcore/api/v2/app/xmly/query")
+    @POST("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/xmly/query")
     fun getXmlyQuery(@Body body: RequestBody): Call<XmlyQueryResponse>
 
-    @POST("https://api.iflyos.cn/showcore/api/v2/app/media_player/play")
+    @POST("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v2/app/media_player/play")
     fun postPlayMedia(@Body body: RequestBody): Call<ResponseBody>
 
     @POST("v2/app/media_player/play_album")

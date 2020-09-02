@@ -48,6 +48,9 @@ abstract class AudioPlayer {
         const val KEY_STATE = "state"
         const val KEY_TEXT = "text"
         const val KEY_METADATA = "metadata"
+        const val KEY_SPEED = "speed"
+        const val KEY_VOLUME = "volume"
+        const val KEY_VCN = "vcn"
 
         const val BEHAVIOR_IMMEDIATELY = "IMMEDIATELY"
         const val BEHAVIOR_UPCOMING = "UPCOMING"
@@ -159,9 +162,23 @@ abstract class AudioPlayer {
      * @param text 待合成文本
      */
     @CallSuper
-    open fun sendTtsText(text: String) {
+    open fun sendTtsText(
+        text: String,
+        speed: Float? = null,
+        volume: Int? = null,
+        vcn: String? = null
+    ) {
         val payload = JSONObject()
         payload[KEY_TEXT] = text
+        speed?.let {
+            payload[KEY_SPEED] = it
+        }
+        volume?.let {
+            payload[KEY_VOLUME] = it
+        }
+        vcn?.let {
+            payload[KEY_VCN] = it
+        }
 
         RequestManager.sendRequest(NAME_TTS_TEXT_IN, payload)
     }

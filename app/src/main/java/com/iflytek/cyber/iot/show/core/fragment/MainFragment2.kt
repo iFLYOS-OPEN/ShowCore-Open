@@ -237,14 +237,14 @@ class MainFragment2 : BaseFragment(), PageScrollable {
                 ACTION_OPEN_WIFI -> {
                     val startMain = Intent(context, EvsLauncherActivity::class.java)
                     startMain.flags =
-                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     startMain.action = EvsLauncherActivity.ACTION_OPEN_WLAN
                     startActivity(startMain)
                 }
                 ACTION_OPEN_AUTH -> {
                     val startMain = Intent(context, EvsLauncherActivity::class.java)
                     startMain.flags =
-                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     startMain.action = EvsLauncherActivity.ACTION_OPEN_AUTH
                     startActivity(startMain)
                 }
@@ -515,28 +515,23 @@ class MainFragment2 : BaseFragment(), PageScrollable {
         mainViewBinder.setRecyclerView(templateList)
         mainViewBinder.setMainViewItemClickListener(object :
             MainViewBinder.MainViewItemClickListener {
-            override fun onIqiyiFrameClick() {
-                val context = context ?: return
-                val packageManager = context.packageManager
-                val appInfo = AppUtil.getAppInfo(context, "com.qiyi.video.speaker")
-                if (appInfo == null) {
-                    Toast.makeText(
-                        context,
-                        getString(R.string.app_action_app_not_found),
-                        Toast.LENGTH_SHORT
-                    ).show()
-                } else {
-                    packageManager?.getLaunchIntentForPackage("com.qiyi.video.speaker")
-                        ?.let { intent ->
-                            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            startActivity(intent)
-                        }
+            override fun onLatestFrameClick() {
+                if (context != null && !NetworkUtils.isNetConnected(context)) {
+                    PromptManager.play(PromptManager.NETWORK_LOST)
+                    return
+                } else if (context != null && AuthDelegate.getAuthResponseFromPref(context!!)?.accessToken.isNullOrEmpty()) {
+                    PromptManager.play(PromptManager.TOKEN_EXPIRED)
+                    return
                 }
+                start(LatestPlaybackFragment())
             }
 
             override fun onFavFrameClick() {
                 if (context != null && !NetworkUtils.isNetConnected(context)) {
                     PromptManager.play(PromptManager.NETWORK_LOST)
+                    return
+                } else if (context != null && AuthDelegate.getAuthResponseFromPref(context!!)?.accessToken.isNullOrEmpty()) {
+                    PromptManager.play(PromptManager.TOKEN_EXPIRED)
                     return
                 }
                 start(CollectionFragment())
@@ -545,6 +540,9 @@ class MainFragment2 : BaseFragment(), PageScrollable {
             override fun onMusicFrameClick() {
                 if (context != null && !NetworkUtils.isNetConnected(context)) {
                     PromptManager.play(PromptManager.NETWORK_LOST)
+                    return
+                } else if (context != null && AuthDelegate.getAuthResponseFromPref(context!!)?.accessToken.isNullOrEmpty()) {
+                    PromptManager.play(PromptManager.TOKEN_EXPIRED)
                     return
                 }
 

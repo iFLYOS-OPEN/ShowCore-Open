@@ -49,7 +49,7 @@ class OtaService : Service() {
             "com.iflytek.cyber.product.ota.action.CHECK_UPDATE_RESULT"
         const val ACTION_REQUEST_DOWNLOAD = "com.iflytek.cyber.product.ota.action.REQUEST_DOWNLOAD"
         private const val TAG = "OtaService"
-        private const val OTA_URL = "https://ota.iflyos.cn"
+        private const val OTA_URL = "https://${BuildConfig.PREFIX}ota.iflyos.cn"
         private const val PREF_NAME = "com.iflytek.cyber.product.ota.pref"
 
         const val EXTRA_DEVICE_ID = "device_id"

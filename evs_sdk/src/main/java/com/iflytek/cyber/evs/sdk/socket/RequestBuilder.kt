@@ -33,6 +33,7 @@ internal object RequestBuilder {
     private var template: Template? = null
     private var videoPlayer: VideoPlayer? = null
     private var wakeWord: WakeWord? = null
+    private var externalPlayer: ExternalPlayer? = null
 
     private var serviceRef: SoftReference<EvsService>? = null
 
@@ -52,6 +53,7 @@ internal object RequestBuilder {
         template: Template?,
         videoPlayer: VideoPlayer?,
         wakeWord: WakeWord?,
+        externalPlayer: ExternalPlayer?,
         service: EvsService
     ) {
         this.alarm = alarm
@@ -67,6 +69,7 @@ internal object RequestBuilder {
         this.template = template
         this.videoPlayer = videoPlayer
         this.wakeWord = wakeWord
+        this.externalPlayer = externalPlayer
         this.serviceRef = SoftReference(service)
     }
 
@@ -84,7 +87,8 @@ internal object RequestBuilder {
         val prefix = if (isManual) PREFIX_MANUAL else ""
         val requestHeader = RequestHeader(name, "$prefix$requestId")
 
-        val device = HeaderDevice(deviceId, serviceRef?.get()?.getLocation(), DevicePlatform(), null)
+        val device =
+            HeaderDevice(deviceId, serviceRef?.get()?.getLocation(), DevicePlatform(), null)
         val header = OsHeader("Bearer $token", device)
 
         val context = buildContext()
@@ -260,7 +264,34 @@ internal object RequestBuilder {
         wakeWord?.let {
             val wakeWordContext = JSONObject()
             wakeWordContext[KEY_VERSION] = it.version
+            val wakeEngine = it.getWakeEngine()
+            wakeEngine?.let { engine ->
+                val engineContext = JSONObject()
+                engineContext[WakeWord.KEY_ENGINE_NAME] = engine.name
+                engineContext[WakeWord.KEY_ENGINE_VERSION] = engine.version
+                wakeWordContext[WakeWord.KEY_ENGINE] = engineContext
+            }
             context[Constant.NAMESPACE_WAKE_WORD] = wakeWordContext
+        }
+
+        externalPlayer?.let {
+            val externalPlayerContext = JSONObject()
+            externalPlayerContext[KEY_VERSION] = it.version
+            externalPlayerContext[ExternalPlayer.KEY_OFFSET] = it.offset
+            externalPlayerContext[ExternalPlayer.KEY_TYPE] = it.playerType
+            externalPlayerContext[ExternalPlayer.KEY_EXTERNAL_PLAYER_ACTIVE] = it.isActive
+            externalPlayerContext[ExternalPlayer.KEY_SOURCE_ID] = it.sourceId
+
+            context[Constant.NAMESPACE_EXTERNAL_PLAYER] = externalPlayerContext
+        }
+
+        serviceRef?.get()?.let {
+            // 服务中的部分特定能力
+            if (it.isMiguEnabled()) {
+                val appMigu = JSONObject()
+                appMigu[KEY_VERSION] = "1.0"
+                context[Constant.NAMESPACE_APP_MIGU] = appMigu
+            }
         }
 
         return context

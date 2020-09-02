@@ -14,6 +14,8 @@ android {
         targetSdkVersion 28
         versionCode 1
         versionName "1.0"
+
+        buildConfigField "String", "PREFIX", '""'
     }
 
     buildTypes {
@@ -22,8 +24,6 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-
-    flavorDimensions "mode"
 
     androidExtensions {
         experimental = true

@@ -101,6 +101,7 @@ class FloatingService : Service() {
     private var micErrorView: View? = null
 
     private var isShowTtsView = false
+    private var isShowSkillApp = false
 
     /**
      * 是否正在评测中，如果在评测的话，不显示tts view，不可手动点击唤醒按钮唤醒
@@ -292,6 +293,7 @@ class FloatingService : Service() {
     private val volumeChangedListener = object : EvsSpeaker.OnVolumeChangedListener {
         override fun onVolumeChanged(volume: Int, fromRemote: Boolean) {
             if (fromRemote) {
+                updateVolume()
                 showSideIndicator(R.raw.animation_volume_level, volume)
             }
         }
@@ -937,8 +939,14 @@ class FloatingService : Service() {
             }
             ACTION_RENDER_SKILL_APP -> {
                 val url = intent.getStringExtra("url")
+                val semanticData = intent.getStringExtra("semanticData")
                 val timeout = intent.getIntExtra("timeout", 120)
-                renderSkillApp(url, timeout)
+                if (isShowSkillApp) {
+                    val skillAppView = skillAppView?.get(0) as? SkillAppView
+                    skillAppView?.setSemanticData(semanticData)
+                } else {
+                    renderSkillApp(url, semanticData, timeout)
+                }
             }
             ACTION_SET_SEMANTIC_DATA -> {
                 val semanticData = intent.getStringExtra("semanticData")
@@ -1065,11 +1073,12 @@ class FloatingService : Service() {
         }
     }
 
-    private fun renderSkillApp(url: String, timeout: Int) {
+    private fun renderSkillApp(url: String, semanticData: String, timeout: Int) {
         skillAppView?.let { skillAppView ->
+            isShowSkillApp = true
             val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
 
-            val child = SkillAppView(this, this, url, timeout)
+            val child = SkillAppView(this, this, url, semanticData, timeout)
             skillAppView.removeAllViews()
 
             skillAppView.addView(
@@ -1101,6 +1110,7 @@ class FloatingService : Service() {
 
     fun closeSkillApp() {
         skillAppView?.let { skillAppView ->
+            isShowSkillApp = false
             val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             skillAppView.animate()
                 .alpha(0f)
@@ -1203,6 +1213,7 @@ class FloatingService : Service() {
 
                     val intent = Intent(baseContext, EvsLauncherActivity::class.java)
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     intent.action = EvsLauncherActivity.ACTION_OPEN_WEB_PAGE
                     intent.putExtra(EvsLauncherActivity.EXTRA_URL, url)
                     applicationContext.startActivity(intent)
@@ -1212,6 +1223,7 @@ class FloatingService : Service() {
         templateView?.let { childView ->
             val windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
             templateContainer?.let { templateContainer ->
+
                 templateContainer.removeAllViews()
 
                 templateContainer.addView(
@@ -1520,7 +1532,7 @@ class FloatingService : Service() {
                 layoutParams.format = PixelFormat.TRANSPARENT
                 layoutParams.flags =
                     WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL or
-                        WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+                            WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
 
                 // 初始化时置空即可，显示 Template 才填入 childView
                 layoutParams.width = 0
@@ -2031,7 +2043,7 @@ class FloatingService : Service() {
                         val intent = Intent(this, EvsLauncherActivity::class.java)
                         intent.action = EvsLauncherActivity.ACTION_OPEN_HOME
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         applicationContext.startActivity(intent)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -2074,7 +2086,7 @@ class FloatingService : Service() {
                         val intent = Intent(this, EvsLauncherActivity::class.java)
                         intent.action = EvsLauncherActivity.ACTION_OPEN_SETTINGS
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         applicationContext.startActivity(intent)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -2117,7 +2129,7 @@ class FloatingService : Service() {
                         val intent = Intent(this, EvsLauncherActivity::class.java)
                         intent.action = EvsLauncherActivity.ACTION_OPEN_WLAN
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         applicationContext.startActivity(intent)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -2173,7 +2185,7 @@ class FloatingService : Service() {
                         val intent = Intent(this, EvsLauncherActivity::class.java)
                         intent.action = EvsLauncherActivity.ACTION_OPEN_MESSAGE_BOARD
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         applicationContext.startActivity(intent)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -2184,7 +2196,7 @@ class FloatingService : Service() {
                         val intent = Intent(this, EvsLauncherActivity::class.java)
                         intent.action = EvsLauncherActivity.ACTION_OPEN_SEARCH
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         applicationContext.startActivity(intent)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -2195,7 +2207,7 @@ class FloatingService : Service() {
                         val intent = Intent(this, EvsLauncherActivity::class.java)
                         intent.action = EvsLauncherActivity.ACTION_OPEN_SMART_HOME
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         applicationContext.startActivity(intent)
                     } catch (e: Exception) {
                         e.printStackTrace()
@@ -2213,7 +2225,7 @@ class FloatingService : Service() {
                     val intent = Intent(it.context, EvsLauncherActivity::class.java)
                     intent.action = ACTION_START_PLAYER
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     startActivity(intent)
 
                     dismissPanel()
@@ -3324,7 +3336,8 @@ class FloatingService : Service() {
                         line: Int,
                         offset: Int
                     ) {
-                        if (tvTtsText?.lineCount ?: 1 > 2) {
+                        val lineCount = tvTtsText?.lineCount ?: 1
+                        if (lineCount > 2 && line < lineCount - 1) {
                             scrollView.smoothScrollTo(0, offset)
                         }
                     }

@@ -27,6 +27,7 @@ import com.iflytek.cyber.evs.sdk.utils.AppUtil
 import com.iflytek.cyber.iot.show.core.fragment.*
 import com.iflytek.cyber.iot.show.core.impl.alarm.EvsAlarm
 import com.iflytek.cyber.iot.show.core.impl.audioplayer.EvsAudioPlayer
+import com.iflytek.cyber.iot.show.core.impl.haotu.HaotuExternalPlayerImpl
 import com.iflytek.cyber.iot.show.core.impl.launcher.EvsLauncher
 import com.iflytek.cyber.iot.show.core.impl.playback.EvsPlaybackController
 import com.iflytek.cyber.iot.show.core.impl.system.EvsSystem
@@ -125,7 +126,7 @@ class EvsLauncherActivity : BaseActivity() {
         override fun onRecognizeStopped() {
         }
 
-        override fun onIntermediateText(text: String) {
+        override fun onIntermediateText(text: String, isLast: Boolean) {
         }
 
     }
@@ -133,7 +134,7 @@ class EvsLauncherActivity : BaseActivity() {
     private fun restartApp() {
         if (!isActivityVisible) {
             val intent = Intent(applicationContext, EvsLauncherActivity::class.java)
-            intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 //            applicationContext.startActivity(intent)
             ContextWrapper.startActivityAsUser(this, intent, "CURRENT")
@@ -155,7 +156,8 @@ class EvsLauncherActivity : BaseActivity() {
 
             val videoPlayPage = (getTopFragment() is VideoFragment) ||
                 TextUtils.equals(foregroundApp?.pkgName, "com.dianshijia.newlive") ||
-                TextUtils.equals(foregroundApp?.pkgName, "com.qiyi.video.speaker")
+                TextUtils.equals(foregroundApp?.pkgName, "com.qiyi.video.speaker") ||
+                HaotuExternalPlayerImpl.getInstance(baseContext).isActive
 
             var templateShowingDuration = -1L //默认custom_template为不关闭
             if (showingDuration == "LONG") {
@@ -230,7 +232,7 @@ class EvsLauncherActivity : BaseActivity() {
                     val intent = Intent(baseContext, EvsLauncherActivity::class.java)
                     intent.action = ACTION_START_VIDEO_PLAYER
                     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                    intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                     applicationContext.startActivity(intent)
                 }
             } else {
@@ -243,7 +245,7 @@ class EvsLauncherActivity : BaseActivity() {
                         val intent = Intent(baseContext, EvsLauncherActivity::class.java)
                         intent.action = ACTION_START_VIDEO_PLAYER
                         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        intent.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
                         applicationContext.startActivity(intent)
                     }
                 }
@@ -273,6 +275,13 @@ class EvsLauncherActivity : BaseActivity() {
         }
 
     }
+
+    fun dismissOtaDialog() {
+        if (requestOtaDialog?.isVisible == true) {
+            requestOtaDialog?.dismissAllowingStateLoss()
+        }
+    }
+
     private val otaReceiver = object : SelfBroadcastReceiver(
         OtaService.ACTION_CHECK_UPDATE_RESULT,
         ACTION_OPEN_CHECK_UPDATE
@@ -578,6 +587,7 @@ class EvsLauncherActivity : BaseActivity() {
         const val ACTION_OPEN_SEARCH = "$ACTION_PREFIX.ACTION_OPEN_SEARCH"
         const val ACTION_CLOSE_PLAYER_INFO = "$ACTION_PREFIX.ACTION_CLOSE_PLAYER_INFO"
         const val ACTION_OPEN_SMART_HOME = "$ACTION_PREFIX.ACTION_OPEN_SMART_HOME"
+        const val PACKAGE_INSTALLED_ACTION = "$ACTION_PREFIX.PACKAGE_INSTALLED_ACTION"
 
         const val ACTION_START_PLAYER = "$ACTION_PREFIX.START_PLAYER"
         const val ACTION_START_VIDEO_PLAYER = "$ACTION_PREFIX.START_VIDEO_PLAYER"

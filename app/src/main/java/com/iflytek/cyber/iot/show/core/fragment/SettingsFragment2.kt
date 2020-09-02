@@ -221,7 +221,7 @@ class SettingsFragment2 : BaseFragment(), PageScrollable {
                 val authResponse = AuthDelegate.getAuthResponseFromPref(context)
 
                 val request = Request.Builder()
-                    .url("https://api.iflyos.cn/showcore/api/v1/profile")
+                    .url("https://${BuildConfig.PREFIX}api.iflyos.cn/showcore/api/v1/profile")
                     .header("Authorization", "Bearer ${authResponse?.accessToken}")
                     .get()
                     .build()

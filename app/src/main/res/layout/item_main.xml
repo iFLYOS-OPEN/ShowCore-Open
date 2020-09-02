@@ -14,7 +14,7 @@
         android:layout_height="0dp"
         android:layout_marginBottom="@dimen/dp_16"
         android:background="@drawable/bg_banner"
-        app:layout_constraintBottom_toTopOf="@id/video_frame"
+        app:layout_constraintBottom_toTopOf="@id/latest_frame"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
@@ -47,14 +47,14 @@
     </LinearLayout>
 
     <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
-        android:id="@+id/video_frame"
+        android:id="@+id/fav_frame"
         android:layout_width="0dp"
         android:layout_height="@dimen/dp_86"
         android:layout_marginTop="@dimen/dp_16"
         android:layout_marginEnd="@dimen/dp_8"
         android:layout_marginBottom="@dimen/dp_24"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/fav_frame"
+        app:layout_constraintEnd_toStartOf="@id/latest_frame"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
         app:layout_constraintStart_toStartOf="parent"
         app:sl_cornerRadius="@dimen/dp_16"
@@ -63,48 +63,13 @@
         app:sl_shadowColor="#0D000000"
         app:sl_shadowRadius="@dimen/dp_20">
 
-        <ImageView
-            android:id="@+id/iqiyi_image"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:scaleType="centerCrop"
-            tools:src="@drawable/img_bg_card_iqiyi" />
-
-        <androidx.appcompat.widget.AppCompatTextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:layout_marginStart="@dimen/dp_19"
-            android:layout_marginBottom="@dimen/dp_14"
-            android:text="@string/iqiyi_text"
-            android:textColor="@android:color/white"
-            android:textSize="@dimen/sp_20" />
-
-    </com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>
-
-    <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
-        android:id="@+id/fav_frame"
-        android:layout_width="0dp"
-        android:layout_height="@dimen/dp_86"
-        android:layout_marginStart="@dimen/dp_8"
-        android:layout_marginTop="@dimen/dp_16"
-        android:layout_marginEnd="@dimen/dp_8"
-        android:layout_marginBottom="@dimen/dp_24"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/music_frame"
-        app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintStart_toEndOf="@id/video_frame"
-        app:sl_cornerRadius="@dimen/dp_16"
-        app:sl_dx="0dp"
-        app:sl_dy="@dimen/dp_8"
-        app:sl_shadowColor="#0D000000"
-        app:sl_shadowRadius="@dimen/dp_20">
-
-        <ImageView
+        <com.makeramen.roundedimageview.RoundedImageView
             android:id="@+id/fav_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            tools:src="@drawable/bg_grey_round_36dp" />
+            android:src="@drawable/desk_fav_bg"
+            app:riv_corner_radius="@dimen/dp_16"
+            android:scaleType="centerCrop"/>
 
         <androidx.appcompat.widget.AppCompatTextView
             android:layout_width="wrap_content"
@@ -127,6 +92,52 @@
     </com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>
 
     <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
+        android:id="@+id/latest_frame"
+        android:layout_width="0dp"
+        android:layout_height="@dimen/dp_86"
+        android:layout_marginStart="@dimen/dp_8"
+        android:layout_marginTop="@dimen/dp_16"
+        android:layout_marginEnd="@dimen/dp_8"
+        android:layout_marginBottom="@dimen/dp_24"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toStartOf="@id/music_frame"
+        app:layout_constraintHorizontal_chainStyle="spread_inside"
+        app:layout_constraintStart_toEndOf="@id/fav_frame"
+        app:sl_cornerRadius="@dimen/dp_16"
+        app:sl_dx="0dp"
+        app:sl_dy="@dimen/dp_8"
+        app:sl_shadowColor="#0D000000"
+        app:sl_shadowRadius="@dimen/dp_20">
+
+        <com.makeramen.roundedimageview.RoundedImageView
+            android:id="@+id/latest_image"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:src="@drawable/desk_recent_bg"
+            app:riv_corner_radius="@dimen/dp_16" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_20"
+            android:layout_marginTop="@dimen/dp_24"
+            android:text="@string/check_text"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_14" />
+
+        <androidx.appcompat.widget.AppCompatTextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/dp_20"
+            android:layout_marginTop="@dimen/dp_44"
+            android:text="@string/latest_play_records"
+            android:textColor="@android:color/white"
+            android:textSize="@dimen/sp_20" />
+
+    </com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout>
+
+    <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
         android:id="@+id/music_frame"
         android:layout_width="0dp"
         android:layout_height="@dimen/dp_86"
@@ -136,19 +147,20 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_chainStyle="spread_inside"
-        app:layout_constraintStart_toEndOf="@id/fav_frame"
+        app:layout_constraintStart_toEndOf="@id/latest_frame"
         app:sl_cornerRadius="@dimen/dp_16"
         app:sl_dx="0dp"
         app:sl_dy="@dimen/dp_8"
         app:sl_shadowColor="#0D000000"
         app:sl_shadowRadius="@dimen/dp_20">
 
-        <ImageView
+        <com.makeramen.roundedimageview.RoundedImageView
             android:id="@+id/music_image"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:scaleType="centerCrop"
-            android:src="@drawable/bg_main_view_music"
+            android:src="@drawable/desk_playin_bg"
+            app:riv_corner_radius="@dimen/dp_16"
             tools:ignore="ContentDescription" />
 
         <FrameLayout

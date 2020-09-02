@@ -48,6 +48,7 @@ abstract class EvsService : Service() {
     private var template: Template? = null
     private var videoPlayer: VideoPlayer? = null
     private var wakeWord: WakeWord? = null
+    private var externalPlayer: ExternalPlayer? = null
 
     private var externalAudioFocusChannels: List<AudioFocusChannel> = emptyList()
     private var externalVisualFocusChannels: List<VisualFocusChannel> = emptyList()
@@ -145,6 +146,15 @@ abstract class EvsService : Service() {
                             videoPlayer?.let {
                                 when (status) {
                                     FocusStatus.Idle -> it.stop()
+                                    FocusStatus.Background -> it.moveToBackground()
+                                    else -> it.moveToForegroundIfAvailable()
+                                }
+                            }
+                        }
+                        AudioFocusManager.TYPE_EXTERNAL_AUDIO, AudioFocusManager.TYPE_EXTERNAL_VIDEO -> {
+                            externalPlayer?.let {
+                                when (status) {
+                                    FocusStatus.Idle -> it.exit()
                                     FocusStatus.Background -> it.moveToBackground()
                                     else -> it.moveToForegroundIfAvailable()
                                 }
@@ -335,6 +345,7 @@ abstract class EvsService : Service() {
         template = overrideTemplate()
         videoPlayer = overrideVideoPlayer()
         wakeWord = overrideWakeWord()
+        externalPlayer = overrideExternalPlayer()
         initResponseSoundPool()
 
         ResponseProcessor.init(
@@ -351,7 +362,8 @@ abstract class EvsService : Service() {
             system,
             template,
             videoPlayer,
-            wakeWord
+            wakeWord,
+            externalPlayer
         )
         RequestBuilder.init(
             alarm,
@@ -367,6 +379,7 @@ abstract class EvsService : Service() {
             template,
             videoPlayer,
             wakeWord,
+            externalPlayer,
             this
         )
 
@@ -573,6 +586,12 @@ abstract class EvsService : Service() {
     fun getAudioPlayer() = audioPlayer
 
     /**
+     * 获取外部播放器。
+     */
+    @Suppress("unused")
+    fun getExternalPlayer() = externalPlayer
+
+    /**
      * 获取拦截器。
      */
     @Suppress("unused")
@@ -703,6 +722,13 @@ abstract class EvsService : Service() {
     }
 
     /**
+     * 创建外部播放器，返回null则不启用该模块。
+     */
+    open fun overrideExternalPlayer(): ExternalPlayer? {
+        return null
+    }
+
+    /**
      * 创建语音唤醒词端能力，返回 null 则不启用该模块
      */
     open fun overrideWakeWord(): WakeWord? {
@@ -715,6 +741,11 @@ abstract class EvsService : Service() {
     open fun overridePlaybackController(): PlaybackController? {
         return PlaybackControllerImpl()
     }
+
+    /**
+     * 咪咕端能力是否开启
+     */
+    open fun isMiguEnabled() = false
 
     /**
      * WebSocket接收数据回调。

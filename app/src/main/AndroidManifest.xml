@@ -87,9 +87,9 @@
 
         <activity
             android:name=".EvsLauncherActivity"
+            android:configChanges="keyboardHidden|screenSize"
             android:excludeFromRecents="true"
             android:launchMode="singleTop"
-
             android:screenOrientation="landscape">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -99,10 +99,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity
+            android:name=".HaotuVideoActivity"
+            android:configChanges="orientation|screenSize|keyboardHidden"
+            android:launchMode="singleTask"
+            android:screenOrientation="landscape" />
 
         <service android:name="com.amap.api.location.APSService" />
         <service android:name=".TimeService" />
-        <service android:name=".EngineService" />
+        <service
+            android:name=".EngineService"
+            android:exported="true" />
         <service android:name=".FloatingService" />
 
         <provider

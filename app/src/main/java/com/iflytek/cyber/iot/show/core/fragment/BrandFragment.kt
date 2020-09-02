@@ -35,6 +35,7 @@ class BrandFragment : BaseFragment() {
     private lateinit var recyclerView: RecyclerView
     private lateinit var errorContainer: View
     private lateinit var loading: LottieAnimationView
+    private var unbindDialog: StyledAlertDialog? = null
     private var brandAdapter: BrandAdapter? = null
 
     private var needSync = false
@@ -115,7 +116,7 @@ class BrandFragment : BaseFragment() {
             return
         }
 
-        StyledAlertDialog.Builder()
+        unbindDialog = StyledAlertDialog.Builder()
             .setTitle("是否解绑")
             .setPositiveButton("确认解绑", View.OnClickListener {
                 unbindDevice(brand)
@@ -128,12 +129,13 @@ class BrandFragment : BaseFragment() {
     private fun unbindDevice(brand: Brand) {
         getIotApi()?.unbindDevice(brand.id)?.enqueue(object : Callback<Message> {
             override fun onResponse(call: Call<Message>, response: Response<Message>) {
+                if (!isAdded && context == null) {
+                    return
+                }
                 if (response.isSuccessful) {
                     needSync = true
-                    if (isAdded && context != null) {
-                        Toast.makeText(context, "解绑成功", Toast.LENGTH_SHORT).show()
-                        getIotList()
-                    }
+                    Toast.makeText(context, "解绑成功", Toast.LENGTH_SHORT).show()
+                    getIotList()
                 } else {
                     Toast.makeText(context, "解绑失败", Toast.LENGTH_SHORT).show()
                 }
@@ -150,6 +152,11 @@ class BrandFragment : BaseFragment() {
         view?.postDelayed(200) {
             getIotList()
         }
+    }
+
+    override fun onSupportInvisible() {
+        super.onSupportInvisible()
+        unbindDialog?.dismissAllowingStateLoss()
     }
 
     override fun onBackPressedSupport(): Boolean {

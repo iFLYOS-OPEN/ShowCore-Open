@@ -31,7 +31,7 @@ class AccountFragment : BaseFragment(), PageScrollable {
             } else if (position == adapter.itemCount - 2) {
                 val webViewFragment = WebViewFragment()
                 val arguments = Bundle()
-                arguments.putString("url", "https://homev2.iflyos.cn/accounts")
+                arguments.putString("url", "https://${BuildConfig.PREFIX}homev2.iflyos.cn/accounts")
                 webViewFragment.arguments = arguments
                 start(webViewFragment)
             }

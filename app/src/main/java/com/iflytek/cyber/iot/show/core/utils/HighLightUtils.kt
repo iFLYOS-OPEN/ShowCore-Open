@@ -1,5 +1,11 @@
 package com.iflytek.cyber.iot.show.core.utils
 
+import android.graphics.Color
+import android.text.SpannableString
+import android.text.Spanned
+import android.text.style.ForegroundColorSpan
+import java.util.regex.Pattern
+
 class HighLightUtils {
 
     companion object {
@@ -36,6 +42,22 @@ class HighLightUtils {
                 highLightText(str1, inputs, resStr)
             }
             return resStr
+        }
+
+        private val selectColor = Color.parseColor("#4C93D4")
+
+        fun hightLightText(text: String, keyword: String): SpannableString {
+            val spannableString = SpannableString(text)
+            //条件 keyword
+            val pattern = Pattern.compile(keyword)
+            val matcher = pattern.matcher(SpannableString(text))
+            while (matcher.find()) {
+                val start = matcher.start()
+                val end = matcher.end()
+                //ForegroundColorSpan 需要new 不然也只能是部分变色
+                spannableString.setSpan(ForegroundColorSpan(selectColor), start, end, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            }
+            return spannableString
         }
     }
 }

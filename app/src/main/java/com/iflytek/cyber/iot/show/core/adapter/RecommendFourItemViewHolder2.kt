@@ -61,7 +61,7 @@ class RecommendFourItemViewHolder2 : ItemViewBinder<DeskRecommend, RecyclerView.
             onCardRefreshListener?.onItemClick(parent, it, holder.adapterPosition)
         }
         holder.openMap?.setOnClickListener {
-            onOpenWebPageListener?.onOpenWebPage("https://voice.baidu.com/act/newpneumonia/newpneumonia/from=osari_pc_3")
+            onOpenWebPageListener?.onOpenWebPage("https://news.sina.cn/zt_d/yiqing0121?wm=6170")
         }
         return holder
     }

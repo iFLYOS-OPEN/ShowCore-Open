@@ -153,8 +153,13 @@ class AudioPlayerImpl(context: Context) : AudioPlayer() {
         Log.d(TAG, "try to play $url on $type player")
         val player = getPlayer(type)
         if (type == TYPE_PLAYBACK) {
-            val uri = Uri.parse(url)
-            currentResourceMediaType = Util.inferContentType(uri.lastPathSegment)
+            currentResourceMediaType = try {
+                val uri = Uri.parse(url)
+                Util.inferContentType(uri.lastPathSegment)
+            } catch (t: Throwable) {
+                t.printStackTrace()
+                C.TYPE_OTHER
+            }
         }
         player?.let {
             it.resourceId = resourceId

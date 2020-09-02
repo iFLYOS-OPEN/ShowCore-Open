@@ -5,7 +5,6 @@ import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.text.TextUtils
-import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -71,6 +70,15 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
             }
         }
 
+        fun newInstance(latestRecord: LatestRecord, type: Int): SongListFragment {
+            return SongListFragment().apply {
+                arguments = bundleOf(
+                    Pair("record", latestRecord),
+                    Pair("type", type)
+                )
+            }
+        }
+
         fun newInstance(song: CollectionSong, type: Int): SongListFragment {
             return SongListFragment().apply {
                 arguments = bundleOf(
@@ -121,11 +129,18 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
     private var audioId: String? = null
     private var name: String? = null
     private var song: CollectionSong? = null
-    private var type: Int? = null // type: 1 收藏列表， type: 2 专辑列表
-    private var albumType: Int? = null //1001: 喜马拉雅专辑， 1002: 其他信源专辑
+    /**
+     *  type: 1 收藏列表， type: 2 模板应用专辑列表， type：3 最近播放专辑列表
+     */
+    private var type: Int? = null
+    /**
+     * 1001: 喜马拉雅专辑， 1002: 其他信源专辑
+     */
+    private var albumType: Int? = null
     private var sourceItem: SourceItem? = null
     private var albumItem: AlbumItem? = null
     private var appShowResult: AppShowResult? = null
+    private var latestRecord: LatestRecord? = null
 
     private var backCount = 0
 
@@ -150,6 +165,9 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
                 playAllCollection()
             } else if (type == 2) {
                 playAllAlbum()
+            } else if (type == 3) {
+                val item = songListAdapter?.items?.get(0)
+                item?.let { playRecordAlbum(item) }
             } else {
                 playAll()
             }
@@ -172,6 +190,7 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
         song = arguments?.getParcelable("song")
         sourceItem = arguments?.getParcelable("sourceItem")
         albumItem = arguments?.getParcelable("albumItem")
+        latestRecord = arguments?.getParcelable("record")
 
         if (type == 2) {
             songListAdapter2 = SongListAdapter2 {
@@ -182,6 +201,8 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
             songListAdapter = SongListAdapter {
                 if (type != null && type == 1) {
                     playCollectionMusic(it)
+                } else if (type == 3) {
+                    playRecordAlbum(it)
                 } else {
                     playMusic(it)
                 }
@@ -196,6 +217,7 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
             when (type) {
                 1 -> getCollectionList(true)
                 2 -> getAlbumList(true)
+                3 -> getRecordAlbumList(true)
                 else -> id?.let { getSongList(id, true) }
             }
         }
@@ -246,6 +268,7 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
                 when (type) {
                     1 -> getCollectionList(true)
                     2 -> getAlbumList(true)
+                    3 -> getRecordAlbumList(true)
                     else -> id?.let { getSongList(id, true) }
                 }
             }
@@ -254,6 +277,7 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
                     page += 1
                     when (type) {
                         1 -> getCollectionList(false)
+                        3 -> getRecordAlbumList(false)
                         else -> id?.let { getSongList(id, false) }
                     }
                 } else if (!isLoading && hasMoreResult && songListAdapter2?.itemCount ?: 0 >= LIMIT && type == 2) {
@@ -318,6 +342,9 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
             rectangleContent.isVisible = false
         }
 
+        if (!songList.name.isNullOrEmpty()) {
+            tvTitle.text = songList.name
+        }
         tvSource.text = songList.from
         val transformer = MultiTransformation(
             CenterCrop(),
@@ -348,46 +375,81 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
             }
 
             override fun onResponse(call: Call<SongList>, response: Response<SongList>) {
-                isLoading = false
-                dismissLoading()
-                if (response.isSuccessful) {
-                    val songList = response.body()
-                    songList?.let {
-                        audioId = songList.id
-                        if (page == 1) {
-                            setupUI(it)
-                        }
-
-                        if (songListAdapter?.itemCount ?: 0 > 1 && songList.items.size == 0) {
-                            hasMoreResult = false
-                        }
-
-                        if (clear) {
-                            songListAdapter?.items?.clear()
-                            songListAdapter?.items?.addAll(songList.items)
-                        } else {
-                            if (songList.items.size > 0) {
-                                songListAdapter?.items?.addAll(songList.items)
-                            } else {
-                                songListAdapter?.loadingFinish(true)
-                            }
-                        }
-
-                        if (songListAdapter?.items?.size ?: 0 < LIMIT) {
-                            songListAdapter?.loadingFinish(true)
-                        }
-
-                        songListAdapter?.notifyDataSetChanged()
-                    }
-                } else {
-                    if (clear) {
-                        mainContent.isVisible = false
-                        loadingContainer.isVisible = false
-                        view?.findViewById<View>(R.id.error_container)?.isVisible = true
-                    }
-                }
+                onResult(response, clear)
             }
         })
+    }
+
+    private fun onResult(response: Response<SongList>, clear: Boolean) {
+        isLoading = false
+        dismissLoading()
+        if (response.isSuccessful) {
+            view?.findViewById<View>(R.id.error_container)?.isVisible = false
+            val songList = response.body()
+            songList?.let {
+                audioId = songList.id
+                if (page == 1) {
+                    setupUI(it)
+                }
+
+                if (songListAdapter?.itemCount ?: 0 > 1 && songList.items.size == 0) {
+                    hasMoreResult = false
+                }
+
+                if (clear) {
+                    songListAdapter?.items?.clear()
+                    songListAdapter?.items?.addAll(songList.items)
+                } else {
+                    if (songList.items.size > 0) {
+                        songListAdapter?.items?.addAll(songList.items)
+                    } else {
+                        songListAdapter?.loadingFinish(true)
+                    }
+                }
+
+                if (songListAdapter?.items?.size ?: 0 < LIMIT) {
+                    songListAdapter?.loadingFinish(true)
+                }
+
+                songListAdapter?.notifyDataSetChanged()
+            }
+        } else {
+            page -= 1
+            songListAdapter?.loadingFinish(true)
+            if (clear) {
+                mainContent.isVisible = false
+                loadingContainer.isVisible = false
+                view?.findViewById<View>(R.id.error_container)?.isVisible = true
+            }
+        }
+    }
+
+    private fun getRecordAlbumList(clear: Boolean) {
+        isLoading = true
+        if (latestRecord == null || latestRecord?.albumId.isNullOrEmpty()) {
+            isLoading = false
+            return
+        }
+
+        getMediaApi()?.getLatestRecordAlbum(
+            latestRecord!!.albumId!!,
+            latestRecord?.sourceType,
+            latestRecord?.business,
+            page,
+            LIMIT
+        )
+            ?.enqueue(object : Callback<SongList> {
+                override fun onFailure(call: Call<SongList>, t: Throwable) {
+                    isLoading = false
+                    dismissLoading()
+                    t.printStackTrace()
+                    showError(t)
+                }
+
+                override fun onResponse(call: Call<SongList>, response: Response<SongList>) {
+                    onResult(response, clear)
+                }
+            })
     }
 
     private fun showLoading() {
@@ -441,47 +503,7 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
                 }
 
                 override fun onResponse(call: Call<SongList>, response: Response<SongList>) {
-                    isLoading = false
-                    dismissLoading()
-                    if (response.isSuccessful) {
-                        view?.findViewById<View>(R.id.error_container)?.isVisible = false
-                        val songList = response.body()
-                        songList?.let {
-                            audioId = songList.id
-                            if (page == 1) {
-                                setupUI(it)
-                            }
-
-                            if (songListAdapter?.itemCount ?: 0 > 1 && songList.items.size == 0) {
-                                hasMoreResult = false
-                            }
-
-                            if (clear) {
-                                songListAdapter?.items?.clear()
-                                songListAdapter?.items?.addAll(songList.items)
-                            } else {
-                                if (songList.items.size > 0) {
-                                    songListAdapter?.items?.addAll(songList.items)
-                                } else {
-                                    songListAdapter?.loadingFinish(true)
-                                }
-                            }
-
-                            if (songListAdapter?.items?.size ?: 0 < LIMIT) {
-                                songListAdapter?.loadingFinish(true)
-                            }
-
-                            songListAdapter?.notifyDataSetChanged()
-                        }
-                    } else {
-                        page -= 1
-                        songListAdapter?.loadingFinish(true)
-                        if (clear) {
-                            mainContent.isVisible = false
-                            loadingContainer.isVisible = false
-                            view?.findViewById<View>(R.id.error_container)?.isVisible = true
-                        }
-                    }
+                    onResult(response, clear)
                 }
             })
     }
@@ -621,9 +643,9 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
                     if (clear) {
                         mainContent.isVisible = false
                         loadingContainer.isVisible = false
-                        if (isAdded && context != null) {
-                            showError(response.errorBody()?.string())
-                        }
+                    }
+                    if (isAdded && context != null) {
+                        showError(response.errorBody()?.string())
                     }
                 }
             }
@@ -668,17 +690,17 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
 
     private fun playAlbumMusic(item: MediaItem) {
         val json = JSONObject()
-         if (albumType != null && albumType == 1002) {
-             json["audio_id"] = item.id
-             json["source"] = item.source
-             json["business"] = sourceItem?.metadata?.business
-             json["album"] = sourceItem?.metadata?.album
-             json["media_type"] = item.mediaType
-         } else {
-             json["audio_id"] = item.id
-             json["source_type"] = item.source
-             json["album_id"] = albumItem?.albumId
-         }
+        if (albumType != null && albumType == 1002) {
+            json["audio_id"] = item.id
+            json["source"] = item.source
+            json["business"] = sourceItem?.metadata?.business
+            json["album"] = sourceItem?.metadata?.album
+            json["media_type"] = item.mediaType
+        } else {
+            json["audio_id"] = item.id
+            json["source_type"] = item.source
+            json["album_id"] = albumItem?.albumId
+        }
 
         val body = RequestBody.create(
             MediaType.parse("application/json"),
@@ -753,6 +775,34 @@ class SongListFragment : BaseFragment(), PageScrollable, AudioPlayer.MediaStateC
             }
 
             override fun onResponse(call: Call<String>, response: Response<String>) {
+                if (response.isSuccessful) {
+                    songListAdapter?.notifyDataSetChanged()
+                    if (isAdded && context != null) {
+                        Toast.makeText(context, "播放${item.name}", Toast.LENGTH_SHORT).show()
+                    }
+                } else {
+                    showError(response.errorBody()?.string())
+                }
+            }
+        })
+    }
+
+    private fun playRecordAlbum(item: SongItem) {
+        val json = JSONObject()
+        json["album_id"] = item.albumId
+        json["media_id"] = item.id
+        json["business"] = item.business
+        json["source_type"] = item.sourceType
+        val body = RequestBody.create(
+            MediaType.parse("application/json"),
+            json.toString()
+        )
+        getMediaApi()?.playRecordAlbum(body)?.enqueue(object : Callback<ResponseBody> {
+            override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
+                t.printStackTrace()
+            }
+
+            override fun onResponse(call: Call<ResponseBody>, response: Response<ResponseBody>) {
                 if (response.isSuccessful) {
                     songListAdapter?.notifyDataSetChanged()
                     if (isAdded && context != null) {

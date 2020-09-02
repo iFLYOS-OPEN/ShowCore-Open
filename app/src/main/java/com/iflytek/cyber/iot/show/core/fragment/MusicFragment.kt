@@ -158,7 +158,7 @@ class MusicFragment : BaseFragment() {
     private fun getMediaSection(id: String) {
         getMediaApi()?.getMediaSection(id)?.enqueue(object : Callback<Group> {
             override fun onFailure(call: Call<Group>, t: Throwable) {
-                if (isRemoving || isDetached)
+                if (context == null || !isAdded)
                     return
                 t.printStackTrace()
                 hidePlaceholder()

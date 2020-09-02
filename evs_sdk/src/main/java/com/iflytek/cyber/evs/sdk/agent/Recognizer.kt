@@ -16,11 +16,7 @@ import com.iflytek.cyber.evs.sdk.codec.audio.speex.SpeexCodec
 import com.iflytek.cyber.evs.sdk.focus.AudioFocusManager
 import com.iflytek.cyber.evs.sdk.model.Constant
 import com.iflytek.cyber.evs.sdk.socket.Result
-import com.iflytek.cyber.evs.sdk.socket.SocketManager
 import com.iflytek.cyber.evs.sdk.utils.Log
-import java.lang.System
-import java.util.Timer
-import java.util.TimerTask
 
 /**
  * 语音识别模块。详细介绍见https://doc.iflyos.cn/device/evs/reference/recognizer.html#%E8%AF%AD%E9%9F%B3%E8%AF%86%E5%88%AB%E5%99%A8
@@ -46,10 +42,12 @@ abstract class Recognizer {
 
         internal const val KEY_QUERY = "query"
         internal const val KEY_TEXT = "text"
+        internal const val KEY_IS_LAST = "is_last"
         internal const val KEY_PROFILE = "profile"
         internal const val KEY_FORMAT = "format"
         internal const val KEY_REPLY_KEY = "reply_key"
         internal const val KEY_ENABLE_VAD = "enable_vad"
+        internal const val KEY_VAD_EOS = "vad_eos"
         internal const val KEY_WAKE_UP = "iflyos_wake_up"
         internal const val KEY_BACKGROUND_RECOGNIZE = "background_recognize"
         internal const val KEY_EVALUATE = "evaluate"
@@ -180,10 +178,11 @@ abstract class Recognizer {
     /**
      * 识别文本实时返回回调。
      * @param text 识别文本
+     * @param isLast 是否为最后一次结果
      */
     @CallSuper
-    open fun onIntermediateText(text: String) {
-        callback?.onIntermediateText(text)
+    open fun onIntermediateText(text: String, isLast: Boolean) {
+        callback?.onIntermediateText(text, isLast)
     }
 
     /**
@@ -358,6 +357,21 @@ abstract class Recognizer {
         wakeUpData: String? = null,
         requestCallback: RequestCallback? = null
     ) {
+        sendAudioIn(replyKey, wakeUpData, null, requestCallback)
+    }
+
+    /**
+     * 开始发送音频。
+     * @param replyKey 关联追问上下文的key
+     * @param wakeUpData 唤醒结果
+     * @param vadEos vad 后端点
+     * @param requestCallback 结果回调
+     */
+    fun sendAudioIn(
+        replyKey: String?, wakeUpData: String? = null,
+        vadEos: Int? = null,
+        requestCallback: RequestCallback? = null
+    ) {
         if (isRecording()) {
             requestCancel()
         }
@@ -371,6 +385,10 @@ abstract class Recognizer {
         wakeUpData?.let {
             val json = JSON.parseObject(it)
             payload[KEY_WAKE_UP] = json
+        }
+
+        if (vadEos != null) {
+            payload[KEY_VAD_EOS] = vadEos
         }
 
         RequestManager.sendRequest(NAME_AUDIO_IN, payload, object : RequestCallback {
@@ -392,7 +410,6 @@ abstract class Recognizer {
 
                 requestCallback?.onResult(result)
             }
-
         }, true)
     }
 
@@ -604,7 +621,7 @@ abstract class Recognizer {
     interface RecognizerCallback {
         fun onRecognizeStarted(isExpectReply: Boolean)
         fun onRecognizeStopped()
-        fun onIntermediateText(text: String)
+        fun onIntermediateText(text: String, isLast: Boolean)
         fun onBackgroundRecognizeStateChanged(isBackgroundRecognize: Boolean)
     }
 

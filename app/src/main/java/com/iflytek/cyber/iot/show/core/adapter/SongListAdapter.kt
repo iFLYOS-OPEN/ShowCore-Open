@@ -67,27 +67,41 @@ class SongListAdapter(private val onItemClickListener: (SongItem) -> Unit)
             holder.title.text = item.name
             holder.artist.text = item.artist
             holder.artist.isVisible = !(item.artist.isNullOrEmpty())
-            val currentPlayingMusic = ContentStorage.get().playerInfo
-            val isPlaying = TextUtils.equals(currentPlayingMusic?.resourceId, item.id)
-            if (isPlaying) {
-                holder.ivPlaying.visibility = View.VISIBLE
-                holder.rank.visibility = View.GONE
-                if (ContentStorage.get().isMusicPlaying) {
-                    holder.ivPlaying.playAnimation()
-                } else {
-                    holder.ivPlaying.pauseAnimation()
-                }
-            } else {
-                holder.ivPlaying.visibility = View.GONE
-                holder.ivPlaying.pauseAnimation()
-                holder.rank.visibility = View.VISIBLE
-            }
+
+            setupItemPlaying(holder, item)
+
             holder.songContent.clickWithTrigger {
                 onItemClickListener.invoke(item)
             }
         } else if (getItemViewType(position) == R.layout.item_load_more) {
             holder as LoadingHolder
             holder.showLoading(isFinished)
+        }
+    }
+
+    private fun setupItemPlaying(holder: SongHolder, item: SongItem) {
+        val currentPlayingMusic = ContentStorage.get().playerInfo
+        val isPlaying = TextUtils.equals(currentPlayingMusic?.resourceId, item.id)
+        if (isPlaying) {
+            holder.ivPlaying.visibility = View.VISIBLE
+            holder.rank.visibility = View.GONE
+            if (ContentStorage.get().isMusicPlaying) {
+                holder.ivPlaying.playAnimation()
+            } else {
+                holder.ivPlaying.pauseAnimation()
+            }
+        } else {
+            holder.ivPlaying.visibility = View.GONE
+            holder.ivPlaying.pauseAnimation()
+            holder.rank.visibility = View.VISIBLE
+        }
+    }
+
+    override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+        super.onViewAttachedToWindow(holder)
+        if (holder is SongHolder) {
+            val item = items[holder.adapterPosition]
+            setupItemPlaying(holder, item)
         }
     }
 

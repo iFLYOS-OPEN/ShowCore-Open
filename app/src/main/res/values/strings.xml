@@ -358,5 +358,13 @@
     <string name="recommend_for_you">为你推荐</string>
     <string name="play_recommend_fail">播放失败</string>
     <string name="unknown">未知</string>
+    
+    <!-- 最近播放 -->
+    <string name="multi_select">多选</string>
+    <string name="select_all">全选</string>
+    <string name="empty_latest_history">暂无播放记录</string>
+    <string name="latest_play_records">最近播放记录</string>
+    <string name="delete">删除</string>
+    <string name="open_album">查看专辑</string>
 
 </resources>

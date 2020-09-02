@@ -14,6 +14,7 @@ import androidx.core.view.isVisible
 import androidx.recyclerview.widget.RecyclerView
 import com.airbnb.lottie.LottieAnimationView
 import com.iflytek.cyber.iot.show.core.R
+import com.iflytek.cyber.iot.show.core.model.CollectionSong
 import com.iflytek.cyber.iot.show.core.model.ContentStorage
 import com.iflytek.cyber.iot.show.core.model.Song
 
@@ -38,24 +39,7 @@ class SongsAdapter(private val onItemClickListener: (song: Song) -> Unit)
         holder.rank.text = (position + 1).toString()
         holder.title.text = song.metadata.title
         holder.artist.text = song.metadata.subtitle
-        val playerInfo = ContentStorage.get().playerInfo
-        val isPlaying = TextUtils.equals(playerInfo?.resourceId, song.stream.token)
-        if (isPlaying) {
-            holder.ivPlaying.visibility = View.VISIBLE
-            holder.rank.visibility = View.GONE
-            holder.title.setTextColor(playingTextColor)
-            holder.onlyTitle.setTextColor(playingTextColor)
-            if (ContentStorage.get().isMusicPlaying) {
-                holder.ivPlaying.playAnimation()
-            } else {
-                holder.ivPlaying.pauseAnimation()
-            }
-        } else {
-            holder.ivPlaying.visibility = View.GONE
-            holder.rank.visibility = View.VISIBLE
-            holder.title.setTextColor(normalTextColor)
-            holder.onlyTitle.setTextColor(normalTextColor)
-        }
+        setupItemPlaying(holder, song)
         holder.songContent.setOnClickListener {
             onItemClickListener.invoke(song)
         }
@@ -69,6 +53,34 @@ class SongsAdapter(private val onItemClickListener: (song: Song) -> Unit)
             holder.textContent.isVisible = true
             holder.onlyTitle.isVisible = false
         }
+    }
+
+    private fun setupItemPlaying(holder: SongHolder, song: Song) {
+        val playerInfo = ContentStorage.get().playerInfo
+        val isPlaying = TextUtils.equals(playerInfo?.resourceId, song.stream.token)
+        if (isPlaying) {
+            holder.ivPlaying.visibility = View.VISIBLE
+            holder.rank.visibility = View.GONE
+            holder.title.setTextColor(playingTextColor)
+            holder.onlyTitle.setTextColor(playingTextColor)
+            if (ContentStorage.get().isMusicPlaying) {
+                holder.ivPlaying.pauseAnimation()
+                holder.ivPlaying.playAnimation()
+            } else {
+                holder.ivPlaying.pauseAnimation()
+            }
+        } else {
+            holder.ivPlaying.visibility = View.GONE
+            holder.rank.visibility = View.VISIBLE
+            holder.title.setTextColor(normalTextColor)
+            holder.onlyTitle.setTextColor(normalTextColor)
+        }
+    }
+
+    override fun onViewAttachedToWindow(holder: SongHolder) {
+        super.onViewAttachedToWindow(holder)
+        val song = songList[holder.adapterPosition]
+        setupItemPlaying(holder, song)
     }
 
     class SongHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

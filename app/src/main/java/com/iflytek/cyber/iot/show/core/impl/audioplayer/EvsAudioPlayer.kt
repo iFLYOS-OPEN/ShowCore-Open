@@ -36,6 +36,10 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
     private var currentPlayingUrl: String? = null
     private var currentPlayResourceId: String? = null
 
+    private var simpleMediaChangedListener: SimpleMediaChangedListener? = null
+
+    private var currentTtsText: String? = null
+
     private inner class ImplListener : AudioPlayerInstance.Listener {
         override fun onPlayerPositionUpdated(
             player: AudioPlayerInstance,
@@ -68,6 +72,7 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
 //                    if (player.isStarted && lastPlayState == Player.STATE_READY) {
 //                        onPaused(type, player.resourceId ?: "")
 //                    }
+                    simpleMediaChangedListener?.onBuffering(type, player.resourceId ?: "")
                 }
                 Player.STATE_IDLE -> {
                     player.isStarted = false
@@ -160,6 +165,19 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
         }
     }
 
+    fun getCurrentTtsText(): String? {
+        return currentTtsText
+    }
+
+    fun setSimpleMediaChangedListener(simpleMediaChangedListener: SimpleMediaChangedListener?) {
+        this.simpleMediaChangedListener = simpleMediaChangedListener
+    }
+
+    override fun onTtsText(text: String) {
+        super.onTtsText(text)
+        currentTtsText = text
+    }
+
     override fun play(type: String, resourceId: String, url: String): Boolean {
         Log.d(TAG, "try to play $url on $type player")
         val player = getPlayer(type)
@@ -174,8 +192,8 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
             it.resourceId = resourceId
             it.play(url)
             it.isStarted = false
-            onStarted(type, resourceId)
-            onPositionUpdated(type, resourceId, 0)
+            //onStarted(type, resourceId)
+            //onPositionUpdated(type, resourceId, 0)
             return true
         } ?: run {
             return false
@@ -302,5 +320,42 @@ class EvsAudioPlayer private constructor(context: Context) : AudioPlayer() {
 
     fun getPlayerPlaybackState(type: String): Int? {
         return getPlayer(type)?.getPlaybackState()
+    }
+
+    abstract class SimpleMediaChangedListener : MediaStateChangedListener {
+        override fun onStarted(player: AudioPlayer, type: String, resourceId: String) {
+        }
+
+        override fun onPaused(player: AudioPlayer, type: String, resourceId: String) {
+        }
+
+        override fun onPositionUpdated(
+            player: AudioPlayer,
+            type: String,
+            resourceId: String,
+            position: Long
+        ) {
+        }
+
+        override fun onError(
+            player: AudioPlayer,
+            type: String,
+            resourceId: String,
+            errorCode: String
+        ) {
+        }
+
+        override fun onResumed(player: AudioPlayer, type: String, resourceId: String) {
+        }
+
+        override fun onStopped(player: AudioPlayer, type: String, resourceId: String) {
+        }
+
+        override fun onCompleted(player: AudioPlayer, type: String, resourceId: String) {
+        }
+
+        open fun onBuffering(type: String, resourceId: String) {
+
+        }
     }
 }

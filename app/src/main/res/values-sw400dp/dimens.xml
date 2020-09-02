@@ -380,6 +380,7 @@
 	<dimen name="dp_500">500.0000dp</dimen>
 	<dimen name="dp_600">600.0000dp</dimen>
 	<dimen name="dp_640">640.0000dp</dimen>
+	<dimen name="dp_680">680.0000dp</dimen>
 	<dimen name="dp_720">720.0000dp</dimen>
 	<dimen name="sp_6">6.0000sp</dimen>
 	<dimen name="sp_7">7.0000sp</dimen>

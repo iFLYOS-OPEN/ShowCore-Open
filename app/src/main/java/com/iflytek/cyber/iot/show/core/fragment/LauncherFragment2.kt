@@ -15,6 +15,7 @@ import androidx.core.os.bundleOf
 import androidx.recyclerview.widget.DefaultItemAnimator
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.iflytek.cyber.iot.show.core.BuildConfig
 import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.EngineService
 import com.iflytek.cyber.iot.show.core.R
@@ -25,6 +26,8 @@ import com.iflytek.cyber.iot.show.core.launcher.LauncherDataHelper
 import com.iflytek.cyber.iot.show.core.launcher.LauncherMemory
 import com.iflytek.cyber.iot.show.core.launcher.TemplateAppData
 import com.iflytek.cyber.iot.show.core.model.TemplateApp
+import com.iflytek.cyber.iot.show.core.utils.ConnectivityUtils
+import com.iflytek.cyber.iot.show.core.utils.DeviceUtils
 import com.iflytek.cyber.iot.show.core.utils.OnItemClickListener
 import kotlinx.android.synthetic.main.fragment_skill.*
 import me.yokeyword.fragmentation.ISupportFragment
@@ -356,6 +359,9 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
 
             override fun onFailure(call: Call<ResponseBody>, t: Throwable) {
                 t.printStackTrace()
+                if (context != null && isAdded && !ConnectivityUtils.isNetworkAvailable(context)) {
+                    Toast.makeText(context, "网络出错，请检查网络", Toast.LENGTH_SHORT).show()
+                }
             }
         })
     }
@@ -544,7 +550,7 @@ class LauncherFragment2 : BaseFragment(), PageScrollable {
     }
 
     private fun getTemplateApp() {
-        getAppApi()?.getAppList()?.enqueue(object : Callback<List<TemplateApp>> {
+        getAppApi()?.getAppList(DeviceUtils.getSystemVersion().toString())?.enqueue(object : Callback<List<TemplateApp>> {
             override fun onFailure(call: Call<List<TemplateApp>>, t: Throwable) {
                 t.printStackTrace()
                 if (isRemoving || isDetached) {

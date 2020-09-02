@@ -67,7 +67,6 @@ import com.warkiz.widget.IndicatorSeekBar
 import com.warkiz.widget.OnSeekChangeListener
 import com.warkiz.widget.SeekParams
 import jp.wasabeef.blurry.Blurry
-import kotlinx.android.synthetic.main.fragment_search.*
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import retrofit2.Call
@@ -80,7 +79,7 @@ import java.net.UnknownHostException
 import java.util.*
 
 class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
-        AudioPlayer.MediaStateChangedListener, PageScrollable {
+    AudioPlayer.MediaStateChangedListener, PageScrollable {
 
     companion object {
         private const val MAX_RETRY_COUNT = 5
@@ -346,9 +345,9 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 //            musicArtist.isVisible = false
 //            tvOnlyTitle.isVisible = true
 //        } else {
-            musicTitle.isVisible = true
-            musicArtist.isVisible = true
-            tvOnlyTitle.isVisible = false
+        musicTitle.isVisible = true
+        musicArtist.isVisible = true
+        tvOnlyTitle.isVisible = false
 //        }
     }
 
@@ -367,43 +366,6 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
         }
 
-        val transformer = MultiTransformation(
-            CenterCrop(),
-            RoundedCornersTransformation(dp4, 0)
-        )
-
-        Glide.with(this)
-            .asBitmap()
-            .load(playerInfo?.content?.imageUrl)
-            .placeholder(R.drawable.default_media_placeholder)
-            .error(R.drawable.default_media_placeholder)
-            .into(object : SimpleTarget<Bitmap>() {
-                override fun onResourceReady(resource: Bitmap, transition: Transition<in Bitmap>?) {
-                    //musicCover.setImageBitmap(resource)
-                    if (isRemoving || isDetached)
-                        return
-                    val context = context ?: return
-
-                    Glide.with(this@PlayerInfoFragment2)
-                        .load(playerInfo?.content?.imageUrl)
-                        .transform(transformer)
-                        .into(musicCover)
-
-                    Blurry.with(context)
-                        .sampling(4)
-                        .color(Color.parseColor("#66212121"))
-                        .from(resource)
-                        .into(ivBlurCover)
-                }
-
-                override fun onLoadFailed(errorDrawable: Drawable?) {
-                    super.onLoadFailed(errorDrawable)
-                    if (isRemoving || isDetached)
-                        return
-                    context ?: return
-                    musicCover.setImageResource(R.drawable.default_media_placeholder)
-                }
-            })
         val dp8 = musicCover.context.resources.getDimensionPixelSize(R.dimen.dp_8)
         Glide.with(this)
             .load(playerInfo?.provider?.logoUrl)
@@ -418,6 +380,51 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 
         if (TextUtils.isEmpty(musicArtist.text)) {
             musicArtist.text = getString(R.string.unknown)
+        }
+
+        val transformer = MultiTransformation(
+            CenterCrop(),
+            RoundedCornersTransformation(dp4, 0)
+        )
+
+        try {
+            Glide.with(this)
+                .asBitmap()
+                .load(playerInfo?.content?.imageUrl)
+                .placeholder(R.drawable.default_media_placeholder)
+                .error(R.drawable.default_media_placeholder)
+                .into(object : SimpleTarget<Bitmap>() {
+                    override fun onResourceReady(
+                        resource: Bitmap,
+                        transition: Transition<in Bitmap>?
+                    ) {
+                        //musicCover.setImageBitmap(resource)
+                        if (isRemoving || isDetached)
+                            return
+                        val context = context ?: return
+
+                        Glide.with(this@PlayerInfoFragment2)
+                            .load(playerInfo?.content?.imageUrl)
+                            .transform(transformer)
+                            .into(musicCover)
+
+                        Blurry.with(context)
+                            .sampling(4)
+                            .color(Color.parseColor("#66212121"))
+                            .from(resource)
+                            .into(ivBlurCover)
+                    }
+
+                    override fun onLoadFailed(errorDrawable: Drawable?) {
+                        super.onLoadFailed(errorDrawable)
+                        if (isRemoving || isDetached)
+                            return
+                        context ?: return
+                        musicCover.setImageResource(R.drawable.default_media_placeholder)
+                    }
+                })
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
     }
 
@@ -625,6 +632,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_pause)
             smallPlayPause.setImageResource(R.drawable.ic_music_pause)
+            ContentStorage.get().isMusicPlaying = true
             songsAdapter?.notifyDataSetChanged()
         }
     }
@@ -633,6 +641,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
             smallPlayPause.setImageResource(R.drawable.ic_music_play)
+            ContentStorage.get().isMusicPlaying = false
             songsAdapter?.notifyDataSetChanged()
         }
     }
@@ -641,6 +650,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
             smallPlayPause.setImageResource(R.drawable.ic_music_play)
+            ContentStorage.get().isMusicPlaying = false
             songsAdapter?.notifyDataSetChanged()
         }
     }
@@ -649,6 +659,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
             smallPlayPause.setImageResource(R.drawable.ic_music_play)
+            ContentStorage.get().isMusicPlaying = false
             songsAdapter?.notifyDataSetChanged()
         }
     }
@@ -663,6 +674,7 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             if (seekBar.max <= 100f) {
                 seekBar.max = player.getDuration(type).toFloat()
             }
+            tvDuration.text = format(seekBar.max.toLong())
             if (currentPosition <= position) {
                 lrcView.updateTime(position)
                 smallLrc.updateTime(position)
@@ -672,7 +684,6 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             }
             if (currentPosition <= position && position in 0L..999) {
                 setupSeekBar()
-                tvDuration.text = format(seekBar.max.toLong())
                 //showMusicPress()
                 playPause.setImageResource(R.drawable.ic_music_pause)
                 smallPlayPause.setImageResource(R.drawable.ic_music_pause)
@@ -687,6 +698,8 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
         if (type == AudioPlayer.TYPE_PLAYBACK) {
             playPause.setImageResource(R.drawable.ic_music_play)
             smallPlayPause.setImageResource(R.drawable.ic_music_play)
+            ContentStorage.get().isMusicPlaying = false
+            songsAdapter?.notifyDataSetChanged()
         }
     }
 
@@ -852,13 +865,13 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
             Log.d("playRecommendMusic", "${music.url}")
 
             val request = Request.Builder().get()
-                    .url(music.url!!)
-                    .build()
+                .url(music.url!!)
+                .build()
             val call = client.newCall(request)
             try {
                 val response = call.execute()
                 if (response.isSuccessful) {
-    //                    isNextPlayRecommend = true
+                    //                    isNextPlayRecommend = true
 
                     Log.d("playRecommendMusic", "success")
                 } else {
@@ -875,7 +888,11 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                         }
                     } catch (e: JSONException) {
                         post {
-                            Toast.makeText(context!!, R.string.play_recommend_fail, Toast.LENGTH_SHORT).show()
+                            Toast.makeText(
+                                context!!,
+                                R.string.play_recommend_fail,
+                                Toast.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -885,7 +902,8 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                 isNextPlayRecommend = false
 
                 post {
-                    Toast.makeText(context!!, R.string.play_recommend_fail, Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context!!, R.string.play_recommend_fail, Toast.LENGTH_SHORT)
+                        .show()
                 }
             }
         }
@@ -921,14 +939,18 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                 if (resourceId == lastPlayResourceId) {
                     lastRecommendAudioList
                 } else {
-                    RecommendAgent.getRecommendList(context!!,
-                            playerInfo?.recommend?.url!!,
-                            MediaEntity::class.java)
+                    RecommendAgent.getRecommendList(
+                        context!!,
+                        playerInfo?.recommend?.url!!,
+                        MediaEntity::class.java
+                    )
                 }
             } else {
-                RecommendAgent.getRecommendList(context!!,
-                                playerInfo?.recommend?.url!!,
-                                MediaEntity::class.java)
+                RecommendAgent.getRecommendList(
+                    context!!,
+                    playerInfo?.recommend?.url!!,
+                    MediaEntity::class.java
+                )
             }
 
             lastRecommendAudioList = audioList
@@ -941,10 +963,10 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                     // 显示推荐
                     val playerInfo = ContentStorage.get().playerInfo
                     Glide.with(launcher!!)
-                            .load(playerInfo?.content?.imageUrl)
-                            .placeholder(R.drawable.default_media_placeholder)
-                            .error(R.drawable.default_media_placeholder)
-                            .into(smallCover)
+                        .load(playerInfo?.content?.imageUrl)
+                        .placeholder(R.drawable.default_media_placeholder)
+                        .error(R.drawable.default_media_placeholder)
+                        .into(smallCover)
 
                     smallTitle.text = getSmallTitleText(playerInfo!!)
 
@@ -978,12 +1000,12 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                             launcher!!.resources.getDimensionPixelSize(R.dimen.dp_60)
 
                     adapter.setOnItemClickListener(object : RecommendMediaAdapter
-                        .OnItemClickListener {
+                    .OnItemClickListener {
 
                         override fun onItemClicked(view: View, position: Int) {
                             if (isRecommendItemClickable) {
                                 val music = (recommendAudioView.adapter as RecommendMediaAdapter)
-                                        .getItem(position)
+                                    .getItem(position)
                                 if (music != null) {
                                     Thread {
                                         playRecommend(music)
@@ -1019,7 +1041,8 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
 //                        false
 //                    }
 
-                    scrollView.setOnCustomTouchListener(object: TouchNestedScrollView.OnCustomTouchListener{
+                    scrollView.setOnCustomTouchListener(object :
+                        TouchNestedScrollView.OnCustomTouchListener {
                         override fun onTouchEvent(event: MotionEvent?) {
                             when (event?.action) {
                                 MotionEvent.ACTION_DOWN -> {
@@ -1066,7 +1089,8 @@ class PlayerInfoFragment2 : BaseFragment(), View.OnClickListener,
                                     smallPlayList.isClickable = false
                                 }
 
-                                var alpha = (scrollY - scrollLimit) / ((musicLayoutHeight - scrollLimit).toFloat())
+                                var alpha =
+                                    (scrollY - scrollLimit) / ((musicLayoutHeight - scrollLimit).toFloat())
                                 if (alpha > 0.9f) {
                                     alpha = 1.0f
                                 } else if (alpha < 0.1) {

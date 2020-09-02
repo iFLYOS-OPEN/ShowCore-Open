@@ -88,4 +88,16 @@
 
     <color name="border_color">#F2F5F7</color>
     <color name="default_shadow_color">#88757575</color>
+
+    <color name="star_high_score">#1784E9</color>
+    <color name="star_low_score">#FFA125</color>
+    
+    <color name="system_files">#23D9B0</color>
+    <color name="app_files">#1784E9</color>
+    <color name="cache_files">#FF9500</color>
+    <color name="trash_files">#FF4D4D</color>
+    <color name="other_files">#9E9FA7</color>
+    <color name="free_space">#E2E7EB</color>
+
+    <color name="light_grey">#e8ecf0</color>
 </resources>

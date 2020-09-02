@@ -88,4 +88,38 @@
         app:layout_constraintTop_toTopOf="parent"
         app:lottie_rawRes="@raw/animation_loading_l" />
 
+    <LinearLayout
+        android:id="@+id/retry_view"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@android:color/white"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/toolbar">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ooooops，请检查网络后重试"
+            android:textColor="@color/grey_500"
+            android:textSize="@dimen/sp_16" />
+
+        <TextView
+            android:id="@+id/retry"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="@dimen/dp_81"
+            android:layout_height="@dimen/dp_36"
+            android:layout_marginTop="@dimen/dp_16"
+            android:text="@string/retry"
+            android:textColor="#1784E9"
+            android:textSize="@dimen/sp_14"
+            app:bl_corners_radius="@dimen/dp_18"
+            app:bl_solid_color="@android:color/white"
+            app:bl_stroke_color="#1784E9"
+            app:bl_stroke_width="@dimen/dp_2" />
+
+    </LinearLayout>
+
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -3,12 +3,9 @@ package com.iflytek.cyber.iot.show.core.impl.launcher
 import android.content.Context
 import android.content.Intent
 import android.os.Handler
-import android.os.Looper
-import android.util.Log
 import androidx.core.os.bundleOf
 import androidx.core.os.postDelayed
 import com.alibaba.fastjson.JSONObject
-import com.google.android.exoplayer2.offline.DownloadService.start
 import com.iflytek.cyber.evs.sdk.agent.Launcher
 import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.EvsLauncherActivity
@@ -43,7 +40,7 @@ class EvsLauncher private constructor() : Launcher() {
     private var contextRef: SoftReference<Context>? = null
     private var activityRef: SoftReference<EvsLauncherActivity>? = null
 
-    private val handler = Handler()
+    //private val handler = Handler()
 
     private var internalAppId: String? = null
     private var currentAppType: String? = null
@@ -84,10 +81,10 @@ class EvsLauncher private constructor() : Launcher() {
             } else {
                 contextRef?.get()?.let { context ->
                     val intent = Intent(context, EvsLauncherActivity::class.java)
-                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP
                     intent.action = EvsLauncherActivity.ACTION_LAUNCHER_CONTROL
                     intent.putExtra(EvsLauncherActivity.EXTRA_PAGE, page)
-                    context.startActivity(intent)
+                    context.applicationContext.startActivity(intent)
                     if (page == PAGE_ALARMS) {
                         callback.onSuccess("")
                     } else {
@@ -133,17 +130,31 @@ class EvsLauncher private constructor() : Launcher() {
                 val template = data.getIntValue("template")
                 val isDark = data.getBooleanValue("is_dark")
                 val templateApp = TemplateApp("", name, icon, img, template, "", isDark)
+                val topFragment = activityRef?.get()?.getTopFragment()
                 when (templateApp.template) {
                     TemplateApp.TEMPLATE_TEMPLATE_1 -> {
-                        activityRef?.get()
-                            ?.start(TemplateApp1Fragment.newInstance(templateApp))
-                        activityRef?.get()?.getService()?.requestLauncherVisualFocus()
+                        if (topFragment is TemplateApp2Fragment) {
+                            activityRef?.get()?.pop()
+                        }
+                        activityRef?.get()?.startWithPopTo(
+                                TemplateApp1Fragment.newInstance(templateApp),
+                                TemplateApp1Fragment::class.java,
+                                true
+                            )
+                        activityRef?.get()?.getService()?.requestSkillAppVisualFocus()
                         callback.onSuccess("")
                     }
                     TemplateApp.TEMPLATE_TEMPLATE_2 -> {
+                        if (topFragment is TemplateApp1Fragment) {
+                            activityRef?.get()?.pop()
+                        }
                         activityRef?.get()
-                            ?.start(TemplateApp2Fragment.newInstance(templateApp))
-                        activityRef?.get()?.getService()?.requestLauncherVisualFocus()
+                            ?.startWithPopTo(
+                                TemplateApp2Fragment.newInstance(templateApp),
+                                TemplateApp2Fragment::class.java,
+                                true
+                            )
+                        activityRef?.get()?.getService()?.requestSkillAppVisualFocus()
                         callback.onSuccess("")
                     }
                     TemplateApp.TEMPLATE_TEMPLATE_3 -> {
@@ -159,31 +170,21 @@ class EvsLauncher private constructor() : Launcher() {
                 val timeout = payload.getIntValue("timeout")
                 val semanticData = data.getString("semanticData")
                 val context = activityRef?.get()
-
                 context?.let {
-                    if (currentAppType == TYPE_SKILL) {
-                        currentAppType = type
-                        val intent = Intent(it, FloatingService::class.java)
-                        intent.action = FloatingService.ACTION_SET_SEMANTIC_DATA
-                        intent.putExtra("semanticData", semanticData)
-                        it.startService(intent)
-                    } else  {
-                        return@let handler.postDelayed(80) {
-                            currentAppType = type
-                            val intent = Intent(it, FloatingService::class.java)
-                            intent.action = FloatingService.ACTION_RENDER_SKILL_APP
-                            intent.putExtra("url", url)
-                            intent.putExtra("timeout", timeout)
-                            it.startService(intent)
-                            it.getService()?.requestLauncherVisualFocus()
-                        }
-                    }
+                    currentAppType = type
+                    val intent = Intent(it, FloatingService::class.java)
+                    intent.action = FloatingService.ACTION_RENDER_SKILL_APP
+                    intent.putExtra("url", url)
+                    intent.putExtra("semanticData", semanticData)
+                    intent.putExtra("timeout", timeout)
+                    it.startService(intent)
+                    it.getService()?.requestSkillAppVisualFocus()
                 }
             }
             TYPE_EVALUATE -> {
                 currentAppType = type
                 activityRef?.get()?.start(SpeakEvaluationFragment())
-                activityRef?.get()?.getService()?.requestLauncherVisualFocus()
+                activityRef?.get()?.getService()?.requestSkillAppVisualFocus()
             }
             TYPE_H5_APP -> {
                 currentAppType = type
@@ -193,7 +194,7 @@ class EvsLauncher private constructor() : Launcher() {
                     arguments = bundleOf(Pair(WebViewFragment.EXTRA_URL, url))
                 }
                 activityRef?.get()?.start(webViewFragment)
-                activityRef?.get()?.getService()?.requestLauncherVisualFocus()
+                activityRef?.get()?.getService()?.requestSkillAppVisualFocus()
             }
         }
         return true

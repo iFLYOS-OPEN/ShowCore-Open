@@ -24,4 +24,6 @@ internal object Constant {
     const val NAMESPACE_TEMPLATE = "template"
     const val NAMESPACE_VIDEO_PLAYER = "video_player"
     const val NAMESPACE_WAKE_WORD = "wakeword"
+    const val NAMESPACE_EXTERNAL_PLAYER = "external_player"
+    const val NAMESPACE_APP_MIGU = "app_migu"
 }

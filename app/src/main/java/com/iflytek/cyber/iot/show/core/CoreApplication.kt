@@ -10,8 +10,10 @@ import com.kk.taurus.ijkplayer.IjkPlayer
 import com.kk.taurus.playerbase.config.PlayerConfig
 import com.kk.taurus.playerbase.config.PlayerLibrary
 import com.kk.taurus.playerbase.entity.DecoderPlan
+import com.yilan.sdk.YLInit
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Protocol
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -48,6 +50,7 @@ class CoreApplication : MultiDexApplication() {
             .writeTimeout(15, TimeUnit.SECONDS)
             .pingInterval(1, TimeUnit.SECONDS)
             .addInterceptor(getNetworkInterceptor())
+            .protocols(arrayListOf(Protocol.HTTP_1_1, Protocol.HTTP_2))
 
         if (BuildConfig.DEBUG) {
             val interceptor = HttpLoggingInterceptor()
@@ -90,6 +93,14 @@ class CoreApplication : MultiDexApplication() {
         ExoMediaPlayer.init(this)
 
         hookWebView()
+
+        // 后台应用管理
+        YLInit.getInstance()
+            .setApplication(this)
+            .setAccessKey("ylx7dsclqfa7")
+            .setAccessToken("z99qbusqcft4o6uqslyv6iwee7b10ojt")
+            .setPrid("ifly123")
+            .build()
     }
 
     private fun getNetworkInterceptor(): Interceptor {

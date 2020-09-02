@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/song_content"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/dp_72"
+    android:background="?selectableItemBackground"
+    android:paddingTop="@dimen/dp_4"
+    android:paddingBottom="@dimen/dp_4">
+
+    <FrameLayout
+        android:id="@+id/index_content"
+        android:layout_width="@dimen/dp_56"
+        android:layout_height="@dimen/dp_56"
+        android:layout_centerVertical="true"
+        android:layout_marginStart="@dimen/dp_16">
+
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/iv_icon_playing"
+            android:layout_width="@dimen/dp_18"
+            android:layout_height="@dimen/dp_18"
+            android:layout_gravity="center"
+            app:lottie_loop="true"
+            app:lottie_rawRes="@raw/anim_music_playing_blue" />
+
+        <TextView
+            android:id="@+id/song_rank"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:textColor="@color/grey"
+            android:textSize="@dimen/sp_14"
+            tools:text="1" />
+
+        <com.iflytek.cyber.iot.show.core.widget.CircleCheckBox
+            android:id="@+id/song_selected"
+            android:layout_width="@dimen/dp_24"
+            android:layout_height="@dimen/dp_26"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+
+    </FrameLayout>
+
+    <FrameLayout
+        android:id="@+id/pic_content"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="@dimen/dp_16"
+        android:layout_toEndOf="@id/index_content"
+        android:visibility="visible">
+
+        <!--  <com.iflytek.cyber.iot.show.core.widget.ShadowFrameLayout
+              android:id="@+id/album_content"
+              android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              app:sl_cornerRadius="@dimen/dp_6"
+              app:sl_dx="0dp"
+              app:sl_dy="@dimen/dp_2"
+              app:sl_shadowColor="#0D000000"
+              app:sl_shadowRadius="@dimen/dp_6" />-->
+
+        <ImageView
+            android:layout_width="@dimen/dp_96"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/dp_4"
+            android:layout_marginBottom="@dimen/dp_4"
+            android:background="@drawable/group_item_border_shape"
+            android:scaleType="centerCrop" />
+
+        <com.makeramen.roundedimageview.RoundedImageView
+            android:id="@+id/iv_cover"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginTop="@dimen/dp_4"
+            android:layout_marginBottom="@dimen/dp_4"
+            android:scaleType="centerCrop"
+            app:riv_corner_radius="@dimen/dp_6" />
+
+    </FrameLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_marginEnd="@dimen/dp_16"
+        android:layout_toStartOf="@id/more"
+        android:layout_toEndOf="@id/pic_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/song_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_18"
+            tools:text="无条件" />
+
+        <TextView
+            android:id="@+id/song_artist"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="@color/grey"
+            android:textSize="@dimen/sp_14"
+            tools:text="陈奕迅" />
+    </LinearLayout>
+
+  <!--  <TextView
+        android:id="@+id/tv_play_count"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerVertical="true"
+        android:layout_toStartOf="@id/more"
+        android:textColor="@color/grey"
+        android:textSize="@dimen/sp_12"
+        tools:text="1000次" />-->
+
+    <ImageView
+        android:id="@+id/more"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentEnd="true"
+        android:layout_centerVertical="true"
+        android:background="?selectableItemBackgroundBorderless"
+        android:paddingStart="@dimen/dp_14"
+        android:paddingEnd="@dimen/dp_32"
+        android:src="@drawable/ic_more"
+        android:tint="@color/grey"
+        tools:ignore="ContentDescription" />
+
+</RelativeLayout>

@@ -7,6 +7,7 @@ import android.content.IntentFilter
 import android.os.BatteryManager
 import android.os.Build
 import android.os.PowerManager
+import android.os.Process
 import com.iflytek.cyber.evs.sdk.agent.Screen
 import com.iflytek.cyber.iot.show.core.utils.BrightnessUtils
 import com.iflytek.cyber.iot.show.core.utils.ScreenOffTimeoutUtils
@@ -77,7 +78,9 @@ class EvsScreen private constructor(context: Context) : Screen() {
             if (isCharging) {
                 ScreenOffTimeoutUtils.dreamNow(context)
             } else {
-                TerminalUtils.execute("input keyevent POWER")
+                if (Process.myUid() == Process.SYSTEM_UID) {
+                    TerminalUtils.execute("input keyevent POWER")
+                }
             }
         }
         return true

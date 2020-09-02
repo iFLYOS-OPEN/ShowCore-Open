@@ -20,6 +20,7 @@ object AudioFocusManager {
     internal const val TYPE_ALARM = "Alarm"
     internal const val TYPE_PLAYBACK = "Playback"
     internal const val TYPE_VIDEO = "Video" // 视频播放器
+    internal const val TYPE_EXTERNAL_AUDIO = "ExternalAudio" // 外部音频播放器
     internal const val TYPE_EXTERNAL_VIDEO = "ExternalVideo" // 外部视频播放器
 
     private val latestForegroundMap = HashMap<String, String>() // <channel, type>
@@ -83,13 +84,14 @@ object AudioFocusManager {
         val tid = Thread.currentThread().id
         Log.d(TAG, "requestActive tid=$tid, activeChannel=$activeChannel, type=$type")
 
-        // 若请求的channel处于非前景状态，或者type对不上
+        // 若请求的channel处于非前景状态或者type对不上，才进行处理
         if (statusMap[activeChannel] != FocusStatus.Foreground ||
             type != latestForegroundMap[activeChannel]
         ) {
             if (statusMap[activeChannel] == FocusStatus.Background &&
                 type != latestForegroundMap[activeChannel]
             ) {
+                // 之前的type变成idle
                 statusMap[activeChannel] = FocusStatus.Idle
                 onInternalFocusChanged(activeChannel)
             }
@@ -159,114 +161,10 @@ object AudioFocusManager {
 
                             statusMap[activeChannel] = FocusStatus.Foreground
                         }
-//                        else -> {
-//                            var backChannel = findBackgroundChannel()
-//                            val result = comparePriority(foreChannel, activeChannel)
-//
-//                            if (result > 0) {
-//                                // activeChannel优先级更高
-//                                if (backChannel != null) {
-//                                    statusMap[backChannel] = FocusStatus.Idle
-//                                    onInternalFocusChanged(backChannel)
-//                                }
-//
-//                                statusMap[foreChannel] = FocusStatus.Background
-//                                onInternalFocusChanged(foreChannel)
-//
-//                                statusMap[activeChannel] = FocusStatus.Foreground
-//                            } else {
-//                                // foreChannel优先级更高
-//                                if (backChannel != null) {
-//                                    if (backChannel == activeChannel) {
-//                                        if (latestForegroundMap[backChannel] != type) {
-//                                            statusMap[backChannel] = FocusStatus.Idle
-//                                            onInternalFocusChanged(backChannel)
-//                                        }
-//                                    } else {
-//                                        statusMap[backChannel] = FocusStatus.Idle
-//                                        onInternalFocusChanged(backChannel)
-//                                    }
-//                                }
-//
-//                                statusMap[activeChannel] = FocusStatus.Background
-//                            }
-//                        }
                     }
                 }
 
             }
-
-//            var findTarget = false
-//            for (i in 0 until sortedChannels.size) {
-//                val channel = sortedChannels[i]
-//
-//                // 若channel处于前景状态，且当前channel不是请求的channel
-//                if (statusMap[channel] == FocusStatus.Foreground &&
-//                    channel != activeChannel
-//                ) {
-//                    if (findTarget) {
-//                        if (channel == CHANNEL_ALARM) {
-//                            statusMap[channel] = FocusStatus.Idle
-//                        } else {
-//                            // 直接置为背景
-//                            statusMap[channel] = FocusStatus.Background
-//                        }
-//                        onInternalFocusChanged(channel) // 只需更新被挤掉的
-//                    } else {
-//                        // 当前前景通道（即channel）优先级高，需要区分对待
-//                        when (activeChannel) {
-//                            CHANNEL_OUTPUT -> {
-//                                if (channel == CHANNEL_ALARM) {
-//                                    // 若闹钟通道活跃，直接停止
-//                                    statusMap[channel] = FocusStatus.Idle
-//                                    onInternalFocusChanged(channel)
-//                                } else {
-//                                    statusMap[channel] = FocusStatus.Background
-//                                    onInternalFocusChanged(channel)
-//                                }
-//                                statusMap[activeChannel] = FocusStatus.Foreground
-//                            }
-//                            CHANNEL_DIAL,
-//                            CHANNEL_INPUT -> {
-//                                if (channel == CHANNEL_OUTPUT) {
-//                                    // 设备提示音/TTS 活跃则直接停掉
-//                                    statusMap[channel] = FocusStatus.Idle
-//                                    onInternalFocusChanged(channel)
-//                                } else {
-//                                    statusMap[activeChannel] = FocusStatus.Background
-//                                }
-//                            }
-//                            CHANNEL_ALARM -> {
-//                                if (channel == CHANNEL_OUTPUT) {
-//                                    statusMap[channel] = FocusStatus.Idle
-//                                    onInternalFocusChanged(channel)
-//
-//                                    statusMap[activeChannel] = FocusStatus.Foreground
-//                                } else {
-//                                    statusMap[activeChannel] = FocusStatus.Background
-//                                }
-//                            }
-//                            CHANNEL_CONTENT -> {
-//                                // 不存在比 Content 更低的优先级
-//                                statusMap[activeChannel] = FocusStatus.Background
-//                            }
-//                        }
-//                    }
-//                } else if (channel == activeChannel) {  // 设置请求的channel
-//                    findTarget = true
-//                    if (statusMap[activeChannel] != FocusStatus.Foreground) {
-//                        statusMap[activeChannel] = FocusStatus.Foreground
-//                    } else {
-//                        // 当前channel的前景类型不是type
-//                        if (latestForegroundMap[channel] != type) {
-//                            statusMap[channel] = FocusStatus.Idle
-//                            onInternalFocusChanged(channel)
-//
-//                            statusMap[activeChannel] = FocusStatus.Foreground
-//                        }
-//                    }
-//                }
-//            }
 
             // 保证在可置为背景的前景通道通知完后，才通知想要激活的通道
             latestForegroundMap[activeChannel] = type

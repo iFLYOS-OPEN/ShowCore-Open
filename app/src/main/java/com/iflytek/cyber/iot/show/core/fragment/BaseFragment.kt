@@ -21,7 +21,10 @@ package com.iflytek.cyber.iot.show.core.fragment
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
+import android.view.LayoutInflater
 import android.view.View
+import android.view.ViewGroup
 import android.view.animation.Animation
 import androidx.annotation.Nullable
 import androidx.fragment.app.Fragment
@@ -69,6 +72,12 @@ open class BaseFragment : Fragment(), ISupportFragment {
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
         mDelegate.onActivityCreated(savedInstanceState)
+        //防止fragment穿透点击
+        if (this !is PlayerInfoFragment2 && this !is VideoFragment) {
+            view?.setOnTouchListener { _, _ ->
+                return@setOnTouchListener true
+            }
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

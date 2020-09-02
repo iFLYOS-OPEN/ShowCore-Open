@@ -8,12 +8,15 @@ import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
-import androidx.core.view.isInvisible
 import androidx.core.view.isVisible
+import androidx.fragment.app.Fragment
 import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager2.adapter.FragmentStateAdapter
+import androidx.viewpager2.widget.ViewPager2
 import com.airbnb.lottie.LottieAnimationView
 import com.iflytek.cyber.iot.show.core.CoreApplication
 import com.iflytek.cyber.iot.show.core.R
+import com.iflytek.cyber.iot.show.core.adapter.TagAdapter
 import com.iflytek.cyber.iot.show.core.api.MediaApi
 import com.iflytek.cyber.iot.show.core.model.CollectionTag
 import com.iflytek.cyber.iot.show.core.model.Tags
@@ -30,9 +33,8 @@ class CollectionFragment : BaseFragment() {
     private lateinit var backContainer: FrameLayout
 
     private lateinit var tagList: RecyclerView
+    private lateinit var viewPager: ViewPager2
     private var tagAdapter: TagAdapter? = null
-
-    private var fragmentList = ArrayList<CollectionListFragment>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -48,6 +50,7 @@ class CollectionFragment : BaseFragment() {
             pop()
         }
 
+        viewPager = view.findViewById(R.id.view_pager)
         backContainer = view.findViewById(R.id.back_container)
         loadingImageView = view.findViewById(R.id.loading_image)
         loadingFrame = view.findViewById(R.id.loading_frame)
@@ -61,22 +64,21 @@ class CollectionFragment : BaseFragment() {
 
         tagList = view.findViewById(R.id.tag_list)
 
+        viewPager.isUserInputEnabled = false
+
         getTags()
     }
 
     private fun setupTag(tags: ArrayList<Tags>) {
-        fragmentList.clear()
-        for (tag in tags) {
-            fragmentList.add(CollectionListFragment.newInstance(tag.id))
-        }
         if (tagAdapter == null) {
             tagAdapter = TagAdapter(tags) { tag, position ->
-                showHideFragment(fragmentList[position])
+                viewPager.setCurrentItem(position, false)
             }
         }
         tagList.adapter = tagAdapter
 
-        loadMultipleRootFragment(R.id.fragment, 0, fragmentList[0], fragmentList[1], fragmentList[2])
+        val pagerAdapter = CategoryViewPager(tags, this)
+        viewPager.adapter = pagerAdapter
     }
 
     private fun getTags() {
@@ -108,54 +110,24 @@ class CollectionFragment : BaseFragment() {
         })
     }
 
-    private fun getMediaApi(): MediaApi? {
-        return if (launcher != null) {
-            CoreApplication.from(launcher!!).createApi(MediaApi::class.java)
-        } else {
-            null
-        }
-    }
-
-    inner class TagAdapter(val items: ArrayList<Tags>, val onItemClick: (Tags, Int) -> Unit) : RecyclerView.Adapter<TagAdapter.TagHolder>() {
-
-        private var selectorColor = Color.parseColor("#262626")
-        private var defaultColor = Color.parseColor("#9E9FA7")
-
-        private var currentPosition = 0
-
-        override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): TagHolder {
-            val view = LayoutInflater.from(parent.context).inflate(R.layout.item_tag, parent, false)
-            return TagHolder(view)
-        }
+    inner class CategoryViewPager(val items: ArrayList<Tags>, fragment: Fragment) :
+        FragmentStateAdapter(fragment) {
 
         override fun getItemCount(): Int {
             return items.size
         }
 
-        private fun updateIndicator(position: Int) {
-            currentPosition = position
-            notifyDataSetChanged()
-        }
-
-        override fun onBindViewHolder(holder: TagHolder, position: Int) {
+        override fun createFragment(position: Int): Fragment {
             val item = items[position]
-            holder.tagTextView.text = item.name
-            if (currentPosition == position) {
-                holder.indicatorView.isInvisible = false
-                holder.tagTextView.setTextColor(selectorColor)
-            } else {
-                holder.indicatorView.isInvisible = true
-                holder.tagTextView.setTextColor(defaultColor)
-            }
-            holder.itemView.setOnClickListener {
-                updateIndicator(position)
-                onItemClick.invoke(item, position)
-            }
+            return CollectionListFragment.newInstance(item.id)
         }
+    }
 
-        inner class TagHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
-            val indicatorView = itemView.findViewById<View>(R.id.indicator_view)
-            val tagTextView = itemView.findViewById<TextView>(R.id.name_text)
+    private fun getMediaApi(): MediaApi? {
+        return if (launcher != null) {
+            CoreApplication.from(launcher!!).createApi(MediaApi::class.java)
+        } else {
+            null
         }
     }
 }

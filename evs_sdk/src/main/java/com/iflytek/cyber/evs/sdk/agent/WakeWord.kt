@@ -22,6 +22,10 @@ abstract class WakeWord {
         const val ERROR_DOWNLOAD_ERROR = "DOWNLOAD_ERROR"
         const val ERROR_CAE_ERROR = "CAE_ERROR"
         const val ERROR_USER_DENY = "USER_DENY"
+
+        const val KEY_ENGINE = "ent"
+        const val KEY_ENGINE_NAME = "name"
+        const val KEY_ENGINE_VERSION = "version"
     }
 
     val version = "1.1"
@@ -29,6 +33,10 @@ abstract class WakeWord {
     abstract fun setWakeWord(wakeWordId: String?, wakeWord: String?, url: String?)
 
     abstract fun resetWakeWord(wakeWordId: String?)
+
+    open fun getWakeEngine(): Engine? {
+        return null
+    }
 
     fun sendSetWakeWordSucceed(wakeWordId: String, wakeWord: String?) {
         val jsonObject = JSONObject()
@@ -57,4 +65,9 @@ abstract class WakeWord {
         jsonObject[PAYLOAD_ERROR_TYPE] = errorType
         RequestManager.sendRequest(NAME_SET_WAKE_WORD_RESULT, jsonObject)
     }
+
+    data class Engine(
+        val name: String?,
+        val version: String?
+    )
 }

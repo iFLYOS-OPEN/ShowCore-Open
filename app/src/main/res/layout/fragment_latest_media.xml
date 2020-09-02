@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_collection">
+
+    <FrameLayout
+        android:id="@+id/header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RelativeLayout
+            android:id="@+id/header_view"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_56"
+            android:paddingTop="@dimen/dp_15"
+            android:paddingBottom="@dimen/dp_15"
+            android:visibility="visible">
+
+            <TextView
+                android:id="@+id/latest_tag"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="@dimen/dp_32"
+                android:textColor="@color/semi_black"
+                android:textSize="@dimen/sp_18"
+                tools:text="最近播放音乐" />
+
+            <LinearLayout
+                android:id="@+id/play_all_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="@dimen/dp_16"
+                android:layout_toEndOf="@id/latest_tag"
+                android:background="@drawable/bg_play_all_black_border"
+                android:clickable="true"
+                android:focusable="true"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:paddingTop="@dimen/dp_4"
+                android:paddingBottom="@dimen/dp_4">
+
+                <ImageView
+                    android:id="@+id/iv_play_all_icon"
+                    android:layout_width="@dimen/dp_16"
+                    android:layout_height="@dimen/dp_16"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="4dp"
+                    android:src="@drawable/ic_music_play"
+                    android:tint="@color/semi_black" />
+
+                <TextView
+                    android:id="@+id/play_all"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="12dp"
+                    android:drawablePadding="@dimen/dp_4"
+                    android:includeFontPadding="false"
+                    android:text="@string/play_all"
+                    android:textColor="@color/color_play_all_selector"
+                    android:textSize="@dimen/sp_14" />
+
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/multi_select"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="@dimen/dp_32"
+                android:background="?selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:orientation="horizontal"
+                android:padding="4dp"
+                tools:ignore="RelativeOverlap">
+
+                <ImageView
+                    android:id="@+id/iv_multi_select"
+                    android:layout_width="@dimen/dp_24"
+                    android:layout_height="@dimen/dp_24"
+                    android:src="@drawable/ic_multi_select"
+                    android:tint="@color/color_multi_select_selector"
+                    tools:ignore="ContentDescription" />
+
+                <TextView
+                    android:id="@+id/tv_multi_select"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:text="@string/multi_select"
+                    android:textColor="@color/color_multi_select_selector"
+                    android:textSize="@dimen/sp_14" />
+
+            </LinearLayout>
+
+        </RelativeLayout>
+
+        <RelativeLayout
+            android:id="@+id/select_view"
+            android:layout_width="match_parent"
+            android:layout_height="@dimen/dp_56"
+            android:visibility="gone">
+
+            <com.iflytek.cyber.iot.show.core.widget.CircleCheckBox
+                android:id="@+id/btn_select_all"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_centerVertical="true"
+                android:layout_marginStart="@dimen/dp_32"
+                app:text="@string/select_all"
+                app:textSize="@dimen/sp_16" />
+
+            <Button
+                android:id="@+id/btn_cancel"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_36"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="@dimen/dp_16"
+                android:layout_toStartOf="@id/btn_delete"
+                android:gravity="center"
+                android:text="@string/cancel"
+                android:textColor="@color/campus_blue"
+                android:textSize="@dimen/sp_14"
+                app:bl_corners_radius="@dimen/dp_18"
+                app:bl_ripple_color="#1A000000"
+                app:bl_ripple_enable="true"
+                app:bl_stroke_color="@color/campus_blue"
+                app:bl_stroke_width="@dimen/dp_1" />
+
+            <Button
+                android:id="@+id/btn_delete"
+                style="?android:attr/borderlessButtonStyle"
+                android:layout_width="wrap_content"
+                android:layout_height="@dimen/dp_36"
+                android:layout_alignParentEnd="true"
+                android:layout_centerVertical="true"
+                android:layout_marginEnd="@dimen/dp_32"
+                android:background="@drawable/btn_delete_round_18dp"
+                android:text="@string/delete"
+                android:textColor="@color/btn_delete_selector"
+                android:textSize="@dimen/sp_14" />
+
+        </RelativeLayout>
+
+    </FrameLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/header"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" />
+
+    <LinearLayout
+        android:id="@+id/empty_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <ImageView
+            android:layout_width="@dimen/dp_120"
+            android:layout_height="@dimen/dp_120"
+            android:src="@drawable/ic_blank_history" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/dp_8"
+            android:text="@string/empty_latest_history"
+            android:textColor="@color/grey_500"
+            android:textSize="@dimen/sp_16" />
+
+    </LinearLayout>
+
+    <com.airbnb.lottie.LottieAnimationView
+        android:id="@+id/loading_image"
+        android:layout_width="@dimen/dp_100"
+        android:layout_height="@dimen/dp_40"
+        android:layout_centerInParent="true"
+        android:layout_marginStart="@dimen/dp_60"
+        app:lottie_loop="true"
+        app:lottie_rawRes="@raw/animation_loading_l" />
+
+    <LinearLayout
+        android:id="@+id/retry_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/white"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Ooooops，请检查网络后重试"
+            android:textColor="@color/grey_500"
+            android:textSize="@dimen/sp_16" />
+
+        <TextView
+            android:id="@+id/retry"
+            style="?android:attr/borderlessButtonStyle"
+            android:layout_width="@dimen/dp_81"
+            android:layout_height="@dimen/dp_36"
+            android:layout_marginTop="@dimen/dp_16"
+            android:text="@string/retry"
+            android:textColor="#1784E9"
+            android:textSize="@dimen/sp_14"
+            app:bl_corners_radius="@dimen/dp_18"
+            app:bl_solid_color="@android:color/white"
+            app:bl_stroke_color="#1784E9"
+            app:bl_stroke_width="@dimen/dp_2" />
+
+    </LinearLayout>
+
+</RelativeLayout>

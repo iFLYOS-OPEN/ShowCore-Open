@@ -1,6 +1,8 @@
 package com.iflytek.cyber.iot.show.core.api
 
 import com.iflytek.cyber.iot.show.core.model.*
+import okhttp3.RequestBody
+import okhttp3.ResponseBody
 import retrofit2.Call
 import retrofit2.http.*
 
@@ -54,4 +56,30 @@ interface MediaApi {
 
     @POST("v2/player/play_album")
     fun playAlbum(@Body body: PlayAlbumBody): Call<PlayResult>
+
+    @GET("v2/records")
+    fun getLatestRecords(
+        @Query("tag_id") tagId: Int
+    ): Call<LatestResult>
+
+    @GET("v2/records/tags")
+    fun getLatestTags(): Call<CollectionTag>
+
+    @POST("v2/records/play")
+    fun playRecord(@Body body: RequestBody): Call<ResponseBody>
+
+    @POST("v2/records/delete")
+    fun deleteRecord(@Body body: RequestBody): Call<Message>
+
+    @GET("v2/records/album_song")
+    fun getLatestRecordAlbum(
+        @Query("album_id") albumId: String,
+        @Query("source_type") sourceType: String?,
+        @Query("business") business: String?,
+        @Query("page") page: Int,
+        @Query("limit") limit: Int
+    ): Call<SongList>
+
+    @POST("v2/records/play_album")
+    fun playRecordAlbum(@Body body: RequestBody): Call<ResponseBody>
 }

@@ -47,9 +47,10 @@ class AudioTypeListAdapter(
 
     override fun onBindViewHolder(holder: AudioTypeListHolder, position: Int) {
         val item = this.items[position]
-        var titleRes = StringBuffer("")
-        titleRes = HighLightUtils.highLightText(item.title, getKeyList(keyword), titleRes)
-        holder.title.text = Html.fromHtml(titleRes.toString())
+        //var titleRes = StringBuffer("")
+        //titleRes = HighLightUtils.highLightText(item.title, getKeyList(keyword), titleRes)
+        //holder.title.text = Html.fromHtml(titleRes.toString())
+        holder.title.text = HighLightUtils.hightLightText(item.title, keyword)
         if (item.author.isNullOrEmpty()) {
             holder.desc.isVisible = false
             holder.title.isVisible = false
@@ -59,9 +60,10 @@ class AudioTypeListAdapter(
             holder.desc.isVisible = true
             holder.title.isVisible = true
             holder.onlyTitle.isVisible = false
-            var descRes = StringBuffer("")
+           /* var descRes = StringBuffer("")
             descRes = HighLightUtils.highLightText(item.author, getKeyList(keyword), descRes)
-            holder.desc.text = Html.fromHtml(descRes.toString())
+            holder.desc.text = Html.fromHtml(descRes.toString())*/
+            holder.desc.text = HighLightUtils.hightLightText(item.author, keyword)
         }
         //holder.moreContent.isVisible = position == items.size - 1
         if (position == items.size - 1) {

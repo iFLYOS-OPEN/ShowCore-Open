@@ -319,7 +319,8 @@ data class MainTemplate(
 
 data class CollectionTag(val tags: ArrayList<Tags>)
 
-data class Tags(val id: Int, val name: String, val value: String?)
+@Parcelize
+data class Tags(val id: Int, val name: String, val value: String?, var isPlaying: Boolean) : Parcelable
 
 @Parcelize
 data class CollectionSong(
@@ -618,4 +619,25 @@ data class MediaEntity(
     @SerializedName("image") val image: String?,
     @SerializedName("url") var url: String?,
     @SerializedName("name") var name: String?
+) : Parcelable
+
+data class LatestResult(
+    val limit: Int,
+    val page: Int,
+    val result: ArrayList<LatestRecord>?,
+    val total: Int
+)
+
+@Parcelize
+data class LatestRecord(
+    @SerializedName("album_id") val albumId: String?,
+    val business: String?,
+    val count: Int,
+    val id: Long,
+    @SerializedName("image_url") val imageUrl: String?,
+    @SerializedName("music_artist") val musicArtist: String?,
+    @SerializedName("music_id") val musicId: String?,
+    @SerializedName("music_name") val musicName: String?,
+    @SerializedName("source_type") val sourceType: String?,
+    var isSelected: Boolean
 ) : Parcelable

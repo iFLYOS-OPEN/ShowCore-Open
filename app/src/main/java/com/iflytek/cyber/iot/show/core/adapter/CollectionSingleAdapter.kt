@@ -38,25 +38,9 @@ class CollectionSingleAdapter(private val onItemClickListener: (song: Collection
         holder.rank.text = (position + 1).toString()
         holder.title.text = song.name
         holder.artist.text = song.artist
-        val playerInfo = ContentStorage.get().playerInfo
-        val isPlaying = TextUtils.equals(playerInfo?.resourceId, song.id)
-        if (isPlaying) {
-            holder.ivPlaying.visibility = View.VISIBLE
-            holder.rank.visibility = View.GONE
-            holder.title.setTextColor(playingTextColor)
-            holder.onlyTitle.setTextColor(playingTextColor)
-            if (ContentStorage.get().isMusicPlaying) {
-                holder.ivPlaying.playAnimation()
-            } else {
-                holder.ivPlaying.pauseAnimation()
-            }
-        } else {
-            holder.ivPlaying.visibility = View.GONE
-            holder.ivPlaying.pauseAnimation()
-            holder.rank.visibility = View.VISIBLE
-            holder.title.setTextColor(normalTextColor)
-            holder.onlyTitle.setTextColor(normalTextColor)
-        }
+
+        setupItemPlaying(holder, song)
+
         holder.songContent.setOnClickListener {
             onItemClickListener.invoke(song)
         }
@@ -70,6 +54,35 @@ class CollectionSingleAdapter(private val onItemClickListener: (song: Collection
             holder.textContent.isVisible = true
             holder.onlyTitle.isVisible = false
         }
+    }
+
+    private fun setupItemPlaying(holder: CollectionSingleHolder, song: CollectionSong) {
+        val playerInfo = ContentStorage.get().playerInfo
+        val isPlaying = TextUtils.equals(playerInfo?.resourceId, song.id)
+        if (isPlaying) {
+            holder.ivPlaying.visibility = View.VISIBLE
+            holder.rank.visibility = View.GONE
+            holder.title.setTextColor(playingTextColor)
+            holder.onlyTitle.setTextColor(playingTextColor)
+            if (ContentStorage.get().isMusicPlaying) {
+                holder.ivPlaying.pauseAnimation()
+                holder.ivPlaying.playAnimation()
+            } else {
+                holder.ivPlaying.pauseAnimation()
+            }
+        } else {
+            holder.ivPlaying.visibility = View.GONE
+            holder.ivPlaying.pauseAnimation()
+            holder.rank.visibility = View.VISIBLE
+            holder.title.setTextColor(normalTextColor)
+            holder.onlyTitle.setTextColor(normalTextColor)
+        }
+    }
+
+    override fun onViewAttachedToWindow(holder: CollectionSingleHolder) {
+        super.onViewAttachedToWindow(holder)
+        val song = items[holder.adapterPosition]
+        setupItemPlaying(holder, song)
     }
 
     inner class CollectionSingleHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {

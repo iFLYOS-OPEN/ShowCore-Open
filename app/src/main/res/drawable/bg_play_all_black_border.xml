@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape xmlns:android="http://schemas.android.com/apk/res/android">
+            <corners android:radius="@dimen/dp_20" />
+            <stroke android:width="@dimen/dp_1" android:color="#80262626" />
+        </shape>
+    </item>
+    <item>
+        <ripple android:color="?android:colorControlHighlight">
+            <item android:id="@android:id/mask">
+                <shape android:shape="rectangle">
+                    <corners android:radius="14dp" />
+                    <solid android:color="?android:colorControlActivated" />
+                </shape>
+                <color android:color="?android:colorControlActivated" />
+            </item>
+        </ripple>
+    </item>
+</layer-list>

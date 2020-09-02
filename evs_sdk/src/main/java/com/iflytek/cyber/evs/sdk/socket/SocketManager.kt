@@ -41,6 +41,10 @@ internal object SocketManager {
         webSocket?.onConnectFailed(t)
     }
 
+    fun onSendFailed(code: Int, reason: String?) {
+        webSocket?.onSendFailed(code, reason)
+    }
+
     abstract class SocketListener {
         open fun onConnected() {}
         open fun onConnectFailed(t: Throwable?) {}

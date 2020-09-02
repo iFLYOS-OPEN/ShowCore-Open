@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.iflytek.cyber.iot.show.core.widget.ShadowLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    app:shadowColor="#1A000000"
+    app:shadowCornerRadius="@dimen/dp_6"
+    app:shadowDx="@dimen/dp_0"
+    app:shadowDy="@dimen/dp_8"
+    app:shadowPaddingBottom="@dimen/dp_10"
+    app:shadowPaddingLeft="@dimen/dp_13"
+    app:shadowPaddingRight="@dimen/dp_13"
+    app:shadowPaddingTop="@dimen/dp_13"
+    app:shadowRadius="@dimen/dp_16"
+    app:useShadowColor="true">
+
+    <LinearLayout
+        android:layout_width="@dimen/dp_120"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/dp_12"
+        android:background="@drawable/bg_popup_round_6dp"
+        android:orientation="vertical"
+        android:paddingTop="@dimen/dp_8"
+        android:paddingBottom="@dimen/dp_8">
+
+        <TextView
+            android:id="@+id/btn_open_album"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:paddingStart="@dimen/dp_16"
+            android:paddingTop="@dimen/dp_14"
+            android:paddingEnd="@dimen/dp_16"
+            android:paddingBottom="@dimen/dp_14"
+            android:text="@string/open_album"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_14" />
+
+        <TextView
+            android:id="@+id/btn_delete"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="?selectableItemBackground"
+            android:paddingStart="@dimen/dp_16"
+            android:paddingTop="@dimen/dp_14"
+            android:paddingEnd="@dimen/dp_16"
+            android:paddingBottom="@dimen/dp_14"
+            android:text="@string/delete"
+            android:textColor="@color/semi_black"
+            android:textSize="@dimen/sp_14" />
+
+    </LinearLayout>
+
+</com.iflytek.cyber.iot.show.core.widget.ShadowLayout>

@@ -46,6 +46,7 @@ class DeviceAuthFragment : BaseFragment() {
     private lateinit var qrcode: ImageView
     private lateinit var errorFiled: LinearLayout
     private lateinit var tvError: TextView
+    private var authDialog: StyledWebDialog? = null
 
     private var authUrl: String? = null
     private var shouldLoadAuthState = true
@@ -97,6 +98,11 @@ class DeviceAuthFragment : BaseFragment() {
         }
     }
 
+    override fun onSupportInvisible() {
+        super.onSupportInvisible()
+        authDialog?.dismissAllowingStateLoss()
+    }
+
     private fun startCount() {
         countDownTimer = object : CountDownTimer(180 * 1000, 2000) {
             override fun onFinish() {
@@ -126,8 +132,8 @@ class DeviceAuthFragment : BaseFragment() {
         if (!isAdded || context == null) {
             return
         }
-        val dialog = StyledWebDialog()
-        dialog.setOnWebPageCallback(object : StyledWebDialog.OnWebPageCallback {
+        authDialog = StyledWebDialog()
+        authDialog?.setOnWebPageCallback(object : StyledWebDialog.OnWebPageCallback {
             override fun onClosePage() {
                 startWithPopTo(
                     SmartHomeFragment.newInstance(true),
@@ -139,8 +145,8 @@ class DeviceAuthFragment : BaseFragment() {
             override fun openNewPage(tag: String, params: String?) {
             }
         })
-        dialog.arguments = bundleOf(Pair("url", url))
-        dialog.show(childFragmentManager, "Web")
+        authDialog?.arguments = bundleOf(Pair("url", url))
+        authDialog?.show(childFragmentManager, "Web")
     }
 
     private fun getAuthState() {

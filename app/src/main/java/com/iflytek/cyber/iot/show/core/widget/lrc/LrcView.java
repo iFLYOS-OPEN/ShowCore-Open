@@ -729,7 +729,12 @@ public class LrcView extends View {
      * 获取歌词宽度
      */
     private float getLrcWidth() {
-        return getWidth() - mLrcPadding * 2;
+        float lrcWidth = getWidth() - mLrcPadding * 2;
+        if (lrcWidth <= 0) {
+            return 0;
+        } else {
+            return lrcWidth;
+        }
     }
 
     /**

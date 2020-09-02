@@ -50,12 +50,11 @@
 
     </LinearLayout>
 
-    <FrameLayout
-        android:id="@+id/fragment"
+    <androidx.viewpager2.widget.ViewPager2
+        android:id="@+id/view_pager"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginStart="@dimen/dp_120"
-        android:background="@drawable/bg_collection" />
+        android:layout_marginStart="@dimen/dp_120" />
 
     <com.airbnb.lottie.LottieAnimationView
         android:id="@+id/loading_image"

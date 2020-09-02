@@ -104,7 +104,7 @@ class HighlightTextView
     }
 
     fun updatePosition(position: Long) {
-        for (index in 0 until timestampArray.size) {
+        for (index in 0 until timestampArray.size - 1) {
             val value = timestampArray[index]
             if (position < value) {
                 if (currentHighlightLine != index) {
